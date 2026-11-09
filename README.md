@@ -103,8 +103,15 @@ Defina `DB_PASSWORD` no ambiente antes de iniciar a aplicação.
 | POST | `/usuarios` | Administrador cadastra usuário e perfil |
 | PATCH | `/usuarios/{id}/ativo` | Administrador ativa/desativa usuário |
 | GET | `/reservas/{id}/auditoria` | Consulta histórico de criação e transições |
+| GET | `/relatorios/utilizacao?inicio=...&fim=...` | Reservas e minutos alocados por recurso |
+| GET | `/relatorios/conflitos?inicio=...&fim=...` | Conflitos de horário evitados |
+| GET | `/notificacoes` | Administrador/responsável consulta notificações simuladas |
 
 Erros de validação retornam HTTP 400; conflitos de horário e transições inválidas retornam HTTP 409; recurso ou reserva inexistente retorna HTTP 404; regras de negócio inválidas retornam HTTP 422.
+
+## Teste de carga
+
+O plano e o script Apache JMeter estão em `docs/PLANO-TESTE-CARGA.md` e `jmeter/reservas-concorrentes.jmx`. O resultado ainda precisa ser executado e anexado; não há métricas de carga aprovadas neste repositório.
 
 ## Testes e cobertura
 
