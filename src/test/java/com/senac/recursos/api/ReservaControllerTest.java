@@ -9,7 +9,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -59,7 +60,7 @@ class ReservaControllerTest {
 
     @Test
     void conflitoDeHorarioRetorna409ComMensagem() throws Exception {
-        when(service.criar(any(), any(), any(), any(), any()))
+        when(service.criar(any(), isNull(), any(), any(), any()))
                 .thenThrow(new ConflitoHorarioException("Já existe reserva neste horário para o recurso"));
 
         enviar(JSON_VALIDO)
@@ -69,7 +70,7 @@ class ReservaControllerTest {
 
     @Test
     void recursoEmManutencaoRetorna422() throws Exception {
-        when(service.criar(any(), any(), any(), any(), any()))
+        when(service.criar(any(), isNull(), any(), any(), any()))
                 .thenThrow(new RecursoIndisponivelException("Recurso em manutenção"));
 
         enviar(JSON_VALIDO)
@@ -79,7 +80,7 @@ class ReservaControllerTest {
 
     @Test
     void periodoInvalidoRetorna422() throws Exception {
-        when(service.criar(any(), any(), any(), any(), any()))
+        when(service.criar(any(), isNull(), any(), any(), any()))
                 .thenThrow(new IllegalArgumentException("O término deve ser posterior ao início"));
 
         enviar(JSON_VALIDO)
@@ -89,7 +90,7 @@ class ReservaControllerTest {
 
     @Test
     void recursoInexistenteRetorna404() throws Exception {
-        when(service.criar(any(), any(), any(), any(), any()))
+        when(service.criar(any(), isNull(), any(), any(), any()))
                 .thenThrow(new NoSuchElementException("Recurso não encontrado: 1"));
 
         enviar(JSON_VALIDO)
@@ -98,9 +99,10 @@ class ReservaControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "responsavel", roles = "RESPONSAVEL")
     void transicaoDeEstadoValidaEhEncaminhadaAoServico() throws Exception {
         mvc.perform(patch("/reservas/42/estado")
+                        .principal(new UsernamePasswordAuthenticationToken("responsavel", "n/a",
+                                java.util.List.of(new SimpleGrantedAuthority("ROLE_RESPONSAVEL"))))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"estado":"APROVADA"}
