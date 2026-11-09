@@ -277,4 +277,44 @@ class ReservaServiceIntegracaoTest {
         assertTrue(movimentacoes.findByReserva_Id(reserva.getId()).isEmpty());
     }
 
+
+    @Test
+    void titularPodeAlterarPeriodoEAlteracaoGeraAuditoria() {
+        Reserva reserva = service.criar(sala.getId(), "prof.ana", hora(10), hora(11));
+        Reserva alterada = service.alterar(reserva.getId(), sala.getId(), null,
+                hora(12), hora(13), "prof.ana", false);
+        assertEquals(hora(12), alterada.getInicio());
+        assertEquals(hora(13), alterada.getFim());
+        var eventos = service.listarAuditoria(reserva.getId());
+        assertEquals(2, eventos.size());
+        assertEquals("ALTERACAO", eventos.get(1).getTipoEvento());
+    }
+
+    @Test
+    void titularNaoPodeAlterarReservaDeOutraPessoa() {
+        Reserva reserva = service.criar(sala.getId(), "prof.ana", hora(10), hora(11));
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> service.alterar(reserva.getId(), sala.getId(), null,
+                        hora(12), hora(13), "prof.bia", false));
+    }
+
+    @Test
+    void reagendamentoTambemVerificaConflitoDeHorario() {
+        Recurso sala2 = recursos.save(new Recurso(TipoRecurso.SALA, "Sala 105", false));
+        service.criar(sala.getId(), "prof.ana", hora(10), hora(11));
+        Reserva ocupada = service.criar(sala2.getId(), "prof.bia", hora(12), hora(13));
+        assertThrows(ConflitoHorarioException.class,
+                () -> service.alterar(ocupada.getId(), sala.getId(), null,
+                        hora(10), hora(11), "prof.bia", false));
+    }
+
+    @Test
+    void reservaAprovadaNaoPodeSerReagendada() {
+        Reserva reserva = service.criar(sala.getId(), "prof.ana", hora(10), hora(11));
+        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA);
+        assertThrows(IllegalStateException.class,
+                () -> service.alterar(reserva.getId(), sala.getId(), null,
+                        hora(12), hora(13), "prof.ana", false));
+    }
+
 }
