@@ -31,6 +31,7 @@ class ReservaServiceIntegracaoTest {
     @Autowired ReservaAuditoriaRepository auditoria;
     @Autowired ConflitoEvitadoRepository conflitos;
     @Autowired RelatorioService relatorios;
+    @Autowired NotificacaoSimuladaRepository notificacoes;
 
     private Recurso sala;
 
@@ -40,6 +41,7 @@ class ReservaServiceIntegracaoTest {
     void limpar() {
         auditoria.deleteAll();
         conflitos.deleteAll();
+        notificacoes.deleteAll();
         reservas.deleteAll();
         recursos.deleteAll();
         sala = recursos.save(new Recurso(TipoRecurso.SALA, "Sala 101", false));
@@ -230,6 +232,18 @@ class ReservaServiceIntegracaoTest {
                 () -> service.criar(sala.getId(), "prof.bia", hora(10), hora(11)));
         assertEquals(1, conflitos.count());
         assertEquals(1, relatorios.conflitos(Instant.now().minusSeconds(86400), Instant.now().plusSeconds(86400)).total());
+    }
+
+
+    @Test
+    void notificacoesSimuladasSaoGeradasNaSolicitacaoETransicao() {
+        Reserva reserva = service.criar(sala.getId(), "prof.ana", hora(10), hora(11));
+        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA);
+        var enviadas = notificacoes.findByDestinatarioIgnoreCaseOrderByOcorridoEmDesc("prof.ana");
+        assertEquals(2, enviadas.size());
+        assertTrue(enviadas.stream().anyMatch(n -> n.getAssunto().equals("Reserva solicitada")));
+        assertTrue(enviadas.stream().anyMatch(n -> n.getAssunto().equals("Reserva atualizada")));
+        assertTrue(enviadas.stream().allMatch(n -> n.getCanal().equals("SIMULADO")));
     }
 
 }
