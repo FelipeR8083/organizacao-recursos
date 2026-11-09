@@ -9,6 +9,9 @@ Projeto de Qualidade de Software — Senac TADS 2026.2.
 - Java 21
 - Spring Boot 3.3.5
 - Spring Data JPA e Hibernate
+- Spring Security HTTP Basic e BCrypt
+- Flyway (migrações SQL versionadas)
+- Springdoc OpenAPI / Swagger UI
 - PostgreSQL 16
 - Maven
 - JUnit 5, Spring Boot Test e Testcontainers
@@ -68,11 +71,16 @@ docker compose down -v
 
 O Compose publica aplicação e PostgreSQL apenas em 127.0.0.1. DB_PASSWORD e as credenciais APP_ADMIN_* são obrigatórias via .env. O primeiro administrador é criado automaticamente na primeira inicialização. A API usa HTTP Basic; cadastre os perfis adicionais pela API administrativa `/usuarios` usando as credenciais do administrador. Senhas são armazenadas com BCrypt e devem ter pelo menos 12 caracteres. Use HTTPS fora do ambiente local.
 
-Execute a aplicação diretamente com Maven:
+Execute diretamente com Maven configurando as credenciais (PowerShell):
 
-```bash
+```powershell
+$env:DB_PASSWORD='senha-do-banco'
+$env:APP_ADMIN_USERNAME='admin'
+$env:APP_ADMIN_PASSWORD='senha-admin-com-12-caracteres'
 mvn spring-boot:run
 ```
+
+No Linux/macOS, exporte as mesmas três variáveis antes de executar `mvn spring-boot:run`.
 
 A aplicação ficará disponível em `http://localhost:8080`. A interface web está em `src/main/resources/static/index.html`.
 
@@ -97,7 +105,10 @@ Defina `DB_PASSWORD` no ambiente antes de iniciar a aplicação.
 | PUT | `/recursos/{id}` | Atualiza recurso |
 | GET | `/reservas` | Lista reservas |
 | POST | `/reservas` | Solicita reserva |
+| PUT | `/reservas/{id}` | Titular altera reserva solicitada; responsável/administrador pode gerenciar |
 | PATCH | `/reservas/{id}/estado` | Responsável/administrador altera estado respeitando a máquina de estados |
+| POST | `/reservas/{id}/retirada` | Responsável registra retirada de material aprovado |
+| POST | `/reservas/{id}/devolucao` | Responsável registra devolução e conclui a reserva |
 | DELETE | `/reservas/{id}` | Solicitante cancela a própria reserva; responsável/administrador pode cancelar |
 | GET | `/usuarios` | Administrador lista usuários |
 | POST | `/usuarios` | Administrador cadastra usuário e perfil |
@@ -138,7 +149,14 @@ O workflow do GitHub Actions executa `mvn -B verify` em pull requests e pushes p
 
 Implementado e coberto por testes no código atual:
 - Criação de reservas e validação de período.
-- Prevenção de sobreposição por recurso.
+- Prevenção de sobreposição por recurso e professor vinculado.
+- Autenticação e autorização por perfil.
+- Pesquisa por tipo, capacidade, localização, competência e disponibilidade.
+- Alteração/cancelamento de reserva solicitada pelo titular.
+- Retirada e devolução de materiais/equipamentos.
+- Notificações simuladas ou por webhook opcional.
+- Relatórios de utilização e conflitos evitados.
+- Migrações SQL versionadas com Flyway.
 - Proteção contra dupla reserva concorrente.
 - Bloqueio de recursos em manutenção.
 - Máquina de estados das reservas.
@@ -149,7 +167,7 @@ Ainda não deve ser considerado concluído:
 - Alteração de período/recurso de reservas ainda não implementada.
 - Aprovação de recurso restrito é protegida pelo papel RESPONSAVEL, mas requer testes de regra de negócio específicos.
 - Retirada e devolução de materiais.
-- Migrações versionadas do banco (o projeto ainda usa `ddl-auto: update`).
+- Metas de cobertura, análise SonarCloud e teste JMeter ainda precisam de resultados comprovados.
 - Rastreabilidade completa dos 14 requisitos, testes de ponta a ponta e carga, e análise SonarCloud.
 
 **Segurança:** HTTP Basic com BCrypt e papéis está implementado nesta branch. O ambiente Compose limita as portas ao localhost; não exponha publicamente sem HTTPS, gestão de segredos e revisão de segurança.
