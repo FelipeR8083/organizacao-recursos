@@ -39,7 +39,7 @@ public class ReservaService {
         EstadoReserva anterior = reserva.getEstado();
         reserva.transicionarPara(estado);
         Reserva salva = reservas.save(reserva);
-        auditoria.save(new ReservaAuditoria(salva, anterior, estado, Instant.now(clock), "API"));
+        auditoria.save(new ReservaAuditoria(salva, anterior, estado, Instant.now(clock), origemAtual()));
         return salva;
     }
 
@@ -49,6 +49,14 @@ public class ReservaService {
             throw new NoSuchElementException("Reserva não encontrada");
         }
         return auditoria.findByReserva_IdOrderByOcorridoEmAscIdAsc(reservaId);
+    }
+
+    private String origemAtual() {
+        var autenticacao = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+        if (autenticacao == null || !autenticacao.isAuthenticated()
+                || "anonymousUser".equals(autenticacao.getPrincipal())) return "API";
+        return autenticacao.getName();
     }
 
     @Transactional
@@ -72,7 +80,7 @@ public class ReservaService {
         }
         Reserva criada = reservas.save(new Reserva(recurso, periodo, solicitanteNormalizado));
         auditoria.save(new ReservaAuditoria(criada, null, EstadoReserva.SOLICITADA,
-                Instant.now(clock), "API"));
+                Instant.now(clock), origemAtual()));
         return criada;
     }
 }
