@@ -157,5 +157,27 @@ class FluxoCompletoE2ETest {
         ResponseEntity<JsonNode> notificacoes = responsavel.getForEntity("/notificacoes", JsonNode.class);
         assertTrue(notificacoes.getStatusCode().is2xxSuccessful());
         assertTrue(notificacoes.getBody().size() >= 2);
+
+        // RF-10: auditoria administrativa existe, é restrita e não vaza senhas.
+        ResponseEntity<JsonNode> auditoriaAdmin = admin.getForEntity(
+                "/auditoria-administrativa", JsonNode.class);
+        assertEquals(HttpStatus.OK, auditoriaAdmin.getStatusCode());
+        assertTrue(auditoriaAdmin.getBody().size() >= 5);
+        assertTrue(auditoriaAdmin.getBody().toString().contains("RECURSO"));
+        assertTrue(auditoriaAdmin.getBody().toString().contains("USUARIO"));
+        assertFalse(auditoriaAdmin.getBody().toString().contains("senha-solicitante-123"));
+        assertEquals(HttpStatus.FORBIDDEN,
+                solicitante.getForEntity("/auditoria-administrativa", String.class).getStatusCode());
+
+        ResponseEntity<JsonNode> recursoAlterado = admin.exchange("/recursos/" + salaId,
+                HttpMethod.PUT,
+                new HttpEntity<>(Map.of("nome", "Sala E2E atualizada", "restrito", false,
+                        "emManutencao", false, "capacidade", 25, "localizacao", "Bloco E",
+                        "competencias", "Aula e laboratorio"), jsonHeaders()), JsonNode.class);
+        assertEquals(HttpStatus.OK, recursoAlterado.getStatusCode());
+        ResponseEntity<JsonNode> auditoriaAtualizada = admin.getForEntity(
+                "/auditoria-administrativa", JsonNode.class);
+        assertTrue(auditoriaAtualizada.getBody().toString().contains("ALTERACAO"));
+
     }
 }
