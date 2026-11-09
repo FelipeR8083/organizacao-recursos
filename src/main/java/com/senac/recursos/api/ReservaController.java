@@ -60,8 +60,11 @@ public class ReservaController {
     }
 
     @PatchMapping("/{id}/estado")
-    public Reserva alterarEstado(@PathVariable Long id, @Valid @RequestBody AlteracaoEstado req) {
-        return service.alterarEstado(id, req.estado());
+    public Reserva alterarEstado(@PathVariable Long id, @Valid @RequestBody AlteracaoEstado req,
+                                  Authentication autenticacao) {
+        boolean responsavel = autenticacao.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_RESPONSAVEL"));
+        return service.alterarEstado(id, req.estado(), autenticacao.getName(), responsavel);
     }
 
     @PostMapping
