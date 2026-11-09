@@ -42,3 +42,19 @@ O resultado real deve ser conferido em resultados-reservas.jtl, no relatório HT
 ## Critério de aprovação funcional
 
 A proteção contra dupla reserva passa se houver exatamente uma reserva aceita e nenhuma duplicidade. Metas de latência/throughput devem ser definidas pelo docente ou equipe antes de avaliar performance; não foram inventadas neste plano.
+
+## Resultado real — GitHub Actions 42711044633
+
+O teste executou com aplicação e PostgreSQL iniciados por Docker Compose no runner do GitHub, Apache JMeter 5.6.3 e **20 threads** no mesmo recurso e intervalo. [Execução aprovada e artefatos](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/42711044633).
+
+- Total: **20 requisições**.
+- HTTP 201 (reserva aceita): **1**.
+- HTTP 409 (conflito): **19**.
+- Erros de transporte/timeout: **0** na execução aprovada.
+- Latência média: **106,9 ms**.
+- P95 de latência: **209 ms**.
+- Evidências: `resultados-reservas.jtl`, `resultado-jmeter.md`, `relatorio-jmeter/` no artefato `evidencias-jmeter`.
+
+### Registro de defeitos do cenário
+
+A primeira execução falhou ao carregar o arquivo JMX por usar classe `AuthorizationManager` inválida; corrigiu-se para `AuthManager` (commit `1c8e4c86`). Na execução seguinte, 11 solicitações atingiram timeout de 15 segundos, embora não houvesse dupla reserva; aumentou-se o prazo de espera para 90 segundos (commit `f6af1ded`). A execução final cumpriu todos os critérios. O limite de 90 segundos é proteção do cenário, não uma meta de desempenho da aplicação.
