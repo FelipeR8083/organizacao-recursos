@@ -1,7 +1,8 @@
 name: JMeter - Carga de Reservas
 
 on:
-  pull_request:
+  push:
+    branches: [melhorias/qualidade-e-requisitos]
     paths:
       - '.github/workflows/jmeter.yml'
       - 'jmeter/**'
