@@ -109,4 +109,18 @@ class ReservaServiceIntegracaoTest {
                 () -> service.criar(sala.getId(), "prof.ana", hora(10), hora(10)));
         assertEquals(0, reservas.count());
     }
+    @Test
+    void solicitanteVazioOuComEspacosEhRejeitado() {
+        assertThrows(IllegalArgumentException.class,
+                () -> service.criar(sala.getId(), "   ", hora(10), hora(11)));
+        assertThrows(IllegalArgumentException.class,
+                () -> service.criar(sala.getId(), null, hora(10), hora(11)));
+        assertEquals(0, reservas.count());
+    }
+
+    @Test
+    void solicitanteEhArmazenadoSemEspacosNasExtremidades() {
+        Reserva reserva = service.criar(sala.getId(), "  prof.ana  ", hora(10), hora(11));
+        assertEquals("prof.ana", reserva.getSolicitante());
+    }
 }
