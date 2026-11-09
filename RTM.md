@@ -12,14 +12,14 @@ Fonte: enunciado oficial "Especificação do Projeto — Qualidade 2026.2", seç
 | RF-02 | Cadastro e consulta de salas, professores e materiais | Parcial | `TipoRecurso` contempla SALA, PROFESSOR e MATERIAL; `RecursoController` permite listar, cadastrar e atualizar. Foram adicionados capacidade, localização e competências. Ainda faltam gestão de usuários e regras específicas por categoria. |
 | RF-03 | Pesquisa por tipo, capacidade, localização, competência e disponibilidade | Parcial | `GET /recursos` aceita `tipo`, `capacidadeMinima`, `localizacao`, `competencia` e, em conjunto, `inicio`/`fim` para disponibilidade. Testes de integração cobrem os filtros de metadados; falta teste HTTP de disponibilidade e filtro na interface web. |
 | RF-04 | Criação, alteração e cancelamento de reservas | Parcial | Criação e cancelamento estão implementados; o cancelamento verifica titularidade ou papel privilegiado e gera auditoria. Ainda falta alterar período/recurso com nova validação de conflito. |
-| RF-05 | Sobreposição de horários, inclusive na agenda do professor | Parcial | A consulta de conflito verifica sobreposição para o mesmo recurso. Não há evidência de validação cruzada entre professor e sala vinculados à mesma reserva. |
+| RF-05 | Sobreposição de horários, inclusive na agenda do professor | Implementado no código/testes | Reserva pode vincular professor; o serviço bloqueia recurso principal e professor em ordem de ID e consulta conflitos em ambos. Teste de integração cobre duas salas tentando usar o mesmo professor no mesmo horário. |
 | RF-06 | Proteção contra dupla reserva em solicitações simultâneas | Implementado no código/testes | Bloqueio pessimista na linha do recurso antes da consulta de conflitos; teste de concorrência com Testcontainers. Revalidar no CI da revisão final. |
 | RF-07 | Aprovação obrigatória para recursos restritos | Pendente | O atributo `restrito` existe, mas não há autorização por perfil nem regra que exija aprovação de Responsável antes de confirmar a reserva. |
 | RF-08 | Bloqueio de recursos em manutenção | Implementado no código/testes | Serviço rejeita nova reserva quando `emManutencao` está ativo; há teste de integração/concorrência. |
 | RF-09 | Registro de retirada e devolução de materiais/equipamentos | Pendente | Não foram encontrados entidades, endpoints ou fluxo de retirada/devolução. |
 | RF-10 | Histórico auditável de mudanças | Parcial | Auditoria persistente de criação/transições/cancelamento e consulta por API/interface; registra login autenticado. Falta auditar alterações de recurso/reserva e retirada/devolução. |
-| RF-11 | Notificação simulada ou integração com API externa | Pendente | Não foram encontrados adaptador de notificação, simulação ou testes WireMock. |
-| RF-12 | Relatório de utilização, carga horária e conflitos evitados | Pendente | Não foram encontrados endpoints/visões de relatórios ou agregações correspondentes. |
+| RF-11 | Notificação simulada ou integração com API externa | Implementado como simulação | Eventos de solicitação, mudança de estado e cancelamento geram registros persistidos em `notificacoes_simuladas`; consulta é restrita a responsável/administrador. Teste de integração cobre solicitação e transição. Não há integração externa; WireMock fica não aplicável enquanto o canal for simulado. |
+| RF-12 | Relatório de utilização, carga horária e conflitos evitados | Implementado no código/testes | `GET /relatorios/utilizacao` calcula reservas e minutos alocados por recurso no intervalo; `GET /relatorios/conflitos` consulta tentativas recusadas persistidas em transação independente. Testes de integração cobrem minutos alocados e persistência do conflito. |
 | RF-13 | Interface responsiva e mensagens compreensíveis | Parcial | Há interface web e tratamento de erros HTTP com mensagens em português. Responsividade precisa ser validada em diferentes larguras e documentada com evidência. |
 | RF-14 | Documentação de API ou fluxos públicos | Parcial | README e documentação técnica descrevem endpoints/fluxos. Foi adicionada dependência Springdoc OpenAPI; validar Swagger UI em `/swagger-ui/index.html` e complementar exemplos/descrições dos endpoints. |
 
@@ -39,7 +39,7 @@ Fonte: enunciado oficial "Especificação do Projeto — Qualidade 2026.2", seç
 | GitHub Actions em pull requests | Implementado | Workflow executa em pull_request e push nas branches configuradas. |
 | JaCoCo | Parcial | Relatório é gerado e publicado como artefato; metas mínimas de 80% linhas e 70% branches ainda precisam ser configuradas e comprovadas. |
 | SonarCloud | Pendente | Não foi encontrada configuração/projeto integrado nem relatório. |
-| JMeter | Pendente | Não há plano, script ou resultado de teste de carga. |
+| JMeter | Parcial | Plano e script concorrente em `docs/PLANO-TESTE-CARGA.md` e `jmeter/reservas-concorrentes.jmx`; falta executar em ambiente controlado e anexar JTL/relatório com métricas. |
 | Autorização, validação e erros seguros | Parcial | HTTP Basic com BCrypt e autorização por papel estão implementados; validação de entrada e mapeamento de erros existentes. Falta teste completo de autorização por propriedade/fluxo e revisão de segurança independente. |
 
 ## Metas mensuráveis do enunciado
