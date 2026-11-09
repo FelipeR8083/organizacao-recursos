@@ -10,6 +10,8 @@ import jakarta.validation.constraints.Positive;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import com.senac.recursos.servico.AuditoriaAdministrativaService;
 import java.time.Instant;
 import java.util.*;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -33,13 +35,20 @@ public class RecursoController {
     }
     private final RecursoRepository repository;
     private final ReservaRepository reservas;
+    private final AuditoriaAdministrativaService auditoriaAdministrativa;
 
-    public RecursoController(RecursoRepository repository) { this(repository, null); }
+    public RecursoController(RecursoRepository repository) { this(repository, null, null); }
+
+    public RecursoController(RecursoRepository repository, ReservaRepository reservas) {
+        this(repository, reservas, null);
+    }
 
     @Autowired
-    public RecursoController(RecursoRepository repository, ReservaRepository reservas) {
+    public RecursoController(RecursoRepository repository, ReservaRepository reservas,
+                             AuditoriaAdministrativaService auditoriaAdministrativa) {
         this.repository = repository;
         this.reservas = reservas;
+        this.auditoriaAdministrativa = auditoriaAdministrativa;
     }
 
     @GetMapping
@@ -66,23 +75,38 @@ public class RecursoController {
     }
 
     @PostMapping
+    @Transactional
     public ResponseEntity<Recurso> criar(@Valid @RequestBody Dados dados) {
         validarNome(dados.tipo(), dados.nome(), null);
         Recurso recurso = new Recurso(dados.tipo(), dados.nome().trim(), dados.restrito());
         recurso.setEmManutencao(dados.emManutencao());
         recurso.atualizarDetalhes(dados.capacidade(), dados.localizacao(), dados.competencias());
-        return ResponseEntity.status(HttpStatus.CREATED).body(repository.save(recurso));
+        Recurso salvo = repository.save(recurso);
+        if (auditoriaAdministrativa != null) {
+            auditoriaAdministrativa.registrar("RECURSO", salvo.getId(), "CRIACAO",
+                    "tipo=" + salvo.getTipo() + ", nome=" + salvo.getNome());
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
 
     @PutMapping("/{id}")
+    @Transactional
     public Recurso atualizar(@PathVariable Long id, @Valid @RequestBody Alteracao dados) {
         Recurso recurso = repository.findById(id).orElseThrow(() -> new NoSuchElementException("Recurso não encontrado"));
         validarNome(recurso.getTipo(), dados.nome(), id);
+        String anterior = "nome=" + recurso.getNome() + ", restrito=" + recurso.isRestrito()
+                + ", manutencao=" + recurso.isEmManutencao();
         recurso.setNome(dados.nome().trim());
         recurso.setRestrito(dados.restrito());
         recurso.setEmManutencao(dados.emManutencao());
         recurso.atualizarDetalhes(dados.capacidade(), dados.localizacao(), dados.competencias());
-        return repository.save(recurso);
+        Recurso salvo = repository.save(recurso);
+        if (auditoriaAdministrativa != null) {
+            auditoriaAdministrativa.registrar("RECURSO", salvo.getId(), "ALTERACAO",
+                    anterior + " -> nome=" + salvo.getNome() + ", restrito=" + salvo.isRestrito()
+                            + ", manutencao=" + salvo.isEmManutencao());
+        }
+        return salvo;
     }
 
     private static String normalizarFiltro(String valor) {
