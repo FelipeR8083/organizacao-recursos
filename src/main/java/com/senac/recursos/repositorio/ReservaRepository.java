@@ -11,8 +11,8 @@ import java.util.Optional;
 public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 
     @Query("""
-        select count(r) > 0 from Reserva r
-        where (r.recurso.id = :recursoId or r.professor.id = :recursoId)
+        select count(r) > 0 from Reserva r left join r.professor p
+        where (r.recurso.id = :recursoId or p.id = :recursoId)
           and r.estado in :estados
           and r.inicio < :fim and r.fim > :inicio
         """)
