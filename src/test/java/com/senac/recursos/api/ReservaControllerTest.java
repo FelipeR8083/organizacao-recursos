@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -24,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /** Testa o contrato HTTP do controller; o serviço é isolado com mock (teste unitário). */
 @WebMvcTest(ReservaController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class ReservaControllerTest {
 
     private static final Instant INICIO = Instant.parse("2026-11-10T10:00:00Z");
