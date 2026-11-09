@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: recursos-db
+    environment:
+      POSTGRES_DB: recursos
+      POSTGRES_USER: recursos
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-recursos}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U recursos -d recursos"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: organizacao-recursos
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/recursos
+      DB_USER: recursos
+      DB_PASSWORD: ${DB_PASSWORD:-recursos}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
