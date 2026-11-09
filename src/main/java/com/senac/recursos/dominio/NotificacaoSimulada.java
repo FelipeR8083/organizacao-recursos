@@ -21,10 +21,15 @@ public class NotificacaoSimulada {
 
     protected NotificacaoSimulada() {}
     public NotificacaoSimulada(String destinatario, String assunto, String mensagem, Instant ocorridoEm) {
+        this(destinatario, assunto, mensagem, ocorridoEm, "SIMULADO");
+    }
+    public NotificacaoSimulada(String destinatario, String assunto, String mensagem,
+                               Instant ocorridoEm, String canal) {
         this.destinatario = destinatario;
         this.assunto = assunto;
         this.mensagem = mensagem;
         this.ocorridoEm = ocorridoEm;
+        this.canal = canal;
     }
     public Long getId() { return id; }
     public String getDestinatario() { return destinatario; }
