@@ -1,0 +1,105 @@
+name: JMeter - Carga de Reservas
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/jmeter.yml'
+      - 'jmeter/**'
+      - 'docker-compose.yml'
+      - 'Dockerfile'
+      - 'src/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  concorrencia:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DB_PASSWORD: senha-temporaria-jmeter-2026
+      APP_ADMIN_USERNAME: admin-carga
+      APP_ADMIN_PASSWORD: senha-temporaria-admin-jmeter-2026
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Subir aplicação e PostgreSQL
+        run: docker compose up --build -d
+
+      - name: Aguardar API e cadastrar recurso de carga
+        run: |
+          for i in $(seq 1 90); do
+            if curl --max-time 3 -sf -u "$APP_ADMIN_USERNAME:$APP_ADMIN_PASSWORD" http://localhost:8080/sessao > /dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          curl -fsS -u "$APP_ADMIN_USERNAME:$APP_ADMIN_PASSWORD" http://localhost:8080/sessao
+          response=$(curl -fsS -u "$APP_ADMIN_USERNAME:$APP_ADMIN_PASSWORD" \
+            -H 'Content-Type: application/json' \
+            -d '{"tipo":"SALA","nome":"Sala para JMeter","restrito":false,"emManutencao":false}' \
+            http://localhost:8080/recursos)
+          RESOURCE_ID=$(echo "$response" | python3 -c 'import json,sys;print(json.load(sys.stdin)["id"])')
+          echo "RESOURCE_ID=$RESOURCE_ID" >> "$GITHUB_ENV"
+
+      - name: Instalar JMeter 5.6.3 com verificação SHA512
+        run: |
+          curl --retry 3 -fsSL -O https://downloads.apache.org/jmeter/binaries/apache-jmeter-5.6.3.tgz
+          curl --retry 3 -fsSL -O https://downloads.apache.org/jmeter/binaries/apache-jmeter-5.6.3.tgz.sha512
+          sha512sum -c apache-jmeter-5.6.3.tgz.sha512
+          tar -xzf apache-jmeter-5.6.3.tgz
+
+      - name: Executar 20 tentativas de reserva simultâneas
+        env:
+          HEAP: '-Xms512m -Xmx512m'
+        run: |
+          ./apache-jmeter-5.6.3/bin/jmeter -n -t jmeter/reservas-concorrentes.jmx \
+            -Jhost=localhost -Jport=8080 -JbaseUrl=http://localhost:8080 \
+            -Jlogin="$APP_ADMIN_USERNAME" -Jpassword="$APP_ADMIN_PASSWORD" \
+            -JresourceId="$RESOURCE_ID" -Jthreads=20 \
+            -Jstart=2030-12-01T10:00:00Z -Jend=2030-12-01T11:00:00Z \
+            -l resultados-reservas.jtl -e -o relatorio-jmeter
+
+      - name: Avaliar resultados de concorrência
+        run: |
+          python3 - <<'PY'
+          import csv, collections, statistics
+          with open('resultados-reservas.jtl', newline='', encoding='utf-8') as arquivo:
+              dados = list(csv.DictReader(arquivo))
+          codigos = collections.Counter(r.get('responseCode') for r in dados)
+          print('Amostras:', len(dados), 'Códigos:', dict(codigos))
+          tempos = sorted(int(r.get('elapsed') or 0) for r in dados)
+          if tempos:
+              print('Latência média (ms):', round(statistics.mean(tempos), 1))
+              print('P95 (ms):', tempos[min(len(tempos)-1, int(len(tempos)*0.95))])
+          assert len(dados) == 20, 'Esperadas 20 requisições'
+          assert codigos['201'] == 1, 'Deve existir exatamente uma reserva criada'
+          assert codigos['409'] == 19, 'As 19 solicitações restantes devem receber conflito'
+          with open('resultado-jmeter.md','w',encoding='utf-8') as f:
+              f.write('# Teste de concorrência JMeter\n\n')
+              f.write(f'Amostras: {len(dados)}; HTTP 201: {codigos["201"]}; HTTP 409: {codigos["409"]}.\n')
+              f.write('Critério: somente uma reserva aceita e dezenove conflitos.\n')
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evidencias-jmeter
+          path: |
+            resultados-reservas.jtl
+            resultado-jmeter.md
+            relatorio-jmeter/
+          if-no-files-found: warn
+
+      - name: Logs da aplicação em caso de falha
+        if: failure()
+        run: docker compose logs --tail=250 app db
+
+      - name: Encerrar contêineres
+        if: always()
+        run: docker compose down
