@@ -12,7 +12,7 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 
     @Query("""
         select count(r) > 0 from Reserva r
-        where r.recurso.id = :recursoId
+        where (r.recurso.id = :recursoId or r.professor.id = :recursoId)
           and r.estado in :estados
           and r.inicio < :fim and r.fim > :inicio
         """)
