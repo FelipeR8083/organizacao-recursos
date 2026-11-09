@@ -33,7 +33,7 @@ Fonte: enunciado oficial "Especificação do Projeto — Qualidade 2026.2", seç
 | RF-03 | Oferecer recurso indisponível ou incompatível | `ReservaServiceIntegracaoTest.pesquisaRecursosPorTipoCapacidadeLocalizacaoECompetencia` e `FluxoCompletoE2ETest` (livre, ocupado, adjacente) | `RecursoRepository.java`, formulário de pesquisa em `static/index.html`, GitHub Actions |
 | RF-04 | Alteração/cancelamento causar sobreposição ou violar titularidade | `ReservaServiceIntegracaoTest.titularPodeAlterarPeriodoEAlteracaoGeraAuditoria`, `reagendamentoTambemVerificaConflitoDeHorario`, testes de cancelamento | `ReservaService.java`, `ReservaController.java` |
 | RF-05 | Professor alocado em duas salas no mesmo período | `ReservaServiceIntegracaoTest.professorVinculadoNaoPodeSerAlocadoEmDuasSalasNoMesmoHorario` | `Reserva.java`, `ReservaRepository.java` |
-| RF-06 | Dupla reserva sob concorrência | `ReservaConcorrenciaTest.solicitacoesSimultaneasProduzemUmaUnicaReserva`; JMeter planejado | `ReservaService.java`, `jmeter/reservas-concorrentes.jmx` |
+| RF-06 | Dupla reserva sob concorrência | `ReservaConcorrenciaTest.solicitacoesSimultaneasProduzemUmaUnicaReserva`; JMeter executado com 20 threads (1 resposta 201, 19 respostas 409) no CI 42711044633 | `ReservaService.java`, `jmeter/reservas-concorrentes.jmx` |
 | RF-07 | Recurso restrito utilizado sem autorização | `ReservaServiceIntegracaoTest.somenteResponsavelPodeAprovarReservaDeRecursoRestrito`; validar papel RESPONSAVEL na UI/API | `ReservaService.java`, `SegurancaConfig.java` |
 | RF-08 | Reserva durante manutenção | `ReservaConcorrenciaTest.naoPermiteReservarRecursoEmManutencao` | `ReservaService.java` |
 | RF-09 | Material não devolvido ou retirada sem aprovação | `ReservaServiceIntegracaoTest.registraRetiradaEDevolucaoDeMaterialComHistoricoDeEstados`, `impedeRetiradaDeReservaQueNaoEstejaAprovada` | `MovimentacaoMaterialService.java`, migração V3 |
@@ -59,7 +59,7 @@ Fonte: enunciado oficial "Especificação do Projeto — Qualidade 2026.2", seç
 | GitHub Actions em pull requests | Implementado | Workflow executa em pull_request e push nas branches configuradas. |
 | JaCoCo | Metas atingidas | GitHub Actions [42708687473](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/42708687473) mediu 87,81% de linhas e 71,64% de branches, com 115 testes aprovados. O `pom.xml` contém regra de check para bloquear regressões abaixo de 80%/70%; validar no SHA final. |
 | SonarCloud | Parcial | Workflow e `sonar-project.properties` estão preparados; falta cadastrar SONAR_TOKEN, SONAR_ORGANIZATION e SONAR_PROJECT_KEY e executar análise real. |
-| JMeter | Parcial | Plano e script concorrente em `docs/PLANO-TESTE-CARGA.md` e `jmeter/reservas-concorrentes.jmx`; falta executar em ambiente controlado e anexar JTL/relatório com métricas. |
+| JMeter | Evidência aprovada | GitHub Actions [42711044633](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/42711044633): 20 solicitações concorrentes, 1 HTTP 201, 19 HTTP 409, latência média 106,9 ms, P95 209 ms. JTL, HTML e resumo publicados como artefatos. |
 | Autorização, validação e erros seguros | Implementado no código/testes | HTTP Basic + BCrypt + RBAC e autorização por titularidade testada em serviço e E2E; mensagens HTTP compreensíveis. Falta revisão externa de segurança para garantir a meta de zero vulnerabilidades críticas. |
 
 ## Metas mensuráveis do enunciado
@@ -79,11 +79,11 @@ Fonte: enunciado oficial "Especificação do Projeto — Qualidade 2026.2", seç
 - [x] Plano e suíte automatizada; relatório final depende dos resultados de CI/cobertura/JMeter/SonarCloud.
 - [x] Pipeline de integração contínua.
 - [ ] Relatórios SonarCloud e JaCoCo com metas atingidas.
-- [ ] Plano e resultado do teste de carga JMeter.
+- [x] Plano e resultado do teste de carga JMeter (execução 42711044633; evidências anexadas).
 - [x] Registro priorizado de defeitos e riscos.
 - [ ] Relatório final de qualidade (há relatório candidato; finalizar após evidências reais).
 - [x] Roteiro de apresentação e demonstração (slides finais/capturas devem ser montados).
 
 ## Critério para declarar pronto
 
-Os 14 requisitos funcionais têm implementação no código e testes associados; RF-13 e RF-14 ainda exigem validação visual na apresentação. Não declarar a entrega acadêmica integralmente concluída até SonarCloud, resultado real JMeter, revisão de segurança, evidências finais e apresentação estarem conferidos. O enunciado oficial é a fonte de verdade para a aceitação.
+Os 14 requisitos funcionais têm implementação no código e testes associados; RF-13 e RF-14 ainda exigem validação visual na apresentação. Não declarar a entrega acadêmica integralmente concluída até SonarCloud, revisão de segurança, evidências visuais finais e apresentação estarem conferidos. O enunciado oficial é a fonte de verdade para a aceitação.
