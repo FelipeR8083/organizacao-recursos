@@ -184,6 +184,7 @@ Se o banco já possuir recursos duplicados, leia primeiro `LEIA-PRIMEIRO-DUPLICA
 - Relatório de qualidade (versão candidata): [docs/RELATORIO-QUALIDADE.md](docs/RELATORIO-QUALIDADE.md).
 - Roteiro de apresentação: [docs/APRESENTACAO.md](docs/APRESENTACAO.md).
 - Plano de validação: [docs/PLANO-DE-VALIDACAO.md](docs/PLANO-DE-VALIDACAO.md).
+- Configuração segura do SonarCloud: [docs/CONFIGURAR-SONARCLOUD.md](docs/CONFIGURAR-SONARCLOUD.md).
 - Exemplos dos endpoints e permissões: [docs/EXEMPLOS-API.md](docs/EXEMPLOS-API.md).
 - Checklist de responsividade e acessibilidade: [docs/TESTE-RESPONSIVIDADE.md](docs/TESTE-RESPONSIVIDADE.md).
 - Cenários BDD e evidência de defeito corrigido: [docs/EVIDENCIA-BDD.md](docs/EVIDENCIA-BDD.md).
