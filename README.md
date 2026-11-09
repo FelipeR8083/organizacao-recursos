@@ -38,6 +38,8 @@ Copie `.env.example` para `.env` na raiz do projeto e substitua o valor por uma 
 
 ```dotenv
 DB_PASSWORD=escolha-uma-senha-local
+APP_ADMIN_USERNAME=admin
+APP_ADMIN_PASSWORD=defina-uma-senha-com-12-caracteres-ou-mais
 ```
 
 Suba PostgreSQL e aplicação:
@@ -64,7 +66,7 @@ Para apagar também o volume de dados (operação destrutiva):
 docker compose down -v
 ```
 
-O Compose publica o PostgreSQL apenas em 127.0.0.1. A senha é obrigatória via .env.
+O Compose publica aplicação e PostgreSQL apenas em 127.0.0.1. DB_PASSWORD e as credenciais APP_ADMIN_* são obrigatórias via .env. O primeiro administrador é criado automaticamente na primeira inicialização.
 
 Execute a aplicação diretamente com Maven:
 
