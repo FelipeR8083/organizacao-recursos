@@ -50,7 +50,7 @@ Fonte: enunciado oficial "Especificação do Projeto — Qualidade 2026.2", seç
 | Testes unitários JUnit 5 | Parcial/implementado | Existem testes de domínio e serviço; revisar cobertura e cenários de borda. |
 | Testes parametrizados | Pendente de comprovação | Não marcar como atendido até localizar testes parametrizados explícitos e úteis. |
 | Testes de integração | Implementado no código | Testcontainers com PostgreSQL real; validar execução final. |
-| Testes de API em caixa-preta | Parcial | MockMvc testa contrato HTTP dentro da aplicação; falta evidência de suíte black-box externa contra aplicação iniciada. |
+| Testes de API em caixa-preta | Implementado para API | `FluxoCompletoE2ETest` usa TestRestTemplate contra servidor iniciado e PostgreSQL real; `AutorizacaoApiTest` cobre 401/403. Não substitui teste de navegador. |
 | Testes end-to-end | Implementado para fluxo API | `FluxoCompletoE2ETest` percorre criação de recursos/usuários, reserva, autorização, aprovação, auditoria, relatório e notificação com aplicação iniciada e PostgreSQL Testcontainers. Ainda não é teste de navegador. |
 | Testcontainers | Implementado no código | PostgreSQL containerizado nos testes de integração/concorrência. |
 | WireMock | Implementado | Webhook de notificação opcional é testado com WireMock; sem URL configurada, o sistema registra notificação simulada. |
@@ -58,7 +58,7 @@ Fonte: enunciado oficial "Especificação do Projeto — Qualidade 2026.2", seç
 | TDD/BDD com evidências | Pendente de comprovação | Histórico de commits isoladamente não comprova ciclo red-green-refactor nem cenário BDD documentado. |
 | GitHub Actions em pull requests | Implementado | Workflow executa em pull_request e push nas branches configuradas. |
 | JaCoCo | Parcial | Relatório é gerado e publicado como artefato; metas mínimas de 80% linhas e 70% branches ainda precisam ser configuradas e comprovadas. |
-| SonarCloud | Pendente | Não foi encontrada configuração/projeto integrado nem relatório. |
+| SonarCloud | Parcial | Workflow e `sonar-project.properties` estão preparados; falta cadastrar SONAR_TOKEN, SONAR_ORGANIZATION e SONAR_PROJECT_KEY e executar análise real. |
 | JMeter | Parcial | Plano e script concorrente em `docs/PLANO-TESTE-CARGA.md` e `jmeter/reservas-concorrentes.jmx`; falta executar em ambiente controlado e anexar JTL/relatório com métricas. |
 | Autorização, validação e erros seguros | Parcial | HTTP Basic com BCrypt e autorização por papel estão implementados; validação de entrada e mapeamento de erros existentes. Falta teste completo de autorização por propriedade/fluxo e revisão de segurança independente. |
 
@@ -74,15 +74,15 @@ Fonte: enunciado oficial "Especificação do Projeto — Qualidade 2026.2", seç
 - [x] Repositório Git com histórico de trabalho.
 - [x] Aplicação e instruções iniciais de instalação (validar demonstração em ambiente limpo).
 - [x] README e documentação técnica inicial.
-- [ ] RTM completa com requisito, risco, teste e evidência (esta matriz é a base; completar risco/teste/evidência por requisito).
-- [x] Diagramas de contexto e contêineres; faltam diagramas de sequência das operações críticas.
-- [ ] Plano, suíte automatizada e relatório final de testes.
+- [x] RTM com requisito, risco, teste e evidência (itens parciais e pendentes estão identificados).
+- [x] Diagramas de contexto, contêineres, componentes e sequência das operações críticas.
+- [x] Plano e suíte automatizada; relatório final depende dos resultados de CI/cobertura/JMeter/SonarCloud.
 - [x] Pipeline de integração contínua.
 - [ ] Relatórios SonarCloud e JaCoCo com metas atingidas.
 - [ ] Plano e resultado do teste de carga JMeter.
-- [ ] Registro priorizado de defeitos encontrados e corrigidos.
-- [ ] Relatório final de qualidade.
-- [ ] Apresentação e roteiro de demonstração.
+- [x] Registro priorizado de defeitos e riscos.
+- [ ] Relatório final de qualidade (há relatório candidato; finalizar após evidências reais).
+- [x] Roteiro de apresentação e demonstração (slides finais/capturas devem ser montados).
 
 ## Critério para declarar pronto
 
