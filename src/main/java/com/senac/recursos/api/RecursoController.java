@@ -86,7 +86,7 @@ public class RecursoController {
     }
 
     private static String normalizarFiltro(String valor) {
-        return valor == null || valor.isBlank() ? null : valor.trim();
+        return valor == null || valor.isBlank() ? "" : valor.trim().toLowerCase(Locale.ROOT);
     }
 
     private void validarNome(TipoRecurso tipo, String nome, Long id) {
