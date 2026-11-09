@@ -331,4 +331,26 @@ class ReservaServiceIntegracaoTest {
         assertEquals(EstadoReserva.APROVADA, reservas.findById(reserva.getId()).orElseThrow().getEstado());
     }
 
+    @Test
+    void solicitanteVisualizaSomenteSuasReservasEHistoricos() {
+        Reserva deAna = service.criar(sala.getId(), "ana", hora(10), hora(11));
+        Reserva deBia = service.criar(sala.getId(), "bia", hora(11), hora(12));
+
+        assertEquals(1, service.listarPara("ANA", false).size());
+        assertEquals(deAna.getId(), service.listarPara("ANA", false).get(0).getId());
+        assertEquals(2, service.listarPara("responsavel", true).size());
+
+        assertEquals(1, service.listarAuditoriaPara(deAna.getId(), "ana", false).size());
+        assertThrows(NoSuchElementException.class,
+                () -> service.listarAuditoriaPara(deBia.getId(), "ana", false));
+        assertEquals(1, service.listarAuditoriaPara(deBia.getId(), "responsavel", true).size());
+    }
+
+    @Test
+    void solicitanteSemIdentidadeNaoPodeConsultarReservas() {
+        service.criar(sala.getId(), "ana", hora(10), hora(11));
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> service.listarPara(null, false));
+    }
+
 }
