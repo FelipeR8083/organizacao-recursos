@@ -173,4 +173,22 @@ class ReservaServiceIntegracaoTest {
         assertTrue(recursos.pesquisar(TipoRecurso.SALA, 20, null, null).isEmpty());
     }
 
+
+    @Test
+    void solicitantePodeCancelarSuaReservaComAuditoria() {
+        Reserva reserva = service.criar(sala.getId(), "prof.ana", hora(10), hora(11));
+        service.cancelar(reserva.getId(), "prof.ana", false);
+        assertEquals(EstadoReserva.CANCELADA, reservas.findById(reserva.getId()).orElseThrow().getEstado());
+        assertEquals(2, service.listarAuditoria(reserva.getId()).size());
+    }
+
+    @Test
+    void solicitanteNaoPodeCancelarReservaDeOutraPessoa() {
+        Reserva reserva = service.criar(sala.getId(), "prof.ana", hora(10), hora(11));
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> service.cancelar(reserva.getId(), "prof.bia", false));
+        assertEquals(EstadoReserva.SOLICITADA, reservas.findById(reserva.getId()).orElseThrow().getEstado());
+        assertEquals(1, service.listarAuditoria(reserva.getId()).size());
+    }
+
 }
