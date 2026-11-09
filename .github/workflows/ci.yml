@@ -1,3 +1,4 @@
+
 name: CI
 
 on:
@@ -24,6 +25,8 @@ jobs:
           docker info
 
       - name: Build, testes e cobertura (JaCoCo)
+        env:
+          DOCKER_API_VERSION: "1.44"
         run: mvn -B verify
 
       - uses: actions/upload-artifact@v4
