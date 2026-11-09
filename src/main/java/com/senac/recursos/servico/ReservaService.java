@@ -43,6 +43,21 @@ public class ReservaService {
         return salva;
     }
 
+
+    @Transactional
+    public void cancelar(Long id, String login, boolean podeGerenciar) {
+        Reserva reserva = reservas.buscarComLock(id)
+                .orElseThrow(() -> new NoSuchElementException("Reserva não encontrada"));
+        if (!podeGerenciar && (login == null || !reserva.getSolicitante().equalsIgnoreCase(login))) {
+            throw new org.springframework.security.access.AccessDeniedException("Você só pode cancelar suas próprias reservas");
+        }
+        EstadoReserva anterior = reserva.getEstado();
+        reserva.transicionarPara(EstadoReserva.CANCELADA);
+        Reserva salva = reservas.save(reserva);
+        auditoria.save(new ReservaAuditoria(salva, anterior, EstadoReserva.CANCELADA,
+                Instant.now(clock), origemAtual()));
+    }
+
     @Transactional(readOnly = true)
     public List<ReservaAuditoria> listarAuditoria(Long reservaId) {
         if (!reservas.existsById(reservaId)) {
