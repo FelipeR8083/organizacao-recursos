@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.time.Instant;
 import java.util.*;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -33,6 +34,9 @@ public class RecursoController {
     private final RecursoRepository repository;
     private final ReservaRepository reservas;
 
+    public RecursoController(RecursoRepository repository) { this(repository, null); }
+
+    @Autowired
     public RecursoController(RecursoRepository repository, ReservaRepository reservas) {
         this.repository = repository;
         this.reservas = reservas;
@@ -54,6 +58,7 @@ public class RecursoController {
         List<Recurso> encontrados = repository.pesquisar(tipo, capacidadeMinima,
                 normalizarFiltro(localizacao), normalizarFiltro(competencia));
         if (inicio == null) return encontrados;
+        if (reservas == null) throw new IllegalStateException("Consulta de disponibilidade indisponível neste contexto");
         return encontrados.stream()
                 .filter(r -> !r.isEmManutencao())
                 .filter(r -> !reservas.existeConflito(r.getId(), EstadoReserva.ativos(), inicio, fim))
