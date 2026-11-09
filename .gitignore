@@ -5,4 +5,5 @@ target/
 *.dump
 .env
 .env.*
+!.env.example
 *.log
