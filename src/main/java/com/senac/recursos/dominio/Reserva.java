@@ -34,6 +34,16 @@ public class Reserva {
         this.solicitante = solicitante;
     }
 
+    public void reagendar(Recurso novoRecurso, Recurso novoProfessor, Periodo periodo) {
+        if (estado != EstadoReserva.SOLICITADA) {
+            throw new IllegalStateException("Somente reservas solicitadas podem ser alteradas");
+        }
+        this.recurso = novoRecurso;
+        this.professor = novoProfessor;
+        this.inicio = periodo.inicio();
+        this.fim = periodo.fim();
+    }
+
     public void transicionarPara(EstadoReserva destino) {
         if (!estado.podeIrPara(destino)) {
             throw new IllegalStateException("Transição inválida: " + estado + " -> " + destino);
