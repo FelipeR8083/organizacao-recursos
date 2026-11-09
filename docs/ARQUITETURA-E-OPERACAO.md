@@ -2,83 +2,109 @@
 
 ## Visão geral
 
-O sistema é uma aplicação monolítica Spring Boot. A interface web estática é servida pela própria aplicação; a API REST aplica as regras de negócio; Spring Data JPA persiste os dados em PostgreSQL.
+Aplicação monolítica Spring Boot 3.3 / Java 21. A interface HTML/JavaScript é servida pela aplicação; controladores REST delegam regras para serviços; Spring Data JPA persiste no PostgreSQL. Spring Security aplica HTTP Basic stateless, com usuários e papéis persistidos. Flyway controla o schema por migrações SQL.
 
-## Diagrama de contexto (C4 — nível 1)
+## C4 — contexto (nível 1)
 
 ```mermaid
 flowchart LR
-    U[Pessoa usuária] -->|Navegador HTTP| S[Organização de Recursos]
-    S -->|JDBC / JPA| DB[(PostgreSQL)]
+  U[Solicitante / Responsável / Administrador] -->|HTTP Basic + navegador| S[Organização de Recursos]
+  S -->|JDBC| DB[(PostgreSQL)]
+  S -. webhook opcional .-> N[API de notificação]
 ```
 
-## Diagrama de contêineres (C4 — nível 2)
+## C4 — contêineres (nível 2)
 
 ```mermaid
 flowchart TB
-    Browser[Navegador]
-    subgraph App[Contêiner de aplicação — Spring Boot / Java 21]
-      UI[Interface estática HTML / JavaScript]
-      API[Controladores REST]
-      Service[Serviços e regras de negócio]
-      Domain[Entidades e máquina de estados]
-      Repo[Spring Data JPA]
-      UI --> API
-      API --> Service
-      Service --> Domain
-      Service --> Repo
-    end
-    DB[(PostgreSQL 16)]
-    Browser -->|HTTP :8080| UI
-    Browser -->|HTTP /recursos e /reservas| API
-    Repo -->|JDBC| DB
+  Browser[Navegador]
+  subgraph App[Spring Boot / Java 21]
+    UI[HTML / JavaScript]
+    SEC[Spring Security]
+    API[Controladores REST]
+    APP[Serviços de aplicação]
+    DOMAIN[Entidades e regras de domínio]
+    REPO[Spring Data JPA]
+    UI --> SEC
+    SEC --> API
+    API --> APP
+    APP --> DOMAIN
+    APP --> REPO
+  end
+  DB[(PostgreSQL 16)]
+  Browser -->|HTTP :8080| UI
+  Browser -->|API REST| SEC
+  REPO -->|JDBC| DB
 ```
 
-## Regras de domínio observáveis no código
+## Componentes e sequências
 
-- Reservas usam intervalos semiabertos `[início, fim)`: dois períodos adjacentes não se sobrepõem.
-- A criação bloqueia a linha do recurso com lock pessimista antes de consultar conflitos, serializando solicitações concorrentes para o mesmo recurso.
-- Mudanças de estado bloqueiam a linha da reserva e respeitam as transições definidas em `EstadoReserva`.
-- A criação e cada transição persistem um evento em `reserva_auditoria` na mesma transação.
-- A auditoria atual registra a origem técnica `API`, não a identidade de uma pessoa.
-- Recursos em manutenção não podem receber novas reservas.
-- O nome de recurso é validado sem diferenciar maiúsculas/minúsculas e espaços nas extremidades, por tipo.
+Ver [docs/DIAGRAMAS-SEQUENCIA.md](DIAGRAMAS-SEQUENCIA.md), que contém o diagrama de componentes e as sequências de solicitação, aprovação restrita e retirada/devolução.
 
-## Endpoints implementados
+## Regras de domínio
 
-| Método | Caminho | Responsabilidade |
+- Intervalos semiabertos `[início, fim)`: períodos adjacentes não conflitam.
+- Reserva pode vincular recurso principal e professor; ambos são bloqueados em ordem crescente de ID para reduzir deadlocks.
+- A consulta de conflitos considera o recurso como principal ou professor vinculado.
+- Reserva nova começa em SOLICITADA; somente RESPONSAVEL pode aprovar quando o recurso principal ou professor for restrito.
+- Apenas reservas SOLICITADAS podem ser reagendadas; a operação repete a validação de disponibilidade.
+- Solicitante só altera/cancela suas próprias reservas; RESPONSAVEL/ADMINISTRADOR têm permissão de gestão conforme o endpoint.
+- Retirada exige reserva de MATERIAL aprovada; devolução registra responsável/data e conclui a reserva.
+- Criação, transições, cancelamento e reagendamento geram auditoria; o login autenticado é registrado como origem.
+- Conflitos recusados são persistidos em transação independente para alimentar relatórios mesmo quando a transação da reserva sofre rollback.
+- Notificações são persistidas como SIMULADO; se `NOTIFICACAO_URL` estiver configurada, o serviço envia webhook HTTP e registra canal HTTP.
+
+## Perfis e responsabilidades
+
+| Perfil | Permissões principais |
+|---|---|
+| SOLICITANTE | Consultar recursos/reservas, solicitar reserva, reagendar/cancelar a própria reserva |
+| RESPONSAVEL | Consultar, aprovar reservas restritas, transicionar estados, retirar/devolver materiais, consultar relatórios e notificações |
+| ADMINISTRADOR | Gerenciar recursos/usuários, consultar e gerenciar reservas e relatórios; não substitui o papel RESPONSAVEL para aprovar recurso restrito |
+
+## Endpoints principais
+
+| Método | Caminho | Permissão |
 |---|---|---|
-| GET | `/recursos` | Listar recursos |
-| POST | `/recursos` | Cadastrar recurso |
-| PUT | `/recursos/{id}` | Atualizar nome, restrição e manutenção |
-| GET | `/reservas` | Listar reservas |
-| POST | `/reservas` | Solicitar reserva |
-| PATCH | `/reservas/{id}/estado` | Transicionar estado |
-| GET | `/reservas/{id}/auditoria` | Consultar histórico |
+| GET | `/recursos` | autenticado |
+| POST / PUT | `/recursos`, `/recursos/{id}` | ADMINISTRADOR |
+| GET / POST | `/reservas` | autenticado |
+| PUT / DELETE | `/reservas/{id}` | titular ou perfil privilegiado |
+| PATCH | `/reservas/{id}/estado` | RESPONSAVEL/ADMINISTRADOR; recurso restrito exige RESPONSAVEL |
+| POST | `/reservas/{id}/retirada`, `/devolucao` | RESPONSAVEL/ADMINISTRADOR |
+| GET | `/reservas/{id}/auditoria` | autenticado |
+| GET / POST / PATCH | `/usuarios`, `/usuarios/{id}/ativo` | ADMINISTRADOR |
+| GET | `/relatorios/**`, `/notificacoes` | RESPONSAVEL/ADMINISTRADOR |
+
+Contrato interativo: `/swagger-ui/index.html`; documento OpenAPI: `/v3/api-docs`.
 
 ## Execução local
 
 1. Instale JDK 21, Maven 3.9+ e Docker.
-2. Copie `.env.example` para `.env` e defina uma senha local forte em `DB_PASSWORD`.
+2. Copie `.env.example` para `.env`; defina DB_PASSWORD e credenciais do administrador inicial (senha com pelo menos 12 caracteres).
 3. Execute `docker compose up --build -d`.
-4. Acesse `http://localhost:8080`.
-5. Consulte logs com `docker compose logs -f app`.
-6. Encerre com `docker compose down`. Isso preserva o volume do banco.
+4. Acesse `http://localhost:8080` e autentique-se com APP_ADMIN_USERNAME/APP_ADMIN_PASSWORD.
+5. Cadastre perfis SOLICITANTE e RESPONSAVEL pela API `/usuarios`.
+6. Consulte logs com `docker compose logs -f app`; encerre com `docker compose down`.
+
+As portas são publicadas somente em localhost. HTTP Basic deve ser usado somente em localhost ou protegido por HTTPS em outro ambiente.
+
+## Banco de dados e migrações
+
+Flyway executa `src/main/resources/db/migration/V1...V4`; Hibernate usa `ddl-auto: validate`. Para banco existente sem histórico Flyway, a configuração baseline version 1 preserva o schema anterior e aplica as migrações incrementais. A V2 cria índice único normalizado; se o banco legado contiver nomes duplicados, faça backup e resolva-os antes da migração, seguindo `LEIA-PRIMEIRO-DUPLICADOS.md`.
 
 ## Testes
 
-Execute `mvn clean verify`. Os testes de integração usam PostgreSQL real por meio do Testcontainers e exigem Docker. O relatório JaCoCo fica em `target/site/jacoco/index.html`.
+Execute `mvn clean verify`. Testcontainers requer Docker. Relatório JaCoCo: `target/site/jacoco/index.html`. Estratégia: [PLANO-DE-TESTES.md](PLANO-DE-TESTES.md). Teste de carga: [PLANO-TESTE-CARGA.md](PLANO-TESTE-CARGA.md).
 
-## Limitações e riscos conhecidos
+## Limitações restantes
 
-- Não há autenticação nem autorização. A aplicação não deve ser exposta publicamente nem usada com dados reais.
-- Não há fluxo de aprovação por perfil para recursos restritos.
-- Não há identificação do usuário na auditoria.
-- Não há operações de retirada/devolução de materiais.
-- Não há edição de período de reserva.
-- O schema ainda é gerenciado por `spring.jpa.hibernate.ddl-auto=update`; não há migrações versionadas.
-- A matriz integral dos 14 requisitos não pode ser concluída sem o enunciado oficial do trabalho.
+- Metas de 80% linhas e 70% branches ainda precisam ser medidas e comprovadas; o pipeline não deve ser considerado aprovado até o último commit passar.
+- SonarCloud requer configurar SONAR_TOKEN (secret) e SONAR_ORGANIZATION / SONAR_PROJECT_KEY (variables) no GitHub.
+- JMeter tem plano/script, mas não resultado de execução anexado.
+- E2E automatizado cobre API real + banco; não há automação de navegador.
+- Responsividade precisa de checklist manual e evidência em dispositivos/viewport.
+- Auditoria de alterações cadastrais de recursos/usuários pode ser ampliada.
+- Backup, restauração, monitoramento e hardening HTTPS são atividades pré-produção.
 
-## Recomendações antes de produção
-
-Implementar autenticação/autorização e políticas de acesso, introduzir migrações de banco revisadas, definir backup e recuperação, adicionar testes ponta a ponta e de carga, revisar segredos e configurar observabilidade. A configuração Docker local é para desenvolvimento/demonstração, não uma implantação de produção.
+Este sistema é uma entrega acadêmica em evolução; não expor publicamente nem utilizar dados operacionais reais sem revisão de segurança e operação.
