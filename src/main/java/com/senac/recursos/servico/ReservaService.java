@@ -36,11 +36,22 @@ public class ReservaService {
 
     @Transactional
     public Reserva alterarEstado(Long id, EstadoReserva estado) {
+        return alterarEstado(id, estado, origemAtual(), false);
+    }
+
+    @Transactional
+    public Reserva alterarEstado(Long id, EstadoReserva estado, String login, boolean responsavel) {
         if (estado == null) {
             throw new IllegalArgumentException("Estado é obrigatório");
         }
         Reserva reserva = reservas.buscarComLock(id)
                 .orElseThrow(() -> new NoSuchElementException("Reserva não encontrada"));
+        boolean recursoRestrito = reserva.getRecurso().isRestrito()
+                || (reserva.getProfessor() != null && reserva.getProfessor().isRestrito());
+        if (estado == EstadoReserva.APROVADA && recursoRestrito && !responsavel) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Somente um responsável pode aprovar reserva de recurso restrito");
+        }
         EstadoReserva anterior = reserva.getEstado();
         reserva.transicionarPara(estado);
         Reserva salva = reservas.save(reserva);
