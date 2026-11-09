@@ -41,6 +41,8 @@ jobs:
       - name: Validar Docker Compose
         env:
           DB_PASSWORD: ci-temporary-password
+          APP_ADMIN_USERNAME: ci-admin
+          APP_ADMIN_PASSWORD: ci-temporary-admin-password
         run: docker compose config --quiet
 
       - name: Construir imagem da aplicação
