@@ -150,4 +150,27 @@ class ReservaServiceIntegracaoTest {
         Reserva reserva = service.criar(sala.getId(), "  prof.ana  ", hora(10), hora(11));
         assertEquals("prof.ana", reserva.getSolicitante());
     }
+
+    @Test
+    void pesquisaRecursosPorTipoCapacidadeLocalizacaoECompetencia() {
+        Recurso laboratorio = new Recurso(TipoRecurso.SALA, "Laboratorio 3", false);
+        laboratorio.atualizarDetalhes(30, "Bloco B", "Java, redes e laboratorio");
+        recursos.save(laboratorio);
+
+        var encontrados = recursos.pesquisar(TipoRecurso.SALA, 25, "bloco b", "REDES");
+
+        assertEquals(1, encontrados.size());
+        assertEquals("Laboratorio 3", encontrados.get(0).getNome());
+        assertEquals(30, encontrados.get(0).getCapacidade());
+    }
+
+    @Test
+    void pesquisaNaoRetornaRecursoComCapacidadeInsuficiente() {
+        Recurso pequena = new Recurso(TipoRecurso.SALA, "Sala pequena", false);
+        pequena.atualizarDetalhes(10, "Bloco A", null);
+        recursos.save(pequena);
+
+        assertTrue(recursos.pesquisar(TipoRecurso.SALA, 20, null, null).isEmpty());
+    }
+
 }
