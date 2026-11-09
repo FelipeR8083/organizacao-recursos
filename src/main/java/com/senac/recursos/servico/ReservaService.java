@@ -24,7 +24,11 @@ public class ReservaService {
 
     @Transactional
     public Reserva alterarEstado(Long id, EstadoReserva estado) {
-        Reserva reserva = reservas.findById(id).orElseThrow(() -> new NoSuchElementException("Reserva não encontrada"));
+        if (estado == null) {
+            throw new IllegalArgumentException("Estado é obrigatório");
+        }
+        Reserva reserva = reservas.buscarComLock(id)
+                .orElseThrow(() -> new NoSuchElementException("Reserva não encontrada"));
         reserva.transicionarPara(estado);
         return reservas.save(reserva);
     }
@@ -32,6 +36,10 @@ public class ReservaService {
     @Transactional
     public Reserva criar(Long recursoId, String solicitante, Instant inicio, Instant fim) {
         Periodo periodo = new Periodo(inicio, fim);
+        String solicitanteNormalizado = solicitante == null ? "" : solicitante.trim();
+        if (solicitanteNormalizado.isBlank()) {
+            throw new IllegalArgumentException("Solicitante é obrigatório");
+        }
 
         // O lock na linha do recurso garante que duas solicitações simultâneas
         // sejam processadas uma de cada vez: apenas uma será aceita.
@@ -44,6 +52,6 @@ public class ReservaService {
         if (reservas.existeConflito(recursoId, EstadoReserva.ativos(), periodo.inicio(), periodo.fim())) {
             throw new ConflitoHorarioException("Já existe reserva neste horário para o recurso");
         }
-        return reservas.save(new Reserva(recurso, periodo, solicitante));
+        return reservas.save(new Reserva(recurso, periodo, solicitanteNormalizado));
     }
 }
