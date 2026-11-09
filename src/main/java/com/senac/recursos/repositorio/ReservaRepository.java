@@ -3,8 +3,10 @@ package com.senac.recursos.repositorio;
 import com.senac.recursos.dominio.*;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
+import jakarta.persistence.LockModeType;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Optional;
 
 public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 
@@ -18,4 +20,9 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
                            @Param("estados") Collection<EstadoReserva> estados,
                            @Param("inicio") Instant inicio,
                            @Param("fim") Instant fim);
+
+    /** Serializa transições simultâneas da mesma reserva. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Reserva r where r.id = :id")
+    Optional<Reserva> buscarComLock(@Param("id") Long id);
 }
