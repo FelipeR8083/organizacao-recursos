@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import java.util.Optional;
+import java.util.NoSuchElementException;
 
 class RecursoControllerDuplicidadeTest {
     private final RecursoRepository repository = mock(RecursoRepository.class);
@@ -31,4 +32,29 @@ class RecursoControllerDuplicidadeTest {
         assertThrows(NomeRecursoDuplicadoException.class,
             () -> controller.atualizar(2L, new RecursoController.Alteracao("Sala 101", false, false)));
     }
+
+    @Test void atualizaNomeRestricaoEManutencaoDoRecurso() {
+        Recurso existente = new Recurso(TipoRecurso.SALA, "Sala antiga", false);
+        when(repository.findById(7L)).thenReturn(Optional.of(existente));
+        when(repository.existeNomeNormalizado(TipoRecurso.SALA, "sala nova", 7L)).thenReturn(false);
+        when(repository.save(existente)).thenReturn(existente);
+
+        Recurso atualizado = controller.atualizar(7L,
+                new RecursoController.Alteracao("  Sala Nova  ", true, true));
+
+        assertEquals("Sala Nova", atualizado.getNome());
+        assertTrue(atualizado.isRestrito());
+        assertTrue(atualizado.isEmManutencao());
+        verify(repository).save(existente);
+    }
+
+    @Test void atualizarRecursoInexistenteRetornaExcecaoDeNaoEncontrado() {
+        when(repository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(NoSuchElementException.class,
+                () -> controller.atualizar(999L,
+                        new RecursoController.Alteracao("Sala Nova", false, false)));
+        verify(repository, never()).save(any());
+    }
+
 }
