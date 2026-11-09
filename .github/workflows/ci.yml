@@ -1,4 +1,3 @@
-
 name: CI
 
 on:
@@ -28,6 +27,14 @@ jobs:
         env:
           DOCKER_API_VERSION: "1.44"
         run: mvn -B verify
+
+      - name: Validar Docker Compose
+        env:
+          DB_PASSWORD: ci-temporary-password
+        run: docker compose config --quiet
+
+      - name: Construir imagem da aplicação
+        run: docker build --tag organizacao-recursos:ci .
 
       - uses: actions/upload-artifact@v4
         if: always()
