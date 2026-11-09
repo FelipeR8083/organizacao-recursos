@@ -21,7 +21,7 @@ Fonte: enunciado oficial "Especificação do Projeto — Qualidade 2026.2", seç
 | RF-11 | Notificação simulada ou integração com API externa | Pendente | Não foram encontrados adaptador de notificação, simulação ou testes WireMock. |
 | RF-12 | Relatório de utilização, carga horária e conflitos evitados | Pendente | Não foram encontrados endpoints/visões de relatórios ou agregações correspondentes. |
 | RF-13 | Interface responsiva e mensagens compreensíveis | Parcial | Há interface web e tratamento de erros HTTP com mensagens em português. Responsividade precisa ser validada em diferentes larguras e documentada com evidência. |
-| RF-14 | Documentação de API ou fluxos públicos | Parcial | README e documentação técnica descrevem endpoints/fluxos. Falta contrato formal OpenAPI/Swagger e exemplos completos de request/response. |
+| RF-14 | Documentação de API ou fluxos públicos | Parcial | README e documentação técnica descrevem endpoints/fluxos. Foi adicionada dependência Springdoc OpenAPI; validar Swagger UI em `/swagger-ui/index.html` e complementar exemplos/descrições dos endpoints. |
 
 ## Estratégia obrigatória de qualidade
 
