@@ -191,4 +191,22 @@ class ReservaServiceIntegracaoTest {
         assertEquals(1, service.listarAuditoria(reserva.getId()).size());
     }
 
+
+    @Test
+    void professorVinculadoNaoPodeSerAlocadoEmDuasSalasNoMesmoHorario() {
+        Recurso sala2 = recursos.save(new Recurso(TipoRecurso.SALA, "Sala 102", false));
+        Recurso professor = recursos.save(new Recurso(TipoRecurso.PROFESSOR, "Prof. Silva", false));
+
+        service.criar(sala.getId(), professor.getId(), "coord.ana", hora(10), hora(12));
+
+        assertThrows(ConflitoHorarioException.class,
+                () -> service.criar(sala2.getId(), professor.getId(), "coord.bia", hora(11), hora(13)));
+    }
+
+    @Test
+    void professorVinculadoDeveSerDoTipoProfessor() {
+        assertThrows(IllegalArgumentException.class,
+                () -> service.criar(sala.getId(), sala.getId(), "coord.ana", hora(10), hora(11)));
+    }
+
 }
