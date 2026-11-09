@@ -75,7 +75,7 @@ class FluxoCompletoE2ETest {
 
         // RF-03: pesquisa real por metadados + disponibilidade via HTTP.
         ResponseEntity<JsonNode> pesquisa = solicitante.getForEntity(
-                "/recursos?tipo=SALA&capacidadeMinima=20&localizacao=bloco%20e&competencia=LABORATORIO",
+                "/recursos?tipo=SALA&capacidadeMinima=20&localizacao=bloco&competencia=LABORATORIO",
                 JsonNode.class);
         assertEquals(HttpStatus.OK, pesquisa.getStatusCode());
         assertEquals(1, pesquisa.getBody().size());
