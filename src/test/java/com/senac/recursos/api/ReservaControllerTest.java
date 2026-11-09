@@ -120,6 +120,34 @@ class ReservaControllerTest {
                 .andExpect(content().json("[]"));
     }
 
+    @Test
+    void consultaAuditoriaExpõeDadosDoEvento() throws Exception {
+        Reserva reserva = new Reserva(new Recurso(TipoRecurso.SALA, "Sala 101", false),
+                new Periodo(INICIO, FIM), "prof.ana");
+        ReflectionTestUtils.setField(reserva, "id", 42L);
+        ReservaAuditoria evento = new ReservaAuditoria(reserva, null,
+                EstadoReserva.SOLICITADA, INICIO, "API");
+        when(service.listarAuditoria(42L)).thenReturn(java.util.List.of(evento));
+
+        mvc.perform(get("/reservas/42/auditoria"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].reservaId").value(42))
+                .andExpect(jsonPath("$[0].estadoAnterior").doesNotExist())
+                .andExpect(jsonPath("$[0].estadoNovo").value("SOLICITADA"))
+                .andExpect(jsonPath("$[0].ocorridoEm").value("2026-11-10T10:00:00Z"))
+                .andExpect(jsonPath("$[0].origem").value("API"));
+    }
+
+    @Test
+    void reservaInexistenteNaConsultaDeAuditoriaRetorna404() throws Exception {
+        when(service.listarAuditoria(404L))
+                .thenThrow(new NoSuchElementException("Reserva não encontrada"));
+
+        mvc.perform(get("/reservas/404/auditoria"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.erro").value("Reserva não encontrada"));
+    }
+
     static Stream<String> corposInvalidos() {
         return Stream.of(
             "{\"recursoId\":1,\"solicitante\":\"\",\"inicio\":\"2026-11-10T10:00:00Z\",\"fim\":\"2026-11-10T11:00:00Z\"}",
