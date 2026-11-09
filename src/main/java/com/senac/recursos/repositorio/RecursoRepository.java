@@ -16,8 +16,8 @@ public interface RecursoRepository extends JpaRepository<Recurso, Long> {
         select r from Recurso r
         where (:tipo is null or r.tipo = :tipo)
           and (:capacidade is null or r.capacidade >= :capacidade)
-          and (:localizacao is null or lower(coalesce(r.localizacao, '')) like lower(concat('%', :localizacao, '%')))
-          and (:competencia is null or lower(coalesce(r.competencias, '')) like lower(concat('%', :competencia, '%')))
+          and (:localizacao = '' or lower(coalesce(r.localizacao, '')) like concat('%', :localizacao, '%'))
+          and (:competencia = '' or lower(coalesce(r.competencias, '')) like concat('%', :competencia, '%'))
         order by r.tipo, r.nome
         """)
     List<Recurso> pesquisar(@Param("tipo") TipoRecurso tipo,
