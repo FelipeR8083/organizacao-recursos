@@ -2,6 +2,11 @@ package com.senac.recursos.api;
 
 import com.senac.recursos.dominio.TipoRecurso;
 import com.senac.recursos.repositorio.RecursoRepository;
+import com.senac.recursos.repositorio.UsuarioRepository;
+import com.senac.recursos.dominio.Usuario;
+import com.senac.recursos.dominio.PerfilAcesso;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,9 +32,11 @@ class AutorizacaoApiTest {
 
     @Autowired MockMvc mvc;
     @Autowired RecursoRepository recursos;
+    @Autowired UsuarioRepository usuarios;
+    @Autowired PasswordEncoder encoder;
 
     @BeforeEach
-    void limpar() { recursos.deleteAll(); }
+    void limpar() { recursos.deleteAll(); usuarios.deleteAll(); }
 
     @Test
     void apiExigeAutenticacao() throws Exception {
@@ -71,4 +78,14 @@ class AutorizacaoApiTest {
                         .content("{\"estado\":\"CANCELADA\"}"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void autenticaUsuarioPersistidoComSenhaCriptografada() throws Exception {
+        usuarios.save(new Usuario("ana", encoder.encode("senha-segura-123"), PerfilAcesso.SOLICITANTE));
+        mvc.perform(get("/recursos").with(httpBasic("ana", "senha-segura-123")))
+                .andExpect(status().isOk());
+        mvc.perform(get("/recursos").with(httpBasic("ana", "senha-incorreta")))
+                .andExpect(status().isUnauthorized());
+    }
+
 }
