@@ -23,6 +23,8 @@ public class ReservaController {
     public record NovaReserva(@NotNull Long recursoId, Long professorId, @NotBlank String solicitante,
                               @NotNull Instant inicio, @NotNull Instant fim) {}
     public record AlteracaoEstado(@NotNull EstadoReserva estado) {}
+    public record AlteracaoReserva(@NotNull Long recursoId, Long professorId,
+                                   @NotNull Instant inicio, @NotNull Instant fim) {}
 
     private final ReservaService service;
 
@@ -36,6 +38,17 @@ public class ReservaController {
         return service.listarAuditoria(id);
     }
 
+
+
+    @PutMapping("/{id}")
+    public Reserva alterar(@PathVariable Long id, @Valid @RequestBody AlteracaoReserva dados,
+                           Authentication autenticacao) {
+        boolean privilegiado = autenticacao.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_RESPONSAVEL")
+                        || a.getAuthority().equals("ROLE_ADMINISTRADOR"));
+        return service.alterar(id, dados.recursoId(), dados.professorId(), dados.inicio(),
+                dados.fim(), autenticacao.getName(), privilegiado);
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> cancelar(@PathVariable Long id, Authentication autenticacao) {
