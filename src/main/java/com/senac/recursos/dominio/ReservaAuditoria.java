@@ -4,9 +4,8 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 /**
- * Histórico imutável de mudanças de estado de uma reserva.
- * A origem identifica o canal da operação; não representa identidade de usuário,
- * pois o sistema ainda não possui autenticação.
+ * Histórico imutável de eventos de uma reserva, incluindo transições e alterações.
+ * A origem registra o login autenticado ou o canal técnico quando não há contexto de segurança.
  */
 @Entity
 @org.hibernate.annotations.Immutable
