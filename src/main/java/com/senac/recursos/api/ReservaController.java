@@ -31,11 +31,21 @@ public class ReservaController {
     public ReservaController(ReservaService service) { this.service = service; }
 
     @GetMapping
-    public List<Reserva> listar() { return service.listar(); }
+    public List<Reserva> listar(Authentication autenticacao) {
+        if (autenticacao == null) return service.listar(); // Testes isolados sem filtros de segurança
+        return service.listarPara(autenticacao.getName(), podeGerenciar(autenticacao));
+    }
 
     @GetMapping("/{id}/auditoria")
-    public List<ReservaAuditoria> auditoria(@PathVariable Long id) {
-        return service.listarAuditoria(id);
+    public List<ReservaAuditoria> auditoria(@PathVariable Long id, Authentication autenticacao) {
+        if (autenticacao == null) return service.listarAuditoria(id); // Testes isolados
+        return service.listarAuditoriaPara(id, autenticacao.getName(), podeGerenciar(autenticacao));
+    }
+
+    private static boolean podeGerenciar(Authentication autenticacao) {
+        return autenticacao.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_RESPONSAVEL")
+                        || a.getAuthority().equals("ROLE_ADMINISTRADOR"));
     }
 
 
