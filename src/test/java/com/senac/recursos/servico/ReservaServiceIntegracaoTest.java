@@ -205,8 +205,9 @@ class ReservaServiceIntegracaoTest {
 
     @Test
     void professorVinculadoDeveSerDoTipoProfessor() {
+        Recurso sala2 = recursos.save(new Recurso(TipoRecurso.SALA, "Sala 103", false));
         assertThrows(IllegalArgumentException.class,
-                () -> service.criar(sala.getId(), sala.getId(), "coord.ana", hora(10), hora(11)));
+                () -> service.criar(sala.getId(), sala2.getId(), "coord.ana", hora(10), hora(11)));
     }
 
 }
