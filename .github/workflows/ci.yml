@@ -43,6 +43,29 @@ jobs:
         run: mvn -B verify
 
 
+      - name: Medir cobertura JaCoCo
+        run: |
+          python3 - <<'PY'
+          import os
+          import xml.etree.ElementTree as ET
+          path = "target/site/jacoco/jacoco.xml"
+          counters = {
+              item.get("type"): item
+              for item in ET.parse(path).getroot().findall("counter")
+          }
+          rows = ["## Cobertura de testes — JaCoCo", "", "| Métrica | Resultado | Meta | Situação |", "|---|---:|---:|---|"]
+          for label, kind, target in [("Linhas", "LINE", 80), ("Branches", "BRANCH", 70)]:
+              item = counters[kind]
+              hit, missed = int(item.get("covered")), int(item.get("missed"))
+              total = hit + missed
+              percentage = 100 * hit / total if total else 0
+              status = "Atingida" if percentage >= target else "Abaixo da meta"
+              print(f"{label}: {percentage:.2f}% ({hit}/{total}), meta {target}% — {status}")
+              rows.append(f"| {label} | {percentage:.2f}% | {target}% | {status} |")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write("\n".join(rows) + "\n")
+          PY
+
       - name: Analisar no SonarCloud
         if: ${{ env.SONAR_TOKEN != '' && env.SONAR_ORGANIZATION != '' && env.SONAR_PROJECT_KEY != '' }}
         uses: SonarSource/sonarqube-scan-action@v5
