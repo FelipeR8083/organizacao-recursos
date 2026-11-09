@@ -27,15 +27,7 @@ Projeto de Qualidade de Software — Senac TADS 2026.2.
 
 ## Como executar
 
-Inicie o banco de dados PostgreSQL:
-
-```bash
-docker run -d --name recursos-db \
-  -e POSTGRES_DB=recursos \
-  -e POSTGRES_USER=recursos \
-  -e POSTGRES_PASSWORD=recursos \
-  -p 5432:5432 postgres:16-alpine
-```
+O caminho recomendado é o Docker Compose, que inicia **banco e aplicação juntos**. Não execute um contêiner PostgreSQL separado com o mesmo nome ou porta enquanto usar o Compose.
 
 ### Executar tudo com Docker Compose
 
@@ -71,7 +63,7 @@ Para apagar também o volume de dados (operação destrutiva):
 docker compose down -v
 ```
 
-O Compose publica aplicação e PostgreSQL apenas em 127.0.0.1. DB_PASSWORD e as credenciais APP_ADMIN_* são obrigatórias via .env. O primeiro administrador é criado automaticamente na primeira inicialização. A API usa HTTP Basic; cadastre os perfis adicionais pela API administrativa `/usuarios` usando as credenciais do administrador. Senhas são armazenadas com BCrypt e devem ter pelo menos 12 caracteres. Use HTTPS fora do ambiente local. O webhook é opcional: configure `NOTIFICACAO_URL` para envio HTTP; sem ele, as notificações ficam no modo simulado.
+O Compose publica aplicação e PostgreSQL apenas em 127.0.0.1. DB_PASSWORD e as credenciais APP_ADMIN_* são obrigatórias via .env. O primeiro administrador é criado automaticamente na primeira inicialização. A API usa HTTP Basic; cadastre os perfis adicionais pela aba **Usuários** da interface (ou pela API administrativa `/usuarios`) usando as credenciais do administrador. Senhas são armazenadas com BCrypt e devem ter pelo menos 12 caracteres. Use HTTPS fora do ambiente local. O webhook é opcional: configure `NOTIFICACAO_URL` para envio HTTP; sem ele, as notificações ficam no modo simulado.
 
 Execute diretamente com Maven configurando as credenciais (PowerShell):
 
@@ -84,7 +76,9 @@ mvn spring-boot:run
 
 No Linux/macOS, exporte as mesmas três variáveis antes de executar `mvn spring-boot:run`.
 
-A aplicação ficará disponível em `http://localhost:8080`. A interface web está em `src/main/resources/static/index.html`.
+A aplicação ficará disponível em `http://localhost:8080`. A interface web está em `src/main/resources/static/index.html`. O navegador pode solicitar as credenciais HTTP Basic; para comparar perfis distintos, abra sessões separadas (por exemplo, janela anônima).
+
+Na interface, o administrador vê cadastro de recursos e usuários; o responsável vê aprovação, retirada/devolução, relatórios e notificações; o solicitante vê apenas suas reservas e ações autorizadas. A aba de relatórios usa o período selecionado pelo usuário.
 
 ### Configuração do banco
 
@@ -112,10 +106,12 @@ Defina `DB_PASSWORD` no ambiente antes de iniciar a aplicação.
 | POST | `/reservas/{id}/retirada` | Responsável registra retirada de material aprovado |
 | POST | `/reservas/{id}/devolucao` | Responsável registra devolução e conclui a reserva |
 | DELETE | `/reservas/{id}` | Solicitante cancela a própria reserva; responsável/administrador pode cancelar |
+| GET | `/sessao` | Retorna login e perfil da sessão autenticada |
 | GET | `/usuarios` | Administrador lista usuários |
 | POST | `/usuarios` | Administrador cadastra usuário e perfil |
 | PATCH | `/usuarios/{id}/ativo` | Administrador ativa/desativa usuário |
-| GET | `/reservas/{id}/auditoria` | Consulta histórico de criação e transições |
+| GET | `/reservas/{id}/auditoria` | Histórico restrito ao titular ou gestor |
+| GET | `/auditoria-administrativa` | Administrador consulta alterações de recursos e usuários |
 | GET | `/relatorios/utilizacao?inicio=...&fim=...` | Reservas e minutos alocados por recurso |
 | GET | `/relatorios/conflitos?inicio=...&fim=...` | Conflitos de horário evitados |
 | GET | `/notificacoes` | Administrador/responsável consulta notificações simuladas |
@@ -134,7 +130,7 @@ Execute a suíte completa:
 mvn clean verify
 ```
 
-Os testes de integração usam Testcontainers e precisam de Docker. O relatório JaCoCo é gerado em `target/site/jacoco/index.html`.
+Os testes de integração usam Testcontainers e precisam de Docker. O relatório JaCoCo é gerado em `target/site/jacoco/index.html`. No CI aprovado [42708687473](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/42708687473), 115 testes passaram, com **87,81% de linhas** e **71,64% de branches**. O Maven agora verifica automaticamente as metas mínimas de 80%/70%; confirmar o resultado no SHA final após atualizações.
 
 O workflow do GitHub Actions executa `mvn -B verify` em pull requests e pushes para `main` e para a branch de melhorias, e publica o relatório como artefato quando disponível. SonarCloud é executado quando `SONAR_TOKEN` (secret) e `SONAR_ORGANIZATION`/`SONAR_PROJECT_KEY` (variables) estiverem configuradas nas configurações do repositório.
 
@@ -144,7 +140,7 @@ O workflow do GitHub Actions executa `mvn -B verify` em pull requests e pushes p
 - **Concorrência na criação:** bloqueia recurso principal e professor vinculado em ordem crescente de ID e valida conflitos em ambos.
 - **Concorrência nas transições:** o bloqueio pessimista da linha da reserva serializa alterações de estado simultâneas.
 - **Máquina de estados:** transições são definidas em `EstadoReserva`; estados finais não permitem novas transições.
-- **Auditoria transacional:** criação, mudança de estado, reagendamento e cancelamento geram eventos persistidos; quando autenticado, o login é registrado como origem.
+- **Auditoria transacional:** criação, mudança de estado, reagendamento e cancelamento geram eventos persistidos; quando autenticado, o login é registrado como origem. Cadastro/edição de recursos e gestão de usuários geram eventos administrativos imutáveis sem senhas.
 - **Nomes de recursos:** validação normalizada por tipo e nome, complementada por restrição de unicidade no banco conforme o script de correção.
 
 ## Status conhecido e limitações
@@ -165,11 +161,12 @@ Implementado e coberto por testes no código atual:
 - Validação de nome duplicado de recurso.
 - Registro e consulta do histórico de criação/transições (branch de melhorias).
 
-Ainda não deve ser considerado concluído:
-- Metas de cobertura (80% linhas / 70% branches), análise SonarCloud e teste JMeter ainda precisam de resultados comprovados.
-- Teste automatizado de navegador e evidência manual de responsividade.
-- Auditoria de alterações cadastrais de recursos e usuários pode ser ampliada.
-- O último CI precisa terminar verde no SHA final; consulte Actions antes de integrar.
+Os **14 requisitos funcionais** têm implementação no código da branch de melhorias; consulte `RTM.md` para evidências e ressalvas de aceitação. A entrega acadêmica **ainda não está homologada integralmente**:
+- SonarCloud precisa ser conectado e analisado para comprovar ausência de bugs/vulnerabilidades críticas.
+- O cenário JMeter está versionado, mas precisa ser executado e ter resultados anexados.
+- A interface necessita de validação manual em celular/tablet e demonstração da Swagger UI.
+- Revisão por pares, evidências finais e apresentação devem ser concluídas.
+- O último CI precisa terminar verde no SHA final, incluindo a regra de JaCoCo; consulte Actions antes de integrar.
 
 **Segurança:** HTTP Basic com BCrypt e papéis está implementado nesta branch. O ambiente Compose limita as portas ao localhost; não exponha publicamente sem HTTPS, gestão de segredos e revisão de segurança.
 
@@ -189,8 +186,9 @@ Se o banco já possuir recursos duplicados, leia primeiro `LEIA-PRIMEIRO-DUPLICA
 - Plano de validação: [docs/PLANO-DE-VALIDACAO.md](docs/PLANO-DE-VALIDACAO.md).
 - Exemplos dos endpoints e permissões: [docs/EXEMPLOS-API.md](docs/EXEMPLOS-API.md).
 - Checklist de responsividade e acessibilidade: [docs/TESTE-RESPONSIVIDADE.md](docs/TESTE-RESPONSIVIDADE.md).
+- Cenários BDD e evidência de defeito corrigido: [docs/EVIDENCIA-BDD.md](docs/EVIDENCIA-BDD.md).
 
-A RTM distingue requisitos implementados, parciais e pendentes conforme o enunciado oficial. Não considerar o sistema pronto para produção enquanto autenticação/autorização e demais lacunas registradas na matriz não forem resolvidas.
+A RTM distingue requisitos implementados, parciais e pendentes conforme o enunciado oficial. Não considerar o sistema pronto para produção ou a entrega totalmente homologada enquanto as evidências de SonarCloud, carga, revisão de segurança e validação visual não forem concluídas.
 
 ### Documentação interativa da API
 
