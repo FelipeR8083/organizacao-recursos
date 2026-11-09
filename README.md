@@ -187,6 +187,8 @@ Se o banco já possuir recursos duplicados, leia primeiro `LEIA-PRIMEIRO-DUPLICA
 - Relatório de qualidade (versão candidata): [docs/RELATORIO-QUALIDADE.md](docs/RELATORIO-QUALIDADE.md).
 - Roteiro de apresentação: [docs/APRESENTACAO.md](docs/APRESENTACAO.md).
 - Plano de validação: [docs/PLANO-DE-VALIDACAO.md](docs/PLANO-DE-VALIDACAO.md).
+- Exemplos dos endpoints e permissões: [docs/EXEMPLOS-API.md](docs/EXEMPLOS-API.md).
+- Checklist de responsividade e acessibilidade: [docs/TESTE-RESPONSIVIDADE.md](docs/TESTE-RESPONSIVIDADE.md).
 
 A RTM distingue requisitos implementados, parciais e pendentes conforme o enunciado oficial. Não considerar o sistema pronto para produção enquanto autenticação/autorização e demais lacunas registradas na matriz não forem resolvidas.
 
