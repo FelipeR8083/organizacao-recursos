@@ -148,6 +148,18 @@ class ReservaControllerTest {
                 .andExpect(jsonPath("$.erro").value("Reserva não encontrada"));
     }
 
+    @Test
+    void estadoDesconhecidoRetorna400ESemChamarServico() throws Exception {
+        mvc.perform(patch("/reservas/42/estado")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"estado":"ESTADO_QUE_NAO_EXISTE"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").value("Dados enviados inválidos"));
+        verifyNoInteractions(service);
+    }
+
     static Stream<String> corposInvalidos() {
         return Stream.of(
             "{\"recursoId\":1,\"solicitante\":\"\",\"inicio\":\"2026-11-10T10:00:00Z\",\"fim\":\"2026-11-10T11:00:00Z\"}",
