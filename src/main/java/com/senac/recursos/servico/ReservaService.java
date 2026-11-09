@@ -76,24 +76,50 @@ public class ReservaService {
 
     @Transactional
     public Reserva criar(Long recursoId, String solicitante, Instant inicio, Instant fim) {
+        return criar(recursoId, null, solicitante, inicio, fim);
+    }
+
+    @Transactional
+    public Reserva criar(Long recursoId, Long professorId, String solicitante, Instant inicio, Instant fim) {
         Periodo periodo = new Periodo(inicio, fim);
         String solicitanteNormalizado = solicitante == null ? "" : solicitante.trim();
         if (solicitanteNormalizado.isBlank()) {
             throw new IllegalArgumentException("Solicitante é obrigatório");
         }
+        if (professorId != null && professorId.equals(recursoId)) {
+            throw new IllegalArgumentException("O professor deve ser um recurso diferente do recurso principal");
+        }
 
-        // O lock na linha do recurso garante que duas solicitações simultâneas
-        // sejam processadas uma de cada vez: apenas uma será aceita.
-        Recurso recurso = recursos.buscarComLock(recursoId)
-                .orElseThrow(() -> new NoSuchElementException("Recurso não encontrado: " + recursoId));
+        // Bloqueia as linhas em ordem crescente para reduzir risco de deadlock.
+        Recurso principal;
+        Recurso professor = null;
+        if (professorId == null) {
+            principal = recursos.buscarComLock(recursoId)
+                    .orElseThrow(() -> new NoSuchElementException("Recurso não encontrado: " + recursoId));
+        } else {
+            Long primeiroId = Math.min(recursoId, professorId);
+            Long segundoId = Math.max(recursoId, professorId);
+            Recurso primeiro = recursos.buscarComLock(primeiroId)
+                    .orElseThrow(() -> new NoSuchElementException("Recurso não encontrado: " + primeiroId));
+            Recurso segundo = recursos.buscarComLock(segundoId)
+                    .orElseThrow(() -> new NoSuchElementException("Recurso não encontrado: " + segundoId));
+            principal = recursoId.equals(primeiroId) ? primeiro : segundo;
+            professor = professorId.equals(primeiroId) ? primeiro : segundo;
+        }
 
-        if (recurso.isEmManutencao()) {
-            throw new RecursoIndisponivelException("Recurso em manutenção");
+        if (principal.isEmManutencao() || (professor != null && professor.isEmManutencao())) {
+            throw new RecursoIndisponivelException("Recurso ou professor em manutenção");
+        }
+        if (professor != null && professor.getTipo() != TipoRecurso.PROFESSOR) {
+            throw new IllegalArgumentException("O recurso vinculado como professor deve ser do tipo PROFESSOR");
         }
         if (reservas.existeConflito(recursoId, EstadoReserva.ativos(), periodo.inicio(), periodo.fim())) {
-            throw new ConflitoHorarioException("Já existe reserva neste horário para o recurso");
+            throw new ConflitoHorarioException("Já existe reserva neste horário para o recurso principal");
         }
-        Reserva criada = reservas.save(new Reserva(recurso, periodo, solicitanteNormalizado));
+        if (professorId != null && reservas.existeConflito(professorId, EstadoReserva.ativos(), periodo.inicio(), periodo.fim())) {
+            throw new ConflitoHorarioException("O professor já possui reserva neste horário");
+        }
+        Reserva criada = reservas.save(new Reserva(principal, professor, periodo, solicitanteNormalizado));
         auditoria.save(new ReservaAuditoria(criada, null, EstadoReserva.SOLICITADA,
                 Instant.now(clock), origemAtual()));
         return criada;
