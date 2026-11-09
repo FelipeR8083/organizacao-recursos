@@ -18,6 +18,8 @@ import java.util.stream.Stream;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /** Testa o contrato HTTP do controller; o serviço é isolado com mock (teste unitário). */
@@ -88,6 +90,32 @@ class ReservaControllerTest {
         enviar(JSON_VALIDO)
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.erro").value("Recurso não encontrado: 1"));
+    }
+
+    @Test
+    void transicaoDeEstadoValidaEhEncaminhadaAoServico() throws Exception {
+        mvc.perform(patch("/reservas/42/estado")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\\"estado\\":\\"APROVADA\\"}"))
+                .andExpect(status().isOk());
+        verify(service).alterarEstado(42L, EstadoReserva.APROVADA);
+    }
+
+    @Test
+    void transicaoSemEstadoRetorna400ESemChamarServico() throws Exception {
+        mvc.perform(patch("/reservas/42/estado")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void consultaAuditoriaRetornaLista() throws Exception {
+        when(service.listarAuditoria(42L)).thenReturn(java.util.List.of());
+        mvc.perform(get("/reservas/42/auditoria"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
     }
 
     static Stream<String> corposInvalidos() {
