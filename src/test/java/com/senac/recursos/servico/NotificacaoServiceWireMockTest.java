@@ -5,6 +5,7 @@ import com.senac.recursos.repositorio.NotificacaoSimuladaRepository;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -19,7 +20,7 @@ class NotificacaoServiceWireMockTest {
             wiremock.stubFor(post(urlEqualTo("/notifications"))
                     .willReturn(aResponse().withStatus(202)));
             NotificacaoSimuladaRepository repository = mock(NotificacaoSimuladaRepository.class);
-            NotificacaoService service = new NotificacaoService(repository, RestClient.builder(),
+            NotificacaoService service = new NotificacaoService(repository, RestClient.builder().requestFactory(new SimpleClientHttpRequestFactory()),
                     wiremock.baseUrl() + "/notifications");
 
             service.enviar("prof.ana", "Reserva aprovada", "Sua reserva foi aprovada.");
