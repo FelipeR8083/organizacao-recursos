@@ -2,6 +2,7 @@ package com.senac.recursos.api;
 
 import com.senac.recursos.dominio.*;
 import com.senac.recursos.servico.*;
+import com.senac.recursos.repositorio.UsuarioRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -36,6 +37,7 @@ class ReservaControllerTest {
 
     @Autowired MockMvc mvc;
     @MockBean ReservaService service;
+    @MockBean UsuarioRepository usuarios;
 
     private ResultActions enviar(String json) throws Exception {
         return mvc.perform(post("/reservas").contentType(MediaType.APPLICATION_JSON).content(json));
