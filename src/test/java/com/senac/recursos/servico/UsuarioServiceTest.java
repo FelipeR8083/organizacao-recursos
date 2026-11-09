@@ -4,6 +4,10 @@ import com.senac.recursos.dominio.PerfilAcesso;
 import com.senac.recursos.dominio.Usuario;
 import com.senac.recursos.repositorio.UsuarioRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.Arguments;
+import java.util.stream.Stream;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,4 +57,65 @@ class UsuarioServiceTest {
         assertThrows(IllegalStateException.class, () -> service.alterarAtivo(1L, false, "outro-admin"));
         assertTrue(admin.isAtivo());
     }
+    static Stream<Arguments> dadosInvalidos() {
+        return Stream.of(
+                Arguments.of(null, "senha-valida-123", PerfilAcesso.SOLICITANTE),
+                Arguments.of("   ", "senha-valida-123", PerfilAcesso.SOLICITANTE),
+                Arguments.of("ana", null, PerfilAcesso.SOLICITANTE),
+                Arguments.of("ana", "curta", PerfilAcesso.SOLICITANTE),
+                Arguments.of("ana", "senha-valida-123", null)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("dadosInvalidos")
+    void rejeitaDadosInvalidosSemConsultarPersistencia(String login, String senha, PerfilAcesso perfil) {
+        assertThrows(IllegalArgumentException.class, () -> service.criar(login, senha, perfil));
+        verifyNoInteractions(encoder, usuarios);
+    }
+
+    @Test
+    void rejeitaCadastroComLoginDuplicado() {
+        when(usuarios.existsByLoginIgnoreCase("ana")).thenReturn(true);
+        assertThrows(IllegalArgumentException.class,
+                () -> service.criar(" ana ", "senha-valida-123", PerfilAcesso.SOLICITANTE));
+        verify(usuarios, never()).save(any());
+        verifyNoInteractions(encoder);
+    }
+
+    @Test
+    void rejeitaAlteracaoDeUsuarioInexistente() {
+        when(usuarios.findById(77L)).thenReturn(Optional.empty());
+        assertThrows(java.util.NoSuchElementException.class,
+                () -> service.alterarAtivo(77L, false, "admin"));
+    }
+
+    @Test
+    void permiteDesativarSolicitanteSemAfetarRegraDeUltimoAdmin() {
+        Usuario usuario = new Usuario("ana", "hash", PerfilAcesso.SOLICITANTE);
+        when(usuarios.findById(3L)).thenReturn(Optional.of(usuario));
+        service.alterarAtivo(3L, false, "admin");
+        assertFalse(usuario.isAtivo());
+        verify(usuarios, never()).countByPerfilAndAtivo(any(), anyBoolean());
+    }
+
+    @Test
+    void permiteDesativarAdministradorQuandoExisteOutroAtivo() {
+        Usuario usuario = new Usuario("admin-secundario", "hash", PerfilAcesso.ADMINISTRADOR);
+        when(usuarios.findById(4L)).thenReturn(Optional.of(usuario));
+        when(usuarios.countByPerfilAndAtivo(PerfilAcesso.ADMINISTRADOR, true)).thenReturn(2L);
+        service.alterarAtivo(4L, false, "admin-principal");
+        assertFalse(usuario.isAtivo());
+    }
+
+    @Test
+    void permiteReativarUsuarioSemConsultarQuantidadeDeAdmins() {
+        Usuario usuario = new Usuario("admin-secundario", "hash", PerfilAcesso.ADMINISTRADOR);
+        usuario.setAtivo(false);
+        when(usuarios.findById(4L)).thenReturn(Optional.of(usuario));
+        service.alterarAtivo(4L, true, "admin-principal");
+        assertTrue(usuario.isAtivo());
+        verify(usuarios, never()).countByPerfilAndAtivo(any(), anyBoolean());
+    }
+
 }
