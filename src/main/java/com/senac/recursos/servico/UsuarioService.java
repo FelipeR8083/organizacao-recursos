@@ -35,9 +35,16 @@ public class UsuarioService {
     public List<Usuario> listar() { return usuarios.findAll(); }
 
     @Transactional
-    public void alterarAtivo(Long id, boolean ativo) {
+    public void alterarAtivo(Long id, boolean ativo, String ator) {
         Usuario usuario = usuarios.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Usuário não encontrado"));
+        if (!ativo && usuario.getUsername().equalsIgnoreCase(ator)) {
+            throw new IllegalArgumentException("Não é permitido desativar o próprio usuário");
+        }
+        if (!ativo && usuario.getPerfil() == PerfilAcesso.ADMINISTRADOR
+                && usuarios.countByPerfilAndAtivo(PerfilAcesso.ADMINISTRADOR, true) <= 1) {
+            throw new IllegalStateException("O último administrador ativo não pode ser desativado");
+        }
         usuario.setAtivo(ativo);
     }
 }
