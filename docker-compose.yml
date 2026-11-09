@@ -26,6 +26,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no arquivo .env}
       APP_ADMIN_USERNAME: ${APP_ADMIN_USERNAME:?Defina APP_ADMIN_USERNAME no arquivo .env}
       APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD:?Defina APP_ADMIN_PASSWORD no arquivo .env}
+      NOTIFICACAO_URL: ${NOTIFICACAO_URL:-}
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:
