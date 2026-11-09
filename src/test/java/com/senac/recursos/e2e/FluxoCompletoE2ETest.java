@@ -184,5 +184,18 @@ class FluxoCompletoE2ETest {
                 "/auditoria-administrativa", JsonNode.class);
         assertTrue(auditoriaAtualizada.getBody().toString().contains("ALTERACAO"));
 
+        // RF-13/RF-14: a página responsiva e o contrato OpenAPI devem ser servidos pela aplicação real.
+        ResponseEntity<String> pagina = admin.getForEntity("/", String.class);
+        assertEquals(HttpStatus.OK, pagina.getStatusCode());
+        assertTrue(pagina.getBody().contains("name=\"viewport\""));
+        assertTrue(pagina.getBody().contains("max-width:650px"));
+
+        ResponseEntity<JsonNode> openApi = admin.getForEntity("/v3/api-docs", JsonNode.class);
+        assertEquals(HttpStatus.OK, openApi.getStatusCode());
+        assertTrue(openApi.getBody().path("paths").has("/recursos"));
+        assertTrue(openApi.getBody().path("paths").has("/reservas"));
+        assertTrue(openApi.getBody().path("paths").has("/auditoria-administrativa"));
+
+
     }
 }
