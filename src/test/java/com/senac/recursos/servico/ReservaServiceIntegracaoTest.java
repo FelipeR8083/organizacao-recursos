@@ -32,6 +32,8 @@ class ReservaServiceIntegracaoTest {
     @Autowired ConflitoEvitadoRepository conflitos;
     @Autowired RelatorioService relatorios;
     @Autowired NotificacaoSimuladaRepository notificacoes;
+    @Autowired MovimentacaoMaterialRepository movimentacoes;
+    @Autowired MovimentacaoMaterialService movimentacaoService;
 
     private Recurso sala;
 
@@ -42,6 +44,7 @@ class ReservaServiceIntegracaoTest {
         auditoria.deleteAll();
         conflitos.deleteAll();
         notificacoes.deleteAll();
+        movimentacoes.deleteAll();
         reservas.deleteAll();
         recursos.deleteAll();
         sala = recursos.save(new Recurso(TipoRecurso.SALA, "Sala 101", false));
@@ -244,6 +247,34 @@ class ReservaServiceIntegracaoTest {
         assertTrue(enviadas.stream().anyMatch(n -> n.getAssunto().equals("Reserva solicitada")));
         assertTrue(enviadas.stream().anyMatch(n -> n.getAssunto().equals("Reserva atualizada")));
         assertTrue(enviadas.stream().allMatch(n -> n.getCanal().equals("SIMULADO")));
+    }
+
+
+    @Test
+    void registraRetiradaEDevolucaoDeMaterialComHistoricoDeEstados() {
+        Recurso projetor = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Projetor E2E", false));
+        Reserva reserva = service.criar(projetor.getId(), "prof.ana", hora(10), hora(11));
+        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA);
+
+        var retirada = movimentacaoService.retirar(reserva.getId(), "responsavel");
+        assertNotNull(retirada.getRetiradaEm());
+        assertEquals("responsavel", retirada.getRetiradaPor());
+        assertEquals(EstadoReserva.EM_USO, reservas.findById(reserva.getId()).orElseThrow().getEstado());
+
+        var devolucao = movimentacaoService.devolver(reserva.getId(), "responsavel");
+        assertNotNull(devolucao.getDevolucaoEm());
+        assertEquals("responsavel", devolucao.getDevolucaoPor());
+        assertEquals(EstadoReserva.CONCLUIDA, reservas.findById(reserva.getId()).orElseThrow().getEstado());
+        assertEquals(4, service.listarAuditoria(reserva.getId()).size());
+    }
+
+    @Test
+    void impedeRetiradaDeReservaQueNaoEstejaAprovada() {
+        Recurso projetor = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Projetor bloqueado", false));
+        Reserva reserva = service.criar(projetor.getId(), "prof.ana", hora(10), hora(11));
+        assertThrows(IllegalStateException.class,
+                () -> movimentacaoService.retirar(reserva.getId(), "responsavel"));
+        assertTrue(movimentacoes.findByReserva_Id(reserva.getId()).isEmpty());
     }
 
 }
