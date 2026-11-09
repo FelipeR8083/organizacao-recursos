@@ -72,6 +72,11 @@ class FluxoCompletoE2ETest {
         Instant inicio = Instant.now().plusSeconds(3600);
         Instant fim = inicio.plusSeconds(3600);
         TestRestTemplate solicitante = auth("solicitante-e2e", "senha-solicitante-123");
+        ResponseEntity<JsonNode> sessaoSolicitante = solicitante.getForEntity("/sessao", JsonNode.class);
+        assertEquals(HttpStatus.OK, sessaoSolicitante.getStatusCode());
+        assertEquals("SOLICITANTE", sessaoSolicitante.getBody().get("perfil").asText());
+        assertEquals("solicitante-e2e", sessaoSolicitante.getBody().get("login").asText());
+
 
         // RF-03: pesquisa real por metadados + disponibilidade via HTTP.
         ResponseEntity<JsonNode> pesquisa = solicitante.getForEntity(
