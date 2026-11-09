@@ -50,6 +50,63 @@ public class ReservaService {
     }
 
 
+
+    @Transactional
+    public Reserva alterar(Long id, Long recursoId, Long professorId,
+                           Instant inicio, Instant fim, String login, boolean podeGerenciar) {
+        Periodo periodo = new Periodo(inicio, fim);
+        Reserva reserva = reservas.buscarComLock(id)
+                .orElseThrow(() -> new NoSuchElementException("Reserva não encontrada"));
+        if (!podeGerenciar && (login == null || !reserva.getSolicitante().equalsIgnoreCase(login))) {
+            throw new org.springframework.security.access.AccessDeniedException("Você só pode alterar suas próprias reservas");
+        }
+        if (professorId != null && professorId.equals(recursoId)) {
+            throw new IllegalArgumentException("O professor deve ser diferente do recurso principal");
+        }
+
+        Recurso principal;
+        Recurso professor = null;
+        if (professorId == null) {
+            principal = recursos.buscarComLock(recursoId)
+                    .orElseThrow(() -> new NoSuchElementException("Recurso não encontrado: " + recursoId));
+        } else {
+            Long primeiroId = Math.min(recursoId, professorId);
+            Long segundoId = Math.max(recursoId, professorId);
+            Recurso primeiro = recursos.buscarComLock(primeiroId)
+                    .orElseThrow(() -> new NoSuchElementException("Recurso não encontrado: " + primeiroId));
+            Recurso segundo = recursos.buscarComLock(segundoId)
+                    .orElseThrow(() -> new NoSuchElementException("Recurso não encontrado: " + segundoId));
+            principal = recursoId.equals(primeiroId) ? primeiro : segundo;
+            professor = professorId.equals(primeiroId) ? primeiro : segundo;
+        }
+        if (principal.isEmManutencao() || (professor != null && professor.isEmManutencao())) {
+            throw new RecursoIndisponivelException("Recurso ou professor em manutenção");
+        }
+        if (professor != null && professor.getTipo() != TipoRecurso.PROFESSOR) {
+            throw new IllegalArgumentException("O recurso vinculado como professor deve ser do tipo PROFESSOR");
+        }
+        if (reservas.existeConflitoIgnorando(recursoId, EstadoReserva.ativos(), periodo.inicio(), periodo.fim(), id)) {
+            conflitosEvitados.registrar(recursoId, periodo.inicio(), periodo.fim(), "Conflito ao alterar recurso principal");
+            throw new ConflitoHorarioException("Já existe reserva neste horário para o recurso principal");
+        }
+        if (professorId != null && reservas.existeConflitoIgnorando(professorId, EstadoReserva.ativos(), periodo.inicio(), periodo.fim(), id)) {
+            conflitosEvitados.registrar(professorId, periodo.inicio(), periodo.fim(), "Conflito ao alterar agenda do professor");
+            throw new ConflitoHorarioException("O professor já possui reserva neste horário");
+        }
+        String detalhes = "Recurso " + reserva.getRecurso().getId() + " -> " + recursoId
+                + "; professor " + (reserva.getProfessor() == null ? "-" : reserva.getProfessor().getId())
+                + " -> " + (professorId == null ? "-" : professorId)
+                + "; período " + reserva.getInicio() + "/" + reserva.getFim()
+                + " -> " + periodo.inicio() + "/" + periodo.fim();
+        EstadoReserva estado = reserva.getEstado();
+        reserva.reagendar(principal, professor, periodo);
+        Reserva salva = reservas.save(reserva);
+        auditoria.save(new ReservaAuditoria(salva, estado, estado, Instant.now(clock),
+                origemAtual(), "ALTERACAO", detalhes));
+        notificacoes.enviar(salva.getSolicitante(), "Reserva alterada", "A reserva " + id + " teve seus dados atualizados.");
+        return salva;
+    }
+
     @Transactional
     public void cancelar(Long id, String login, boolean podeGerenciar) {
         Reserva reserva = reservas.buscarComLock(id)
