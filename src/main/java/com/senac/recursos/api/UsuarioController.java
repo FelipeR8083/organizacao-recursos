@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 import java.util.List;
 import java.util.Map;
 
@@ -40,10 +41,10 @@ public class UsuarioController {
 
     @PatchMapping("/{id}/ativo")
     public ResponseEntity<Map<String, String>> alterarAtivo(@PathVariable Long id,
-                                                              @RequestBody Map<String, Boolean> dados) {
+                                                              @RequestBody Map<String, Boolean> dados, Authentication autenticacao) {
         Boolean ativo = dados.get("ativo");
         if (ativo == null) return ResponseEntity.badRequest().body(Map.of("erro", "Campo ativo é obrigatório"));
-        service.alterarAtivo(id, ativo);
+        service.alterarAtivo(id, ativo, autenticacao.getName());
         return ResponseEntity.ok(Map.of("mensagem", "Situação do usuário atualizada"));
     }
 }
