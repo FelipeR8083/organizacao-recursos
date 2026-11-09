@@ -108,6 +108,30 @@ class FluxoCompletoE2ETest {
 
         ResponseEntity<JsonNode> lista = solicitante.getForEntity("/reservas", JsonNode.class);
         assertEquals("solicitante-e2e", lista.getBody().get(0).get("solicitante").asText());
+        // RF-01/RF-10: o solicitante não deve conhecer reservas nem históricos de terceiros.
+        ResponseEntity<JsonNode> novoUsuario = admin.postForEntity("/usuarios",
+                new HttpEntity<>(Map.of("login", "outra-pessoa-e2e",
+                        "senha", "senha-outra-pessoa-123", "perfil", "SOLICITANTE"),
+                        jsonHeaders()), JsonNode.class);
+        assertEquals(HttpStatus.CREATED, novoUsuario.getStatusCode());
+        TestRestTemplate outro = auth("outra-pessoa-e2e", "senha-outra-pessoa-123");
+        ResponseEntity<JsonNode> outraReserva = outro.postForEntity("/reservas",
+                new HttpEntity<>(Map.of("recursoId", salaId,
+                        "solicitante", "identidade-forjada",
+                        "inicio", fim.toString(), "fim", fim.plusSeconds(3600).toString()),
+                        jsonHeaders()), JsonNode.class);
+        assertEquals(HttpStatus.CREATED, outraReserva.getStatusCode());
+        long outraReservaId = outraReserva.getBody().get("id").asLong();
+
+        ResponseEntity<JsonNode> minhasReservas = solicitante.getForEntity("/reservas", JsonNode.class);
+        assertEquals(1, minhasReservas.getBody().size());
+        assertEquals(reservaId, minhasReservas.getBody().get(0).get("id").asLong());
+        assertEquals(1, outro.getForEntity("/reservas", JsonNode.class).getBody().size());
+        assertEquals(2, admin.getForEntity("/reservas", JsonNode.class).getBody().size());
+        assertEquals(HttpStatus.NOT_FOUND,
+                solicitante.getForEntity("/reservas/" + outraReservaId + "/auditoria",
+                        String.class).getStatusCode());
+
 
         ResponseEntity<String> proibido = solicitante.exchange("/reservas/" + reservaId + "/estado",
                 HttpMethod.PATCH, new HttpEntity<>(Map.of("estado", "APROVADA"), jsonHeaders()), String.class);
