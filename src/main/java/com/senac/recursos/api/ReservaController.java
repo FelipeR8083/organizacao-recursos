@@ -20,6 +20,7 @@ public class ReservaController {
 
     public record NovaReserva(@NotNull Long recursoId, @NotBlank String solicitante,
                               @NotNull Instant inicio, @NotNull Instant fim) {}
+    public record AlteracaoEstado(@NotNull EstadoReserva estado) {}
 
     private final ReservaService service;
 
@@ -29,10 +30,8 @@ public class ReservaController {
     public List<Reserva> listar() { return service.listar(); }
 
     @PatchMapping("/{id}/estado")
-    public Reserva alterarEstado(@PathVariable Long id, @RequestBody Map<String, EstadoReserva> req) {
-        EstadoReserva estado = req.get("estado");
-        if (estado == null) throw new IllegalArgumentException("Estado obrigatório");
-        return service.alterarEstado(id, estado);
+    public Reserva alterarEstado(@PathVariable Long id, @Valid @RequestBody AlteracaoEstado req) {
+        return service.alterarEstado(id, req.estado());
     }
 
     @PostMapping
