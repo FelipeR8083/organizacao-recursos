@@ -24,18 +24,18 @@
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
         </ConfigTestElement>
         <hashTree/>
-        <AuthorizationManager guiclass="AuthorizationManagerGui" testclass="AuthorizationManager" testname="HTTP Basic" enabled="true">
-          <collectionProp name="AuthorizationManager.auth_list">
+        <AuthManager guiclass="AuthPanel" testclass="AuthManager" testname="HTTP Basic" enabled="true">
+          <collectionProp name="AuthManager.auth_list">
             <elementProp name="Basic" elementType="Authorization">
               <stringProp name="Authorization.url">${__P(baseUrl,http://localhost:8080)}</stringProp>
               <stringProp name="Authorization.username">${__P(login,admin)}</stringProp>
               <stringProp name="Authorization.password">${__P(password)}</stringProp>
               <stringProp name="Authorization.domain"></stringProp>
               <stringProp name="Authorization.realm"></stringProp>
-              <stringProp name="Authorization.mechanism">BASIC</stringProp>
+              <stringProp name="Authorization.mechanism">BASIC_DIGEST</stringProp>
             </elementProp>
           </collectionProp>
-        </AuthorizationManager>
+        </AuthManager>
         <hashTree/>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Solicitar reserva concorrente" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
