@@ -34,6 +34,29 @@ public class ReservaService {
     @Transactional(readOnly = true)
     public List<Reserva> listar() { return reservas.findAll(); }
 
+    /** Solicitantes veem somente suas reservas; gestores podem consultar todas. */
+    @Transactional(readOnly = true)
+    public List<Reserva> listarPara(String login, boolean gestor) {
+        if (gestor) return listar();
+        if (login == null || login.isBlank()) {
+            throw new org.springframework.security.access.AccessDeniedException("Autenticação obrigatória");
+        }
+        return reservas.findAll().stream()
+                .filter(r -> r.getSolicitante().equalsIgnoreCase(login))
+                .toList();
+    }
+
+    /** A existência do histórico de terceiros não deve ser revelada a solicitantes. */
+    @Transactional(readOnly = true)
+    public List<ReservaAuditoria> listarAuditoriaPara(Long reservaId, String login, boolean gestor) {
+        Reserva reserva = reservas.findById(reservaId)
+                .orElseThrow(() -> new NoSuchElementException("Reserva não encontrada"));
+        if (!gestor && (login == null || !reserva.getSolicitante().equalsIgnoreCase(login))) {
+            throw new NoSuchElementException("Reserva não encontrada");
+        }
+        return auditoria.findByReserva_IdOrderByOcorridoEmAscIdAsc(reservaId);
+    }
+
     @Transactional
     public Reserva alterarEstado(Long id, EstadoReserva estado) {
         return alterarEstado(id, estado, origemAtual(), false);
