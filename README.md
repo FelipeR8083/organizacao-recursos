@@ -145,3 +145,11 @@ Ainda não deve ser considerado concluído:
 ## Correção de dados duplicados existentes
 
 Se o banco já possuir recursos duplicados, leia primeiro `LEIA-PRIMEIRO-DUPLICADOS.md`. Faça backup antes de executar `CORRIGIR-DUPLICADOS.sql`. Não rode o script sem revisar os dados e confirmar o backup.
+
+## Rastreabilidade e documentação
+
+- Matriz de requisitos e evidências: [RTM.md](RTM.md).
+- Arquitetura e operação: [docs/ARQUITETURA-E-OPERACAO.md](docs/ARQUITETURA-E-OPERACAO.md).
+- Plano de validação: [docs/PLANO-DE-VALIDACAO.md](docs/PLANO-DE-VALIDACAO.md).
+
+A RTM distingue requisitos implementados, parciais e pendentes conforme o enunciado oficial. Não considerar o sistema pronto para produção enquanto autenticação/autorização e demais lacunas registradas na matriz não forem resolvidas.
