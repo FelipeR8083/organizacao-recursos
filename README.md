@@ -66,7 +66,7 @@ Para apagar também o volume de dados (operação destrutiva):
 docker compose down -v
 ```
 
-O Compose publica aplicação e PostgreSQL apenas em 127.0.0.1. DB_PASSWORD e as credenciais APP_ADMIN_* são obrigatórias via .env. O primeiro administrador é criado automaticamente na primeira inicialização.
+O Compose publica aplicação e PostgreSQL apenas em 127.0.0.1. DB_PASSWORD e as credenciais APP_ADMIN_* são obrigatórias via .env. O primeiro administrador é criado automaticamente na primeira inicialização. A API usa HTTP Basic; cadastre os perfis adicionais pela API administrativa `/usuarios` usando as credenciais do administrador. Senhas são armazenadas com BCrypt e devem ter pelo menos 12 caracteres. Use HTTPS fora do ambiente local.
 
 Execute a aplicação diretamente com Maven:
 
@@ -97,7 +97,11 @@ Defina `DB_PASSWORD` no ambiente antes de iniciar a aplicação.
 | PUT | `/recursos/{id}` | Atualiza recurso |
 | GET | `/reservas` | Lista reservas |
 | POST | `/reservas` | Solicita reserva |
-| PATCH | `/reservas/{id}/estado` | Altera estado respeitando a máquina de estados |
+| PATCH | `/reservas/{id}/estado` | Responsável/administrador altera estado respeitando a máquina de estados |
+| DELETE | `/reservas/{id}` | Solicitante cancela a própria reserva; responsável/administrador pode cancelar |
+| GET | `/usuarios` | Administrador lista usuários |
+| POST | `/usuarios` | Administrador cadastra usuário e perfil |
+| PATCH | `/usuarios/{id}/ativo` | Administrador ativa/desativa usuário |
 | GET | `/reservas/{id}/auditoria` | Consulta histórico de criação e transições |
 
 Erros de validação retornam HTTP 400; conflitos de horário e transições inválidas retornam HTTP 409; recurso ou reserva inexistente retorna HTTP 404; regras de negócio inválidas retornam HTTP 422.
@@ -120,7 +124,7 @@ O workflow do GitHub Actions executa `mvn -B verify` em pull requests e pushes p
 - **Concorrência na criação:** o bloqueio pessimista da linha do recurso serializa solicitações simultâneas para o mesmo recurso.
 - **Concorrência nas transições:** o bloqueio pessimista da linha da reserva serializa alterações de estado simultâneas.
 - **Máquina de estados:** transições são definidas em `EstadoReserva`; estados finais não permitem novas transições.
-- **Auditoria transacional:** criação e mudança de estado geram eventos persistidos na mesma transação da operação. A origem atual é registrada como `API`; ainda não representa um usuário autenticado.
+- **Auditoria transacional:** criação, mudança de estado e cancelamento geram eventos persistidos na mesma transação; quando autenticado, o login é registrado como origem.
 - **Nomes de recursos:** validação normalizada por tipo e nome, complementada por restrição de unicidade no banco conforme o script de correção.
 
 ## Status conhecido e limitações
@@ -135,14 +139,13 @@ Implementado e coberto por testes no código atual:
 - Registro e consulta do histórico de criação/transições (branch de melhorias).
 
 Ainda não deve ser considerado concluído:
-- Autenticação e autorização por perfil.
-- Identificação do usuário responsável por cada ação de auditoria.
-- Política de autorização para aprovar reservas de recursos restritos.
+- Alteração de período/recurso de reservas ainda não implementada.
+- Aprovação de recurso restrito é protegida pelo papel RESPONSAVEL, mas requer testes de regra de negócio específicos.
 - Retirada e devolução de materiais.
 - Migrações versionadas do banco (o projeto ainda usa `ddl-auto: update`).
 - Rastreabilidade completa dos 14 requisitos, testes de ponta a ponta e carga, e análise SonarCloud.
 
-**Segurança:** esta versão não possui autenticação nem autorização. Não exponha a aplicação publicamente nem utilize dados pessoais ou operacionais reais.
+**Segurança:** HTTP Basic com BCrypt e papéis está implementado nesta branch. O ambiente Compose limita as portas ao localhost; não exponha publicamente sem HTTPS, gestão de segredos e revisão de segurança.
 
 ## Correção de dados duplicados existentes
 
