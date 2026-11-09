@@ -29,6 +29,8 @@ class ReservaServiceIntegracaoTest {
     @Autowired RecursoRepository recursos;
     @Autowired ReservaRepository reservas;
     @Autowired ReservaAuditoriaRepository auditoria;
+    @Autowired ConflitoEvitadoRepository conflitos;
+    @Autowired RelatorioService relatorios;
 
     private Recurso sala;
 
@@ -37,6 +39,7 @@ class ReservaServiceIntegracaoTest {
     @BeforeEach
     void limpar() {
         auditoria.deleteAll();
+        conflitos.deleteAll();
         reservas.deleteAll();
         recursos.deleteAll();
         sala = recursos.save(new Recurso(TipoRecurso.SALA, "Sala 101", false));
@@ -208,6 +211,25 @@ class ReservaServiceIntegracaoTest {
         Recurso sala2 = recursos.save(new Recurso(TipoRecurso.SALA, "Sala 103", false));
         assertThrows(IllegalArgumentException.class,
                 () -> service.criar(sala.getId(), sala2.getId(), "coord.ana", hora(10), hora(11)));
+    }
+
+
+    @Test
+    void relatorioCalculaMinutosAlocadosNoIntervaloSolicitado() {
+        service.criar(sala.getId(), "prof.ana", hora(10), hora(12));
+        var linha = relatorios.utilizacao(hora(10).plusSeconds(1800), hora(11).plusSeconds(1800))
+                .stream().filter(x -> x.recursoId().equals(sala.getId())).findFirst().orElseThrow();
+        assertEquals(1, linha.reservas());
+        assertEquals(60, linha.minutosAlocados());
+    }
+
+    @Test
+    void conflitoRecusadoFicaRegistradoMesmoComRollbackDaReserva() {
+        service.criar(sala.getId(), "prof.ana", hora(10), hora(11));
+        assertThrows(ConflitoHorarioException.class,
+                () -> service.criar(sala.getId(), "prof.bia", hora(10), hora(11)));
+        assertEquals(1, conflitos.count());
+        assertEquals(1, relatorios.conflitos(hora(0), hora(23)).total());
     }
 
 }
