@@ -48,7 +48,7 @@ class ReservaControllerTest {
         Reserva reserva = new Reserva(new Recurso(TipoRecurso.SALA, "Sala 101", false),
                 new Periodo(INICIO, FIM), "prof.ana");
         ReflectionTestUtils.setField(reserva, "id", 42L);
-        when(service.criar(eq(1L), eq("prof.ana"), eq(INICIO), eq(FIM))).thenReturn(reserva);
+        when(service.criar(eq(1L), isNull(), eq("prof.ana"), eq(INICIO), eq(FIM))).thenReturn(reserva);
 
         enviar(JSON_VALIDO)
                 .andExpect(status().isCreated())
@@ -58,7 +58,7 @@ class ReservaControllerTest {
 
     @Test
     void conflitoDeHorarioRetorna409ComMensagem() throws Exception {
-        when(service.criar(any(), any(), any(), any()))
+        when(service.criar(any(), any(), any(), any(), any()))
                 .thenThrow(new ConflitoHorarioException("Já existe reserva neste horário para o recurso"));
 
         enviar(JSON_VALIDO)
