@@ -28,6 +28,7 @@ class ReservaServiceIntegracaoTest {
     @Autowired ReservaService service;
     @Autowired RecursoRepository recursos;
     @Autowired ReservaRepository reservas;
+    @Autowired ReservaAuditoriaRepository auditoria;
 
     private Recurso sala;
 
@@ -35,6 +36,7 @@ class ReservaServiceIntegracaoTest {
 
     @BeforeEach
     void limpar() {
+        auditoria.deleteAll();
         reservas.deleteAll();
         recursos.deleteAll();
         sala = recursos.save(new Recurso(TipoRecurso.SALA, "Sala 101", false));
