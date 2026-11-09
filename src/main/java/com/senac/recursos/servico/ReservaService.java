@@ -18,13 +18,16 @@ public class ReservaService {
     private final ReservaAuditoriaRepository auditoria;
     private final Clock clock;
     private final ConflitoEvitadoService conflitosEvitados;
+    private final NotificacaoService notificacoes;
 
     public ReservaService(RecursoRepository recursos, ReservaRepository reservas,
-                          ReservaAuditoriaRepository auditoria, ConflitoEvitadoService conflitosEvitados) {
+                          ReservaAuditoriaRepository auditoria, ConflitoEvitadoService conflitosEvitados,
+                          NotificacaoService notificacoes) {
         this.recursos = recursos;
         this.reservas = reservas;
         this.auditoria = auditoria;
         this.conflitosEvitados = conflitosEvitados;
+        this.notificacoes = notificacoes;
         this.clock = Clock.systemUTC();
     }
 
@@ -42,6 +45,7 @@ public class ReservaService {
         reserva.transicionarPara(estado);
         Reserva salva = reservas.save(reserva);
         auditoria.save(new ReservaAuditoria(salva, anterior, estado, Instant.now(clock), origemAtual()));
+        notificacoes.enviar(salva.getSolicitante(), "Reserva atualizada", "A reserva " + id + " mudou de " + anterior + " para " + estado + ".");
         return salva;
     }
 
@@ -58,6 +62,7 @@ public class ReservaService {
         Reserva salva = reservas.save(reserva);
         auditoria.save(new ReservaAuditoria(salva, anterior, EstadoReserva.CANCELADA,
                 Instant.now(clock), origemAtual()));
+        notificacoes.enviar(salva.getSolicitante(), "Reserva cancelada", "A reserva " + id + " foi cancelada.");
     }
 
     @Transactional(readOnly = true)
@@ -126,6 +131,7 @@ public class ReservaService {
         Reserva criada = reservas.save(new Reserva(principal, professor, periodo, solicitanteNormalizado));
         auditoria.save(new ReservaAuditoria(criada, null, EstadoReserva.SOLICITADA,
                 Instant.now(clock), origemAtual()));
+        notificacoes.enviar(criada.getSolicitante(), "Reserva solicitada", "Sua solicitação de reserva " + criada.getId() + " foi registrada.");
         return criada;
     }
 }
