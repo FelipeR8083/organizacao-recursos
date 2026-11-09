@@ -1,6 +1,7 @@
 package com.senac.recursos.api;
 
 import com.senac.recursos.dominio.Reserva;
+import com.senac.recursos.dominio.ReservaAuditoria;
 import com.senac.recursos.servico.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -28,6 +29,11 @@ public class ReservaController {
 
     @GetMapping
     public List<Reserva> listar() { return service.listar(); }
+
+    @GetMapping("/{id}/auditoria")
+    public List<ReservaAuditoria> auditoria(@PathVariable Long id) {
+        return service.listarAuditoria(id);
+    }
 
     @PatchMapping("/{id}/estado")
     public Reserva alterarEstado(@PathVariable Long id, @Valid @RequestBody AlteracaoEstado req) {
