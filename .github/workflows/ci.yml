@@ -5,9 +5,19 @@ on:
   push:
     branches: [main, melhorias/qualidade-e-requisitos]
 
+# O pipeline só precisa ler o código e publicar artefatos do próprio run.
+permissions:
+  contents: read
+
+# Evita gastar runners em execuções antigas da mesma branch/PR.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
 
     steps:
       - uses: actions/checkout@v4
