@@ -1,0 +1,110 @@
+package com.senac.recursos.api;
+
+import com.senac.recursos.dominio.*;
+import com.senac.recursos.servico.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import java.time.Instant;
+import java.util.NoSuchElementException;
+import java.util.stream.Stream;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+/** Testa o contrato HTTP do controller; o serviço é isolado com mock (teste unitário). */
+@WebMvcTest(ReservaController.class)
+class ReservaControllerTest {
+
+    private static final Instant INICIO = Instant.parse("2026-11-10T10:00:00Z");
+    private static final Instant FIM = Instant.parse("2026-11-10T11:00:00Z");
+    private static final String JSON_VALIDO =
+            "{\"recursoId\":1,\"solicitante\":\"prof.ana\","
+          + "\"inicio\":\"2026-11-10T10:00:00Z\",\"fim\":\"2026-11-10T11:00:00Z\"}";
+
+    @Autowired MockMvc mvc;
+    @MockBean ReservaService service;
+
+    private ResultActions enviar(String json) throws Exception {
+        return mvc.perform(post("/reservas").contentType(MediaType.APPLICATION_JSON).content(json));
+    }
+
+    @Test
+    void criaReservaERetorna201ComIdEEstado() throws Exception {
+        Reserva reserva = new Reserva(new Recurso(TipoRecurso.SALA, "Sala 101", false),
+                new Periodo(INICIO, FIM), "prof.ana");
+        ReflectionTestUtils.setField(reserva, "id", 42L);
+        when(service.criar(eq(1L), eq("prof.ana"), eq(INICIO), eq(FIM))).thenReturn(reserva);
+
+        enviar(JSON_VALIDO)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(42))
+                .andExpect(jsonPath("$.estado").value("SOLICITADA"));
+    }
+
+    @Test
+    void conflitoDeHorarioRetorna409ComMensagem() throws Exception {
+        when(service.criar(any(), any(), any(), any()))
+                .thenThrow(new ConflitoHorarioException("Já existe reserva neste horário para o recurso"));
+
+        enviar(JSON_VALIDO)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.erro").value("Já existe reserva neste horário para o recurso"));
+    }
+
+    @Test
+    void recursoEmManutencaoRetorna422() throws Exception {
+        when(service.criar(any(), any(), any(), any()))
+                .thenThrow(new RecursoIndisponivelException("Recurso em manutenção"));
+
+        enviar(JSON_VALIDO)
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.erro").value("Recurso em manutenção"));
+    }
+
+    @Test
+    void periodoInvalidoRetorna422() throws Exception {
+        when(service.criar(any(), any(), any(), any()))
+                .thenThrow(new IllegalArgumentException("O término deve ser posterior ao início"));
+
+        enviar(JSON_VALIDO)
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.erro").value("O término deve ser posterior ao início"));
+    }
+
+    @Test
+    void recursoInexistenteRetorna404() throws Exception {
+        when(service.criar(any(), any(), any(), any()))
+                .thenThrow(new NoSuchElementException("Recurso não encontrado: 1"));
+
+        enviar(JSON_VALIDO)
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.erro").value("Recurso não encontrado: 1"));
+    }
+
+    static Stream<String> corposInvalidos() {
+        return Stream.of(
+            "{\"recursoId\":1,\"solicitante\":\"\",\"inicio\":\"2026-11-10T10:00:00Z\",\"fim\":\"2026-11-10T11:00:00Z\"}",
+            "{\"solicitante\":\"prof.ana\",\"inicio\":\"2026-11-10T10:00:00Z\",\"fim\":\"2026-11-10T11:00:00Z\"}",
+            "{\"recursoId\":1,\"solicitante\":\"prof.ana\",\"fim\":\"2026-11-10T11:00:00Z\"}",
+            "{\"recursoId\":1,\"solicitante\":\"prof.ana\",\"inicio\":\"2026-11-10T10:00:00Z\"}",
+            "{\"recursoId\":1,\"solicitante\":\"prof.ana\",\"inicio\":\"ontem\",\"fim\":\"2026-11-10T11:00:00Z\"}",
+            "isto não é json"
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("corposInvalidos")
+    void entradaInvalidaRetorna400ENuncaChamaOServico(String corpo) throws Exception {
+        enviar(corpo).andExpect(status().isBadRequest());
+        verifyNoInteractions(service);
+    }
+}
