@@ -23,6 +23,26 @@ Fonte: enunciado oficial "Especificação do Projeto — Qualidade 2026.2", seç
 | RF-13 | Interface responsiva e mensagens compreensíveis | Parcial | Há interface web e tratamento de erros HTTP com mensagens em português. Responsividade precisa ser validada em diferentes larguras e documentada com evidência. |
 | RF-14 | Documentação de API ou fluxos públicos | Parcial | README e documentação técnica descrevem endpoints/fluxos. Foi adicionada dependência Springdoc OpenAPI; validar Swagger UI em `/swagger-ui/index.html` e complementar exemplos/descrições dos endpoints. |
 
+
+## Rastreabilidade requisito → risco → teste → evidência
+
+| Requisito | Risco principal | Teste automatizado / manual | Evidência versionada |
+|---|---|---|---|
+| RF-01 | Acesso indevido e escalonamento de privilégio | `AutorizacaoApiTest`, `FluxoCompletoE2ETest`; testar login real e bloqueio de endpoints | `src/main/java/com/senac/recursos/config/SegurancaConfig.java`, `docs/ADR-001-SEGURANCA.md` |
+| RF-02 | Cadastro inconsistente e recurso duplicado | `RecursoControllerDuplicidadeTest`, `ReservaServiceIntegracaoTest`; cadastrar SALA/PROFESSOR/MATERIAL | `Recurso.java`, `RecursoController.java` |
+| RF-03 | Oferecer recurso indisponível ou incompatível | `ReservaServiceIntegracaoTest.pesquisaRecursosPorTipoCapacidadeLocalizacaoECompetencia`; validar filtro de disponibilidade via HTTP | `RecursoRepository.java`, formulário de pesquisa em `static/index.html` |
+| RF-04 | Alteração/cancelamento causar sobreposição ou violar titularidade | `ReservaServiceIntegracaoTest.titularPodeAlterarPeriodoEAlteracaoGeraAuditoria`, `reagendamentoTambemVerificaConflitoDeHorario`, testes de cancelamento | `ReservaService.java`, `ReservaController.java` |
+| RF-05 | Professor alocado em duas salas no mesmo período | `ReservaServiceIntegracaoTest.professorVinculadoNaoPodeSerAlocadoEmDuasSalasNoMesmoHorario` | `Reserva.java`, `ReservaRepository.java` |
+| RF-06 | Dupla reserva sob concorrência | `ReservaConcorrenciaTest.solicitacoesSimultaneasProduzemUmaUnicaReserva`; JMeter planejado | `ReservaService.java`, `jmeter/reservas-concorrentes.jmx` |
+| RF-07 | Recurso restrito utilizado sem autorização | `ReservaServiceIntegracaoTest.somenteResponsavelPodeAprovarReservaDeRecursoRestrito`; validar papel RESPONSAVEL na UI/API | `ReservaService.java`, `SegurancaConfig.java` |
+| RF-08 | Reserva durante manutenção | `ReservaConcorrenciaTest.naoPermiteReservarRecursoEmManutencao` | `ReservaService.java` |
+| RF-09 | Material não devolvido ou retirada sem aprovação | `ReservaServiceIntegracaoTest.registraRetiradaEDevolucaoDeMaterialComHistoricoDeEstados`, `impedeRetiradaDeReservaQueNaoEstejaAprovada` | `MovimentacaoMaterialService.java`, migração V3 |
+| RF-10 | Alteração sem trilha de auditoria | Testes de auditoria de criação, transição, cancelamento e reagendamento | `ReservaAuditoria.java`, migração V4 |
+| RF-11 | Falha de notificação não percebida | `ReservaServiceIntegracaoTest.notificacoesSimuladasSaoGeradasNaSolicitacaoETransicao`, `NotificacaoServiceWireMockTest` | `NotificacaoService.java`, `NotificacaoSimulada.java` |
+| RF-12 | Indicadores de utilização/conflitos incorretos | `ReservaServiceIntegracaoTest.relatorioCalculaMinutosAlocadosNoIntervaloSolicitado`, `conflitoRecusadoFicaRegistradoMesmoComRollbackDaReserva` | `RelatorioService.java`, `ConflitoEvitadoService.java` |
+| RF-13 | Interface difícil de usar em celular ou erro incompreensível | Checklist manual em viewport 360px, 768px e desktop; executar fluxo de erro | `src/main/resources/static/index.html` |
+| RF-14 | Contrato público ambíguo | Abrir Swagger UI e validar schemas/exemplos | `OpenApiConfig.java`, Springdoc e README |
+
 ## Estratégia obrigatória de qualidade
 
 | Critério do enunciado | Status observado | Evidência / ação necessária |
