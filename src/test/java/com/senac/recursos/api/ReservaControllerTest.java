@@ -68,7 +68,7 @@ class ReservaControllerTest {
 
     @Test
     void recursoEmManutencaoRetorna422() throws Exception {
-        when(service.criar(any(), any(), any(), any()))
+        when(service.criar(any(), any(), any(), any(), any()))
                 .thenThrow(new RecursoIndisponivelException("Recurso em manutenção"));
 
         enviar(JSON_VALIDO)
@@ -78,7 +78,7 @@ class ReservaControllerTest {
 
     @Test
     void periodoInvalidoRetorna422() throws Exception {
-        when(service.criar(any(), any(), any(), any()))
+        when(service.criar(any(), any(), any(), any(), any()))
                 .thenThrow(new IllegalArgumentException("O término deve ser posterior ao início"));
 
         enviar(JSON_VALIDO)
@@ -88,7 +88,7 @@ class ReservaControllerTest {
 
     @Test
     void recursoInexistenteRetorna404() throws Exception {
-        when(service.criar(any(), any(), any(), any()))
+        when(service.criar(any(), any(), any(), any(), any()))
                 .thenThrow(new NoSuchElementException("Recurso não encontrado: 1"));
 
         enviar(JSON_VALIDO)
