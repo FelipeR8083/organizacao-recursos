@@ -96,7 +96,7 @@ class ReservaControllerTest {
     void transicaoDeEstadoValidaEhEncaminhadaAoServico() throws Exception {
         mvc.perform(patch("/reservas/42/estado")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\\"estado\\":\\"APROVADA\\"}"))
+                        .content("{\"estado\":\"APROVADA\"}"))
                 .andExpect(status().isOk());
         verify(service).alterarEstado(42L, EstadoReserva.APROVADA);
     }
