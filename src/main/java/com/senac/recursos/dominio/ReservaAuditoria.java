@@ -9,7 +9,10 @@ import java.time.Instant;
  * pois o sistema ainda não possui autenticação.
  */
 @Entity
-@Table(name = "reserva_auditoria")
+@org.hibernate.annotations.Immutable
+@Table(name = "reserva_auditoria", indexes = {
+        @Index(name = "idx_auditoria_reserva_data_id", columnList = "reserva_id, ocorrido_em, id")
+})
 public class ReservaAuditoria {
 
     @Id
@@ -17,15 +20,15 @@ public class ReservaAuditoria {
     private Long id;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "reserva_id", nullable = false)
+    @JoinColumn(name = "reserva_id", nullable = false, updatable = false)
     private Reserva reserva;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado_anterior", length = 30)
+    @Column(name = "estado_anterior", length = 30, updatable = false)
     private EstadoReserva estadoAnterior;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado_novo", nullable = false, length = 30)
+    @Column(name = "estado_novo", nullable = false, length = 30, updatable = false)
     private EstadoReserva estadoNovo;
 
     @Column(name = "ocorrido_em", nullable = false, updatable = false)
