@@ -20,7 +20,7 @@ import org.springframework.security.core.Authentication;
 @RequestMapping("/reservas")
 public class ReservaController {
 
-    public record NovaReserva(@NotNull Long recursoId, @NotBlank String solicitante,
+    public record NovaReserva(@NotNull Long recursoId, Long professorId, @NotBlank String solicitante,
                               @NotNull Instant inicio, @NotNull Instant fim) {}
     public record AlteracaoEstado(@NotNull EstadoReserva estado) {}
 
@@ -54,7 +54,7 @@ public class ReservaController {
     @PostMapping
     public ResponseEntity<Map<String, Object>> criar(@Valid @RequestBody NovaReserva req, Authentication autenticacao) {
         String solicitante = autenticacao == null ? req.solicitante() : autenticacao.getName();
-        Reserva r = service.criar(req.recursoId(), solicitante, req.inicio(), req.fim());
+        Reserva r = service.criar(req.recursoId(), req.professorId(), solicitante, req.inicio(), req.fim());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of("id", r.getId(), "estado", r.getEstado()));
     }
