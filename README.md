@@ -34,7 +34,7 @@ docker run -d --name recursos-db \
 
 ### Executar tudo com Docker Compose
 
-Crie um arquivo .env na raiz do projeto (não o envie ao Git):
+Copie `.env.example` para `.env` na raiz do projeto e substitua o valor por uma senha forte (não envie `.env` ao Git):
 
 ```dotenv
 DB_PASSWORD=escolha-uma-senha-local
