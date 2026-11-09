@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -97,6 +98,7 @@ class ReservaControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "responsavel", roles = "RESPONSAVEL")
     void transicaoDeEstadoValidaEhEncaminhadaAoServico() throws Exception {
         mvc.perform(patch("/reservas/42/estado")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -104,7 +106,7 @@ class ReservaControllerTest {
                                 {"estado":"APROVADA"}
                                 """))
                 .andExpect(status().isOk());
-        verify(service).alterarEstado(42L, EstadoReserva.APROVADA);
+        verify(service).alterarEstado(42L, EstadoReserva.APROVADA, "responsavel", true);
     }
 
     @Test
