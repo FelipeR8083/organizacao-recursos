@@ -32,7 +32,41 @@ docker run -d --name recursos-db \
   -p 5432:5432 postgres:16-alpine
 ```
 
-Execute a aplicação:
+### Executar tudo com Docker Compose
+
+Crie um arquivo .env na raiz do projeto (não o envie ao Git):
+
+```dotenv
+DB_PASSWORD=escolha-uma-senha-local
+```
+
+Suba PostgreSQL e aplicação:
+
+```bash
+docker compose up --build -d
+```
+
+Acesse a interface em http://localhost:8080. Para acompanhar os logs:
+
+```bash
+docker compose logs -f app
+```
+
+Para parar os serviços, preservando os dados do banco:
+
+```bash
+docker compose down
+```
+
+Para apagar também o volume de dados (operação destrutiva):
+
+```bash
+docker compose down -v
+```
+
+O Compose publica o PostgreSQL apenas em 127.0.0.1. A senha é obrigatória via .env.
+
+Execute a aplicação diretamente com Maven:
 
 ```bash
 mvn spring-boot:run
