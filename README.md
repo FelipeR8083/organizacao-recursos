@@ -1,37 +1,113 @@
 # Organização de Recursos
 
-Sistema para alocar **salas, professores e materiais** sem conflitos de horário.
+Sistema acadêmico para alocar **salas, professores e materiais** sem conflitos de horário.
+
 Projeto de Qualidade de Software — Senac TADS 2026.2.
 
-## Stack
-Java 21 · Spring Boot 3.3 · PostgreSQL · JUnit 5 · Testcontainers · JaCoCo
+## Tecnologias
+
+- Java 21
+- Spring Boot 3.3.5
+- Spring Data JPA e Hibernate
+- PostgreSQL 16
+- Maven
+- JUnit 5, Spring Boot Test e Testcontainers
+- JaCoCo
+
+## Pré-requisitos
+
+- JDK 21
+- Maven 3.9+
+- Docker Desktop ou Docker Engine em execução
 
 ## Como executar
+
+Inicie o banco de dados PostgreSQL:
+
 ```bash
-docker run -d --name recursos-db -e POSTGRES_DB=recursos -e POSTGRES_USER=recursos \
-  -e POSTGRES_PASSWORD=recursos -p 5432:5432 postgres:16-alpine
+docker run -d --name recursos-db \
+  -e POSTGRES_DB=recursos \
+  -e POSTGRES_USER=recursos \
+  -e POSTGRES_PASSWORD=recursos \
+  -p 5432:5432 postgres:16-alpine
+```
+
+Execute a aplicação:
+
+```bash
 mvn spring-boot:run
 ```
 
-## Testes
+A aplicação ficará disponível em `http://localhost:8080`. A interface web está em `src/main/resources/static/index.html`.
+
+### Configuração do banco
+
+As variáveis de ambiente aceitas são:
+
+| Variável | Padrão |
+|---|---|
+| `DB_URL` | `jdbc:postgresql://localhost:5432/recursos` |
+| `DB_USER` | `recursos` |
+| `DB_PASSWORD` | sem valor padrão |
+
+Defina `DB_PASSWORD` no ambiente antes de iniciar a aplicação.
+
+## API REST
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| GET | `/recursos` | Lista recursos |
+| POST | `/recursos` | Cadastra recurso |
+| PUT | `/recursos/{id}` | Atualiza recurso |
+| GET | `/reservas` | Lista reservas |
+| POST | `/reservas` | Solicita reserva |
+| PATCH | `/reservas/{id}/estado` | Altera estado respeitando a máquina de estados |
+| GET | `/reservas/{id}/auditoria` | Consulta histórico de criação e transições |
+
+Erros de validação retornam HTTP 400; conflitos de horário e transições inválidas retornam HTTP 409; recurso ou reserva inexistente retorna HTTP 404; regras de negócio inválidas retornam HTTP 422.
+
+## Testes e cobertura
+
+Execute a suíte completa:
+
 ```bash
-mvn verify   # requer Docker (Testcontainers); relatório em target/site/jacoco
+mvn clean verify
 ```
 
+Os testes de integração usam Testcontainers e precisam de Docker. O relatório JaCoCo é gerado em `target/site/jacoco/index.html`.
+
+O workflow do GitHub Actions executa `mvn -B verify` em pull requests e pushes para `main`, e publica o relatório como artefato quando disponível.
+
 ## Decisões de design
-- **Intervalo semiaberto `[início, fim)`**: reservas que apenas se tocam (10h–11h e 11h–12h) não conflitam.
-- **Dupla reserva**: `SELECT ... FOR UPDATE` na linha do recurso (`PESSIMISTIC_WRITE`) serializa solicitações concorrentes; provado em `ReservaConcorrenciaTest`.
-- **Estados** em `EstadoReserva`; estados finais não têm saída e `EM_USO` não pode ser cancelada.
 
-## Status dos requisitos (RTM resumida)
-| # | Requisito | Status |
-|---|-----------|--------|
-| 4 | Criar reserva | Parcial (alterar/cancelar pendentes) |
-| 5 | Sobreposição de horários | Feito por recurso (agenda do professor vinculada à sala pendente) |
-| 6 | Proteção contra dupla reserva | Feito + teste |
-| 8 | Bloqueio por manutenção | Feito + teste |
-| 1,2,3,7,9–14 | Demais | Pendente |
+- **Intervalo semiaberto [início, fim):** reservas adjacentes, como 10h–11h e 11h–12h, não conflitam.
+- **Concorrência na criação:** o bloqueio pessimista da linha do recurso serializa solicitações simultâneas para o mesmo recurso.
+- **Concorrência nas transições:** o bloqueio pessimista da linha da reserva serializa alterações de estado simultâneas.
+- **Máquina de estados:** transições são definidas em `EstadoReserva`; estados finais não permitem novas transições.
+- **Auditoria transacional:** criação e mudança de estado geram eventos persistidos na mesma transação da operação. A origem atual é registrada como `API`; ainda não representa um usuário autenticado.
+- **Nomes de recursos:** validação normalizada por tipo e nome, complementada por restrição de unicidade no banco conforme o script de correção.
 
-## Próximos passos
-Autenticação por perfil, CRUD de recursos, aprovação de restritos, auditoria,
-retirada/devolução, WireMock, JMeter, SonarCloud, RTM.md completa e diagramas C4.
+## Status conhecido e limitações
+
+Implementado e coberto por testes no código atual:
+- Criação de reservas e validação de período.
+- Prevenção de sobreposição por recurso.
+- Proteção contra dupla reserva concorrente.
+- Bloqueio de recursos em manutenção.
+- Máquina de estados das reservas.
+- Validação de nome duplicado de recurso.
+- Registro e consulta do histórico de criação/transições (branch de melhorias).
+
+Ainda não deve ser considerado concluído:
+- Autenticação e autorização por perfil.
+- Identificação do usuário responsável por cada ação de auditoria.
+- Política de autorização para aprovar reservas de recursos restritos.
+- Retirada e devolução de materiais.
+- Migrações versionadas do banco (o projeto ainda usa `ddl-auto: update`).
+- Rastreabilidade completa dos 14 requisitos, testes de ponta a ponta e carga, e análise SonarCloud.
+
+**Segurança:** esta versão não possui autenticação nem autorização. Não exponha a aplicação publicamente nem utilize dados pessoais ou operacionais reais.
+
+## Correção de dados duplicados existentes
+
+Se o banco já possuir recursos duplicados, leia primeiro `LEIA-PRIMEIRO-DUPLICADOS.md`. Faça backup antes de executar `CORRIGIR-DUPLICADOS.sql`. Não rode o script sem revisar os dados e confirmar o backup.
