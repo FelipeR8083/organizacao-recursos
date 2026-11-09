@@ -39,6 +39,8 @@ public class SegurancaConfig {
                         .requestMatchers(HttpMethod.PUT, "/recursos/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/recursos/**", "/reservas/**")
                             .hasAnyRole("SOLICITANTE", "RESPONSAVEL", "ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.POST, "/reservas/*/retirada", "/reservas/*/devolucao")
+                            .hasAnyRole("RESPONSAVEL", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/reservas/**")
                             .hasAnyRole("SOLICITANTE", "RESPONSAVEL", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/reservas/**")
