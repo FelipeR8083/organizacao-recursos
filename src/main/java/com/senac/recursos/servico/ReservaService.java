@@ -48,7 +48,7 @@ public class ReservaService {
         if (!reservas.existsById(reservaId)) {
             throw new NoSuchElementException("Reserva não encontrada");
         }
-        return auditoria.findByReserva_IdOrderByOcorridoEmAsc(reservaId);
+        return auditoria.findByReserva_IdOrderByOcorridoEmAscIdAsc(reservaId);
     }
 
     @Transactional
