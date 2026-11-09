@@ -2,6 +2,8 @@ package com.senac.recursos.servico;
 
 import com.senac.recursos.dominio.*;
 import com.senac.recursos.repositorio.*;
+import java.time.Clock;
+import com.senac.recursos.dominio.ReservaAuditoria;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
@@ -13,10 +15,15 @@ public class ReservaService {
 
     private final RecursoRepository recursos;
     private final ReservaRepository reservas;
+    private final ReservaAuditoriaRepository auditoria;
+    private final Clock clock;
 
-    public ReservaService(RecursoRepository recursos, ReservaRepository reservas) {
+    public ReservaService(RecursoRepository recursos, ReservaRepository reservas,
+                          ReservaAuditoriaRepository auditoria) {
         this.recursos = recursos;
         this.reservas = reservas;
+        this.auditoria = auditoria;
+        this.clock = Clock.systemUTC();
     }
 
     @Transactional(readOnly = true)
@@ -29,8 +36,19 @@ public class ReservaService {
         }
         Reserva reserva = reservas.buscarComLock(id)
                 .orElseThrow(() -> new NoSuchElementException("Reserva não encontrada"));
+        EstadoReserva anterior = reserva.getEstado();
         reserva.transicionarPara(estado);
-        return reservas.save(reserva);
+        Reserva salva = reservas.save(reserva);
+        auditoria.save(new ReservaAuditoria(salva, anterior, estado, Instant.now(clock), "API"));
+        return salva;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReservaAuditoria> listarAuditoria(Long reservaId) {
+        if (!reservas.existsById(reservaId)) {
+            throw new NoSuchElementException("Reserva não encontrada");
+        }
+        return auditoria.findByReservaIdOrderByOcorridoEmAsc(reservaId);
     }
 
     @Transactional
@@ -52,6 +70,9 @@ public class ReservaService {
         if (reservas.existeConflito(recursoId, EstadoReserva.ativos(), periodo.inicio(), periodo.fim())) {
             throw new ConflitoHorarioException("Já existe reserva neste horário para o recurso");
         }
-        return reservas.save(new Reserva(recurso, periodo, solicitanteNormalizado));
+        Reserva criada = reservas.save(new Reserva(recurso, periodo, solicitanteNormalizado));
+        auditoria.save(new ReservaAuditoria(criada, null, EstadoReserva.SOLICITADA,
+                Instant.now(clock), "API"));
+        return criada;
     }
 }
