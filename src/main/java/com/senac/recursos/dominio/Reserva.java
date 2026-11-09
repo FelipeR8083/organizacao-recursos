@@ -9,6 +9,8 @@ public class Reserva {
     private Long id;
     @ManyToOne(optional = false)
     private Recurso recurso;
+    @ManyToOne
+    private Recurso professor;
     @Column(nullable = false)
     private Instant inicio;
     @Column(nullable = false)
@@ -21,7 +23,12 @@ public class Reserva {
     protected Reserva() {}
 
     public Reserva(Recurso recurso, Periodo periodo, String solicitante) {
+        this(recurso, null, periodo, solicitante);
+    }
+
+    public Reserva(Recurso recurso, Recurso professor, Periodo periodo, String solicitante) {
         this.recurso = recurso;
+        this.professor = professor;
         this.inicio = periodo.inicio();
         this.fim = periodo.fim();
         this.solicitante = solicitante;
@@ -37,6 +44,7 @@ public class Reserva {
 
     public Long getId() { return id; }
     public Recurso getRecurso() { return recurso; }
+    public Recurso getProfessor() { return professor; }
     public Instant getInicio() { return inicio; }
     public Instant getFim() { return fim; }
     public EstadoReserva getEstado() { return estado; }
