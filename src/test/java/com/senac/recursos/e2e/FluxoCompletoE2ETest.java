@@ -72,12 +72,39 @@ class FluxoCompletoE2ETest {
         Instant inicio = Instant.now().plusSeconds(3600);
         Instant fim = inicio.plusSeconds(3600);
         TestRestTemplate solicitante = auth("solicitante-e2e", "senha-solicitante-123");
+
+        // RF-03: pesquisa real por metadados + disponibilidade via HTTP.
+        ResponseEntity<JsonNode> pesquisa = solicitante.getForEntity(
+                "/recursos?tipo=SALA&capacidadeMinima=20&localizacao=bloco%20e&competencia=LABORATORIO",
+                JsonNode.class);
+        assertEquals(HttpStatus.OK, pesquisa.getStatusCode());
+        assertEquals(1, pesquisa.getBody().size());
+        assertEquals(salaId, pesquisa.getBody().get(0).get("id").asLong());
+
+        String consultaDisponibilidade = "/recursos?tipo=SALA&inicio=" + inicio + "&fim=" + fim;
+        ResponseEntity<JsonNode> livresAntes = solicitante.getForEntity(
+                consultaDisponibilidade, JsonNode.class);
+        assertEquals(HttpStatus.OK, livresAntes.getStatusCode());
+        assertEquals(1, livresAntes.getBody().size());
+        assertEquals(salaId, livresAntes.getBody().get(0).get("id").asLong());
         ResponseEntity<JsonNode> reservaResponse = solicitante.postForEntity("/reservas",
                 new HttpEntity<>(Map.of("recursoId", salaId, "professorId", professorId,
                         "solicitante", "identidade-forjada", "inicio", inicio.toString(), "fim", fim.toString()),
                         jsonHeaders()), JsonNode.class);
         assertEquals(HttpStatus.CREATED, reservaResponse.getStatusCode());
         long reservaId = reservaResponse.getBody().get("id").asLong();
+
+        ResponseEntity<JsonNode> ocupados = solicitante.getForEntity(
+                consultaDisponibilidade, JsonNode.class);
+        assertEquals(HttpStatus.OK, ocupados.getStatusCode());
+        assertEquals(0, ocupados.getBody().size(), "Sala ocupada não deve aparecer como disponível");
+
+        ResponseEntity<JsonNode> livresDepois = solicitante.getForEntity(
+                "/recursos?tipo=SALA&inicio=" + fim + "&fim=" + fim.plusSeconds(3600),
+                JsonNode.class);
+        assertEquals(HttpStatus.OK, livresDepois.getStatusCode());
+        assertEquals(1, livresDepois.getBody().size(),
+                "Período adjacente à reserva deve continuar disponível");
 
         ResponseEntity<JsonNode> lista = solicitante.getForEntity("/reservas", JsonNode.class);
         assertEquals("solicitante-e2e", lista.getBody().get(0).get("solicitante").asText());
