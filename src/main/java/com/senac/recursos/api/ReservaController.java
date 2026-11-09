@@ -14,6 +14,7 @@ import java.util.List;
 import com.senac.recursos.dominio.EstadoReserva;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/reservas")
@@ -33,6 +34,16 @@ public class ReservaController {
     @GetMapping("/{id}/auditoria")
     public List<ReservaAuditoria> auditoria(@PathVariable Long id) {
         return service.listarAuditoria(id);
+    }
+
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> cancelar(@PathVariable Long id, Authentication autenticacao) {
+        boolean privilegiado = autenticacao.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_RESPONSAVEL")
+                        || a.getAuthority().equals("ROLE_ADMINISTRADOR"));
+        service.cancelar(id, autenticacao.getName(), privilegiado);
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/estado")
