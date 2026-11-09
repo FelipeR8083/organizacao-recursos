@@ -31,7 +31,7 @@ public class Reserva {
         if (!estado.podeIrPara(destino)) {
             throw new IllegalStateException("Transição inválida: " + estado + " -> " + destino);
         }
-        // TODO: gerar registro de auditoria (requisito 10)
+        // O serviço registra a transição na mesma transação, preservando o histórico.
         this.estado = destino;
     }
 
