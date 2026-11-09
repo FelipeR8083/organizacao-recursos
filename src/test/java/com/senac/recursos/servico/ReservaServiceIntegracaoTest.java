@@ -121,6 +121,31 @@ class ReservaServiceIntegracaoTest {
     }
 
     @Test
+    void criaAuditoriaNaCriacaoEEmCadaMudancaDeEstado() {
+        Reserva reserva = service.criar(sala.getId(), "prof.ana", hora(10), hora(11));
+        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA);
+        service.alterarEstado(reserva.getId(), EstadoReserva.EM_USO);
+
+        var eventos = service.listarAuditoria(reserva.getId());
+        assertEquals(3, eventos.size());
+        assertNull(eventos.get(0).getEstadoAnterior());
+        assertEquals(EstadoReserva.SOLICITADA, eventos.get(0).getEstadoNovo());
+        assertEquals(EstadoReserva.SOLICITADA, eventos.get(1).getEstadoAnterior());
+        assertEquals(EstadoReserva.APROVADA, eventos.get(1).getEstadoNovo());
+        assertEquals(EstadoReserva.APROVADA, eventos.get(2).getEstadoAnterior());
+        assertEquals(EstadoReserva.EM_USO, eventos.get(2).getEstadoNovo());
+        assertEquals("API", eventos.get(2).getOrigem());
+    }
+
+    @Test
+    void transicaoInvalidaNaoGeraEventoDeAuditoria() {
+        Reserva reserva = service.criar(sala.getId(), "prof.ana", hora(10), hora(11));
+        assertThrows(IllegalStateException.class,
+                () -> service.alterarEstado(reserva.getId(), EstadoReserva.CONCLUIDA));
+        assertEquals(1, service.listarAuditoria(reserva.getId()).size());
+    }
+
+    @Test
     void solicitanteEhArmazenadoSemEspacosNasExtremidades() {
         Reserva reserva = service.criar(sala.getId(), "  prof.ana  ", hora(10), hora(11));
         assertEquals("prof.ana", reserva.getSolicitante());
