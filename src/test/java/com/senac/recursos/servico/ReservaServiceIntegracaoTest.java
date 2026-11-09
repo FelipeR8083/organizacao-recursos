@@ -229,7 +229,7 @@ class ReservaServiceIntegracaoTest {
         assertThrows(ConflitoHorarioException.class,
                 () -> service.criar(sala.getId(), "prof.bia", hora(10), hora(11)));
         assertEquals(1, conflitos.count());
-        assertEquals(1, relatorios.conflitos(hora(0), hora(23)).total());
+        assertEquals(1, relatorios.conflitos(Instant.now().minusSeconds(86400), Instant.now().plusSeconds(86400)).total());
     }
 
 }
