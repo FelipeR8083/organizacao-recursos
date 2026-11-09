@@ -16,6 +16,8 @@ Projeto de Qualidade de Software — Senac TADS 2026.2.
 - Maven
 - JUnit 5, Spring Boot Test e Testcontainers
 - JaCoCo
+- WireMock
+- Apache JMeter
 
 ## Pré-requisitos
 
@@ -69,7 +71,7 @@ Para apagar também o volume de dados (operação destrutiva):
 docker compose down -v
 ```
 
-O Compose publica aplicação e PostgreSQL apenas em 127.0.0.1. DB_PASSWORD e as credenciais APP_ADMIN_* são obrigatórias via .env. O primeiro administrador é criado automaticamente na primeira inicialização. A API usa HTTP Basic; cadastre os perfis adicionais pela API administrativa `/usuarios` usando as credenciais do administrador. Senhas são armazenadas com BCrypt e devem ter pelo menos 12 caracteres. Use HTTPS fora do ambiente local.
+O Compose publica aplicação e PostgreSQL apenas em 127.0.0.1. DB_PASSWORD e as credenciais APP_ADMIN_* são obrigatórias via .env. O primeiro administrador é criado automaticamente na primeira inicialização. A API usa HTTP Basic; cadastre os perfis adicionais pela API administrativa `/usuarios` usando as credenciais do administrador. Senhas são armazenadas com BCrypt e devem ter pelo menos 12 caracteres. Use HTTPS fora do ambiente local. O webhook é opcional: configure `NOTIFICACAO_URL` para envio HTTP; sem ele, as notificações ficam no modo simulado.
 
 Execute diretamente com Maven configurando as credenciais (PowerShell):
 
@@ -134,15 +136,15 @@ mvn clean verify
 
 Os testes de integração usam Testcontainers e precisam de Docker. O relatório JaCoCo é gerado em `target/site/jacoco/index.html`.
 
-O workflow do GitHub Actions executa `mvn -B verify` em pull requests e pushes para `main`, e publica o relatório como artefato quando disponível.
+O workflow do GitHub Actions executa `mvn -B verify` em pull requests e pushes para `main` e para a branch de melhorias, e publica o relatório como artefato quando disponível. SonarCloud é executado quando `SONAR_TOKEN` (secret) e `SONAR_ORGANIZATION`/`SONAR_PROJECT_KEY` (variables) estiverem configuradas nas configurações do repositório.
 
 ## Decisões de design
 
 - **Intervalo semiaberto [início, fim):** reservas adjacentes, como 10h–11h e 11h–12h, não conflitam.
-- **Concorrência na criação:** o bloqueio pessimista da linha do recurso serializa solicitações simultâneas para o mesmo recurso.
+- **Concorrência na criação:** bloqueia recurso principal e professor vinculado em ordem crescente de ID e valida conflitos em ambos.
 - **Concorrência nas transições:** o bloqueio pessimista da linha da reserva serializa alterações de estado simultâneas.
 - **Máquina de estados:** transições são definidas em `EstadoReserva`; estados finais não permitem novas transições.
-- **Auditoria transacional:** criação, mudança de estado e cancelamento geram eventos persistidos na mesma transação; quando autenticado, o login é registrado como origem.
+- **Auditoria transacional:** criação, mudança de estado, reagendamento e cancelamento geram eventos persistidos; quando autenticado, o login é registrado como origem.
 - **Nomes de recursos:** validação normalizada por tipo e nome, complementada por restrição de unicidade no banco conforme o script de correção.
 
 ## Status conhecido e limitações
@@ -164,11 +166,10 @@ Implementado e coberto por testes no código atual:
 - Registro e consulta do histórico de criação/transições (branch de melhorias).
 
 Ainda não deve ser considerado concluído:
-- Alteração de período/recurso de reservas ainda não implementada.
-- Aprovação de recurso restrito é protegida pelo papel RESPONSAVEL, mas requer testes de regra de negócio específicos.
-- Retirada e devolução de materiais.
-- Metas de cobertura, análise SonarCloud e teste JMeter ainda precisam de resultados comprovados.
-- Rastreabilidade completa dos 14 requisitos, testes de ponta a ponta e carga, e análise SonarCloud.
+- Metas de cobertura (80% linhas / 70% branches), análise SonarCloud e teste JMeter ainda precisam de resultados comprovados.
+- Teste automatizado de navegador e evidência manual de responsividade.
+- Auditoria de alterações cadastrais de recursos e usuários pode ser ampliada.
+- O último CI precisa terminar verde no SHA final; consulte Actions antes de integrar.
 
 **Segurança:** HTTP Basic com BCrypt e papéis está implementado nesta branch. O ambiente Compose limita as portas ao localhost; não exponha publicamente sem HTTPS, gestão de segredos e revisão de segurança.
 
@@ -180,6 +181,11 @@ Se o banco já possuir recursos duplicados, leia primeiro `LEIA-PRIMEIRO-DUPLICA
 
 - Matriz de requisitos e evidências: [RTM.md](RTM.md).
 - Arquitetura e operação: [docs/ARQUITETURA-E-OPERACAO.md](docs/ARQUITETURA-E-OPERACAO.md).
+- Diagramas de sequência: [docs/DIAGRAMAS-SEQUENCIA.md](docs/DIAGRAMAS-SEQUENCIA.md).
+- Plano de testes: [docs/PLANO-DE-TESTES.md](docs/PLANO-DE-TESTES.md).
+- Registro de defeitos: [docs/REGISTRO-DEFEITOS.md](docs/REGISTRO-DEFEITOS.md).
+- Relatório de qualidade (versão candidata): [docs/RELATORIO-QUALIDADE.md](docs/RELATORIO-QUALIDADE.md).
+- Roteiro de apresentação: [docs/APRESENTACAO.md](docs/APRESENTACAO.md).
 - Plano de validação: [docs/PLANO-DE-VALIDACAO.md](docs/PLANO-DE-VALIDACAO.md).
 
 A RTM distingue requisitos implementados, parciais e pendentes conforme o enunciado oficial. Não considerar o sistema pronto para produção enquanto autenticação/autorização e demais lacunas registradas na matriz não forem resolvidas.
