@@ -10,9 +10,9 @@
 
 ## Resumo executivo
 
-A versão candidata contém autenticação por perfil, gestão de recursos, reserva de sala com professor vinculado, prevenção de conflitos, reagendamento/cancelamento, aprovação restrita, retirada/devolução de materiais, auditoria, notificações simuladas/webhook e relatórios. A documentação de requisitos está em `RTM.md`.
+A versão candidata contém os 14 requisitos funcionais do enunciado implementados no código, com testes associados e matriz em `RTM.md`. Foram acrescentados controle de titularidade nas consultas e histórico, auditoria de recursos/usuários, interface com telas por perfil, relatórios e notificações.
 
-**Status: NÃO APROVADO COMO ENTREGA FINAL AINDA.** A última execução de CI que foi inspecionada falhou na compilação do teste WireMock porque o construtor do servidor usava uma chamada ambígua a `options()`. A chamada foi corrigida em commit posterior; é obrigatório aguardar a execução do novo commit antes de declarar o build verde. Também faltam resultados reais de cobertura, SonarCloud e JMeter.
+**Status: funcionalidades implementadas; entrega acadêmica ainda não homologada integralmente.** A execução [42708687473](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/42708687473) foi aprovada com 115 testes, 87,81% de cobertura de linhas e 71,64% de branches. O `pom.xml` foi atualizado posteriormente para exigir 80%/70% no build; ainda é necessário validar esse check no SHA final. SonarCloud não executou por falta de configuração, JMeter não possui execução registrada e a interface necessita de aceitação visual.
 
 ## Evidências automatizadas versionadas
 
@@ -25,13 +25,13 @@ A versão candidata contém autenticação por perfil, gestão de recursos, rese
 
 Consulte [PLANO-DE-TESTES.md](PLANO-DE-TESTES.md) e [REGISTRO-DEFEITOS.md](REGISTRO-DEFEITOS.md).
 
-## Indicadores que ainda precisam de resultado
+## Indicadores de qualidade
 
 | Indicador | Meta/critério | Resultado atual |
 |---|---|---|
-| Build Maven / testes | 100% verdes no commit final | Aguardando reexecução após correção do teste WireMock |
-| Cobertura de linhas | >= 80% | Não medida/aprovada nesta revisão |
-| Cobertura de branches | >= 70% | Não medida/aprovada nesta revisão |
+| Build Maven / testes | 100% verdes no commit final | 115 testes aprovados na execução 42708687473; conferir novamente o SHA final |
+| Cobertura de linhas | >= 80% | 87,81% (526/599) — meta atingida no CI 42708687473 |
+| Cobertura de branches | >= 70% | 71,64% (192/268) — meta atingida no CI 42708687473 |
 | SonarCloud | Sem bugs/vulnerabilidades críticas | Integração condicional; falta configurar token/identificadores e executar |
 | Teste de carga | 20 threads; uma criação e demais conflitos para mesmo slot | Plano/JMX versionados; execução pendente |
 | E2E de navegador | Fluxo visual completo | Não implementado; E2E HTTP cobre integração entre camadas |
@@ -46,4 +46,4 @@ Consulte [PLANO-DE-TESTES.md](PLANO-DE-TESTES.md) e [REGISTRO-DEFEITOS.md](REGIS
 
 ## Conclusão
 
-A implementação funcional foi ampliada substancialmente, mas esta versão permanece candidata. O responsável pela entrega deve aguardar CI verde no SHA final, gerar e arquivar JaCoCo, configurar/rodar SonarCloud, executar JMeter e concluir validação visual/manual antes de integrar à `main`.
+A implementação funcional foi ampliada substancialmente, mas esta versão permanece candidata. O responsável pela entrega deve confirmar o CI no SHA final com a regra JaCoCo, configurar/rodar SonarCloud, executar JMeter, guardar evidências e concluir a validação visual/manual e revisão por pares antes de integrar à `main`.
