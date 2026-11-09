@@ -8,7 +8,7 @@ Fonte: enunciado oficial "Especificação do Projeto — Qualidade 2026.2", seç
 
 | ID | Requisito oficial (síntese fiel) | Status observado | Evidência atual / lacuna |
 |---|---|---|---|
-| RF-01 | Autenticação e autorização por perfil | Pendente | Não há Spring Security, login ou papéis Solicitante/Responsável/Administrador. Não expor a aplicação publicamente. |
+| RF-01 | Autenticação e autorização por perfil | Parcial | Spring Security HTTP Basic, usuários persistidos, BCrypt, perfis SOLICITANTE/RESPONSAVEL/ADMINISTRADOR, bootstrap do primeiro administrador por variáveis de ambiente e regras por endpoint. Testes MockMvc cobrem 401/403 e autenticação persistida. Falta revisar autorização por propriedade da reserva e validar o fluxo operacional da interface. |
 | RF-02 | Cadastro e consulta de salas, professores e materiais | Parcial | `TipoRecurso` contempla SALA, PROFESSOR e MATERIAL; `RecursoController` permite listar, cadastrar e atualizar. Foram adicionados capacidade, localização e competências. Ainda faltam gestão de usuários e regras específicas por categoria. |
 | RF-03 | Pesquisa por tipo, capacidade, localização, competência e disponibilidade | Parcial | `GET /recursos` aceita `tipo`, `capacidadeMinima`, `localizacao`, `competencia` e, em conjunto, `inicio`/`fim` para disponibilidade. Testes de integração cobrem os filtros de metadados; falta teste HTTP de disponibilidade e filtro na interface web. |
 | RF-04 | Criação, alteração e cancelamento de reservas | Parcial | Há criação e transição de estado; não há operação completa para alterar período/recurso nem fluxo de cancelamento com regras de negócio dedicado. |
@@ -17,7 +17,7 @@ Fonte: enunciado oficial "Especificação do Projeto — Qualidade 2026.2", seç
 | RF-07 | Aprovação obrigatória para recursos restritos | Pendente | O atributo `restrito` existe, mas não há autorização por perfil nem regra que exija aprovação de Responsável antes de confirmar a reserva. |
 | RF-08 | Bloqueio de recursos em manutenção | Implementado no código/testes | Serviço rejeita nova reserva quando `emManutencao` está ativo; há teste de integração/concorrência. |
 | RF-09 | Registro de retirada e devolução de materiais/equipamentos | Pendente | Não foram encontrados entidades, endpoints ou fluxo de retirada/devolução. |
-| RF-10 | Histórico auditável de mudanças | Parcial | Auditoria persistente de criação/transições e consulta por API/interface. A origem registrada é técnica (`API`); falta identificar o usuário real após autenticação e ampliar eventos para demais operações. |
+| RF-10 | Histórico auditável de mudanças | Parcial | Auditoria persistente de criação/transições e consulta por API/interface; agora registra o login autenticado quando a operação vem de usuário. Falta auditar alterações/cancelamentos/retirada/devolução e testar autoria por perfil. |
 | RF-11 | Notificação simulada ou integração com API externa | Pendente | Não foram encontrados adaptador de notificação, simulação ou testes WireMock. |
 | RF-12 | Relatório de utilização, carga horária e conflitos evitados | Pendente | Não foram encontrados endpoints/visões de relatórios ou agregações correspondentes. |
 | RF-13 | Interface responsiva e mensagens compreensíveis | Parcial | Há interface web e tratamento de erros HTTP com mensagens em português. Responsividade precisa ser validada em diferentes larguras e documentada com evidência. |
@@ -40,7 +40,7 @@ Fonte: enunciado oficial "Especificação do Projeto — Qualidade 2026.2", seç
 | JaCoCo | Parcial | Relatório é gerado e publicado como artefato; metas mínimas de 80% linhas e 70% branches ainda precisam ser configuradas e comprovadas. |
 | SonarCloud | Pendente | Não foi encontrada configuração/projeto integrado nem relatório. |
 | JMeter | Pendente | Não há plano, script ou resultado de teste de carga. |
-| Autorização, validação e erros seguros | Parcial | Há validação de entrada e mapeamento de erros; autorização por perfil está ausente. |
+| Autorização, validação e erros seguros | Parcial | HTTP Basic com BCrypt e autorização por papel estão implementados; validação de entrada e mapeamento de erros existentes. Falta teste completo de autorização por propriedade/fluxo e revisão de segurança independente. |
 
 ## Metas mensuráveis do enunciado
 
