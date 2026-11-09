@@ -7,6 +7,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.*;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
+import java.net.http.HttpClient;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -31,7 +33,10 @@ class FluxoCompletoE2ETest {
     @Autowired TestRestTemplate http;
 
     private TestRestTemplate auth(String login, String senha) {
-        return http.withBasicAuth(login, senha);
+        TestRestTemplate client = http.withBasicAuth(login, senha);
+        client.getRestTemplate().setRequestFactory(new JdkClientHttpRequestFactory(
+                HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build()));
+        return client;
     }
 
     private HttpHeaders jsonHeaders() {
