@@ -13,7 +13,7 @@ import static org.mockito.Mockito.*;
 class NotificacaoServiceWireMockTest {
     @Test
     void enviaWebhookERegistraCanalHttp() {
-        WireMockServer wiremock = new WireMockServer(options().dynamicPort());
+        WireMockServer wiremock = new WireMockServer(com.github.tomakehurst.wiremock.core.WireMockConfiguration.options().dynamicPort());
         wiremock.start();
         try {
             wiremock.stubFor(post(urlEqualTo("/notifications"))
@@ -36,7 +36,7 @@ class NotificacaoServiceWireMockTest {
 
     @Test
     void falhaNoWebhookNaoRegistraNotificacaoComoEnviada() {
-        WireMockServer wiremock = new WireMockServer(options().dynamicPort());
+        WireMockServer wiremock = new WireMockServer(com.github.tomakehurst.wiremock.core.WireMockConfiguration.options().dynamicPort());
         wiremock.start();
         try {
             wiremock.stubFor(post(urlEqualTo("/notifications"))
