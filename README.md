@@ -153,3 +153,7 @@ Se o banco já possuir recursos duplicados, leia primeiro `LEIA-PRIMEIRO-DUPLICA
 - Plano de validação: [docs/PLANO-DE-VALIDACAO.md](docs/PLANO-DE-VALIDACAO.md).
 
 A RTM distingue requisitos implementados, parciais e pendentes conforme o enunciado oficial. Não considerar o sistema pronto para produção enquanto autenticação/autorização e demais lacunas registradas na matriz não forem resolvidas.
+
+### Documentação interativa da API
+
+Com a aplicação em execução, acesse `http://localhost:8080/swagger-ui/index.html` para consultar os endpoints e o contrato OpenAPI em `/v3/api-docs`.
