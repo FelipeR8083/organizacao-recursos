@@ -34,6 +34,7 @@ public class SegurancaConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/usuarios/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers("/relatorios/**").hasAnyRole("RESPONSAVEL", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/recursos/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/recursos/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/recursos/**", "/reservas/**")
