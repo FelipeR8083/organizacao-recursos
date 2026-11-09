@@ -4,6 +4,7 @@ import com.senac.recursos.dominio.PerfilAcesso;
 import com.senac.recursos.dominio.Usuario;
 import com.senac.recursos.repositorio.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -13,10 +14,18 @@ import java.util.NoSuchElementException;
 public class UsuarioService {
     private final UsuarioRepository usuarios;
     private final PasswordEncoder encoder;
+    private final AuditoriaAdministrativaService auditoriaAdministrativa;
 
     public UsuarioService(UsuarioRepository usuarios, PasswordEncoder encoder) {
+        this(usuarios, encoder, null);
+    }
+
+    @Autowired
+    public UsuarioService(UsuarioRepository usuarios, PasswordEncoder encoder,
+                          AuditoriaAdministrativaService auditoriaAdministrativa) {
         this.usuarios = usuarios;
         this.encoder = encoder;
+        this.auditoriaAdministrativa = auditoriaAdministrativa;
     }
 
     @Transactional
@@ -28,7 +37,12 @@ public class UsuarioService {
         if (usuarios.existsByLoginIgnoreCase(nome)) {
             throw new IllegalArgumentException("Já existe usuário com este login");
         }
-        return usuarios.save(new Usuario(nome, encoder.encode(senha), perfil));
+        Usuario criado = usuarios.save(new Usuario(nome, encoder.encode(senha), perfil));
+        if (auditoriaAdministrativa != null) {
+            auditoriaAdministrativa.registrar("USUARIO", criado.getId(), "CRIACAO",
+                    "login=" + criado.getUsername() + ", perfil=" + criado.getPerfil());
+        }
+        return criado;
     }
 
     @Transactional(readOnly = true)
@@ -45,6 +59,11 @@ public class UsuarioService {
                 && usuarios.countByPerfilAndAtivo(PerfilAcesso.ADMINISTRADOR, true) <= 1) {
             throw new IllegalStateException("O último administrador ativo não pode ser desativado");
         }
+        boolean anterior = usuario.isAtivo();
         usuario.setAtivo(ativo);
+        if (auditoriaAdministrativa != null && anterior != ativo) {
+            auditoriaAdministrativa.registrar("USUARIO", usuario.getId(), "ATIVACAO",
+                    "login=" + usuario.getUsername() + ", ativo=" + anterior + " -> " + ativo);
+        }
     }
 }
