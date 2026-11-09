@@ -52,8 +52,9 @@ public class ReservaController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> criar(@Valid @RequestBody NovaReserva req) {
-        Reserva r = service.criar(req.recursoId(), req.solicitante(), req.inicio(), req.fim());
+    public ResponseEntity<Map<String, Object>> criar(@Valid @RequestBody NovaReserva req, Authentication autenticacao) {
+        String solicitante = autenticacao == null ? req.solicitante() : autenticacao.getName();
+        Reserva r = service.criar(req.recursoId(), solicitante, req.inicio(), req.fim());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of("id", r.getId(), "estado", r.getEstado()));
     }
