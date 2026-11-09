@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ReservaAuditoriaRepository extends JpaRepository<ReservaAuditoria, Long> {
-    List<ReservaAuditoria> findByReserva_IdOrderByOcorridoEmAsc(Long reservaId);
+    List<ReservaAuditoria> findByReserva_IdOrderByOcorridoEmAscIdAsc(Long reservaId);
 }
