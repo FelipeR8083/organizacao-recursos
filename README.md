@@ -120,7 +120,7 @@ Erros de validação retornam HTTP 400; conflitos de horário e transições inv
 
 ## Teste de carga
 
-O plano e o script Apache JMeter estão em `docs/PLANO-TESTE-CARGA.md` e `jmeter/reservas-concorrentes.jmx`. O resultado ainda precisa ser executado e anexado; não há métricas de carga aprovadas neste repositório.
+O plano e o script Apache JMeter estão em `docs/PLANO-TESTE-CARGA.md` e `jmeter/reservas-concorrentes.jmx`. O workflow [JMeter #42711044633](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/42711044633) executou 20 reservas concorrentes: **1 HTTP 201, 19 HTTP 409**, média de 106,9 ms e P95 de 209 ms. As evidências JTL, HTML e resumo estão nos artefatos da execução.
 
 ## Testes e cobertura
 
@@ -163,7 +163,7 @@ Implementado e coberto por testes no código atual:
 
 Os **14 requisitos funcionais** têm implementação no código da branch de melhorias; consulte `RTM.md` para evidências e ressalvas de aceitação. A entrega acadêmica **ainda não está homologada integralmente**:
 - SonarCloud precisa ser conectado e analisado para comprovar ausência de bugs/vulnerabilidades críticas.
-- O cenário JMeter está versionado, mas precisa ser executado e ter resultados anexados.
+- O cenário JMeter foi executado e aprovado; os artefatos devem ser guardados junto da entrega.
 - A interface necessita de validação manual em celular/tablet e demonstração da Swagger UI.
 - Revisão por pares, evidências finais e apresentação devem ser concluídas.
 - O último CI precisa terminar verde no SHA final, incluindo a regra de JaCoCo; consulte Actions antes de integrar.
