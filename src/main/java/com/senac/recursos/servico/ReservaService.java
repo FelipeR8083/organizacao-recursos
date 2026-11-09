@@ -17,12 +17,14 @@ public class ReservaService {
     private final ReservaRepository reservas;
     private final ReservaAuditoriaRepository auditoria;
     private final Clock clock;
+    private final ConflitoEvitadoService conflitosEvitados;
 
     public ReservaService(RecursoRepository recursos, ReservaRepository reservas,
-                          ReservaAuditoriaRepository auditoria) {
+                          ReservaAuditoriaRepository auditoria, ConflitoEvitadoService conflitosEvitados) {
         this.recursos = recursos;
         this.reservas = reservas;
         this.auditoria = auditoria;
+        this.conflitosEvitados = conflitosEvitados;
         this.clock = Clock.systemUTC();
     }
 
@@ -114,9 +116,11 @@ public class ReservaService {
             throw new IllegalArgumentException("O recurso vinculado como professor deve ser do tipo PROFESSOR");
         }
         if (reservas.existeConflito(recursoId, EstadoReserva.ativos(), periodo.inicio(), periodo.fim())) {
+            conflitosEvitados.registrar(recursoId, periodo.inicio(), periodo.fim(), "Conflito no recurso principal");
             throw new ConflitoHorarioException("Já existe reserva neste horário para o recurso principal");
         }
         if (professorId != null && reservas.existeConflito(professorId, EstadoReserva.ativos(), periodo.inicio(), periodo.fim())) {
+            conflitosEvitados.registrar(professorId, periodo.inicio(), periodo.fim(), "Conflito na agenda do professor");
             throw new ConflitoHorarioException("O professor já possui reserva neste horário");
         }
         Reserva criada = reservas.save(new Reserva(principal, professor, periodo, solicitanteNormalizado));
