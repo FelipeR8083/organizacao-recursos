@@ -17,12 +17,20 @@ public class CadastroProfessorController {
                          @NotBlank @Size(min = 12) String senha) {}
 
     private final UsuarioService usuarios;
-    public CadastroProfessorController(UsuarioService usuarios) { this.usuarios = usuarios; }
+    private final com.senac.recursos.servico.EmailConfirmacaoProfessorService emailConfirmacao;
+    public CadastroProfessorController(UsuarioService usuarios,
+            com.senac.recursos.servico.EmailConfirmacaoProfessorService emailConfirmacao) {
+        this.usuarios = usuarios;
+        this.emailConfirmacao = emailConfirmacao;
+    }
 
     @PostMapping
     public ResponseEntity<Map<String, String>> cadastrar(@Valid @RequestBody Pedido pedido) {
         usuarios.solicitarCadastroProfessor(pedido.email(), pedido.senha());
+        String mensagem = emailConfirmacao.habilitado()
+                ? "Cadastro recebido. Confirme o e-mail institucional enviado e aguarde a aprovação do administrador."
+                : "Cadastro recebido. Aguarde a aprovação do administrador.";
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("mensagem", "Cadastro recebido. Aguarde a aprovação do administrador."));
+                .body(Map.of("mensagem", mensagem));
     }
 }
