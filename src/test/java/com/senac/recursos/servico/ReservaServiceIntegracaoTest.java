@@ -124,6 +124,23 @@ class ReservaServiceIntegracaoTest {
     }
 
     @Test
+    void aprovacaoAdministrativaPreservaMateriaisDaReservaConjunta() {
+        Recurso projetor = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Projetor", false));
+        Recurso notebook = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Notebook", false));
+        Reserva solicitada = service.criar(sala.getId(), null,
+                java.util.List.of(projetor.getId(), notebook.getId()),
+                "prof.ana", hora(10), hora(12));
+
+        Reserva aprovada = service.alterarEstado(solicitada.getId(),
+                EstadoReserva.APROVADA, "admin", true);
+
+        assertEquals(EstadoReserva.APROVADA, aprovada.getEstado());
+        assertEquals(2, reservas.findById(aprovada.getId()).orElseThrow().getMateriais().size());
+        assertThrows(ConflitoHorarioException.class,
+                () -> service.criar(projetor.getId(), "prof.bia", hora(11), hora(12)));
+    }
+
+    @Test
     void cancelarReservaConjuntaLiberaMaterialParaOutraSala() {
         Recurso projetor = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Projetor", false));
         Recurso outraSala = recursos.save(new Recurso(TipoRecurso.SALA, "Sala 102", false));
