@@ -124,6 +124,17 @@ class ReservaServiceIntegracaoTest {
     }
 
     @Test
+    void cancelarReservaConjuntaLiberaMaterialParaOutraSala() {
+        Recurso projetor = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Projetor", false));
+        Recurso outraSala = recursos.save(new Recurso(TipoRecurso.SALA, "Sala 102", false));
+        Reserva primeira = service.criar(sala.getId(), null, java.util.List.of(projetor.getId()),
+                "prof.ana", hora(10), hora(12));
+        service.cancelar(primeira.getId(), "prof.ana", false);
+        assertDoesNotThrow(() -> service.criar(outraSala.getId(), null,
+                java.util.List.of(projetor.getId()), "prof.bia", hora(11), hora(12)));
+    }
+
+    @Test
     void reservaConjuntaRejeitaMateriaisDuplicadosOuEmManutencao() {
         Recurso material = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Projetor", false));
         assertThrows(IllegalArgumentException.class,
