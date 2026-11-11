@@ -53,6 +53,7 @@ public class UsuarioService {
         String dominio = arroba < 0 ? "" : normalizado.substring(arroba + 1);
         if (arroba <= 0 || normalizado.indexOf('@') != arroba
                 || !(dominio.equals("senac.br") || dominio.endsWith(".senac.br"))
+                || !dominio.matches("[a-z0-9]+(?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9]+(?:[a-z0-9-]*[a-z0-9])?)*")
                 || normalizado.length() > 80 || normalizado.contains(" ")) {
             throw new IllegalArgumentException("Informe um e-mail institucional do Senac válido");
         }
