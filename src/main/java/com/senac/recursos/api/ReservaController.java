@@ -73,7 +73,8 @@ public class ReservaController {
     public Reserva alterarEstado(@PathVariable Long id, @Valid @RequestBody AlteracaoEstado req,
                                   Authentication autenticacao) {
         boolean responsavel = autenticacao.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_RESPONSAVEL"));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_RESPONSAVEL")
+                        || a.getAuthority().equals("ROLE_ADMINISTRADOR"));
         return service.alterarEstado(id, req.estado(), autenticacao.getName(), responsavel);
     }
 
