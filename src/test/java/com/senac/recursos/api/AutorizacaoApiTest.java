@@ -211,4 +211,28 @@ class AutorizacaoApiTest {
         org.junit.jupiter.api.Assertions.assertEquals(0, usuarios.count());
     }
 
+    @Test
+    void professorPendenteNaoConsegueLoginVisualAteAprovacao() throws Exception {
+        Usuario professor = new Usuario("joao@sp.senac.br",
+                encoder.encode("senha-segura-123"), PerfilAcesso.PROFESSOR);
+        professor.setAtivo(false);
+        professor = usuarios.save(professor);
+
+        mvc.perform(post("/login").param("username", "joao@sp.senac.br")
+                        .param("password", "senha-segura-123"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login.html?erro"));
+
+        mvc.perform(patch("/usuarios/" + professor.getId() + "/ativo")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
+                                .user("admin").roles("ADMINISTRADOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"ativo\":true}"))
+                .andExpect(status().isOk());
+
+        mvc.perform(post("/login").param("username", "joao@sp.senac.br")
+                        .param("password", "senha-segura-123"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/"));
+    }
+
 }
