@@ -156,6 +156,9 @@ class UsuarioServiceTest {
         return Stream.of(
                 "ana@senac.br.atacante.com",
                 "ana@falso-senac.br",
+                "ana@.senac.br",
+                "ana@-sp.senac.br",
+                "ana@sp..senac.br",
                 "ana@@senac.br",
                 "ana@senac.br outro@senac.br",
                 "ana@",
