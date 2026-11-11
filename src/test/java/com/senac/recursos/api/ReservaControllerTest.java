@@ -101,14 +101,14 @@ class ReservaControllerTest {
     @Test
     void transicaoDeEstadoValidaEhEncaminhadaAoServico() throws Exception {
         mvc.perform(patch("/reservas/42/estado")
-                        .principal(new UsernamePasswordAuthenticationToken("responsavel", "n/a",
-                                java.util.List.of(new SimpleGrantedAuthority("ROLE_RESPONSAVEL"))))
+                        .principal(new UsernamePasswordAuthenticationToken("admin", "n/a",
+                                java.util.List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRADOR"))))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"estado":"APROVADA"}
                                 """))
                 .andExpect(status().isOk());
-        verify(service).alterarEstado(42L, EstadoReserva.APROVADA, "responsavel", true);
+        verify(service).alterarEstado(42L, EstadoReserva.APROVADA, "admin", true);
     }
 
     @Test
