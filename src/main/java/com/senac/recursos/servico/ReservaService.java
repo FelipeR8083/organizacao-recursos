@@ -132,6 +132,18 @@ public class ReservaService {
             conflitosEvitados.registrar(professorId, periodo.inicio(), periodo.fim(), "Conflito ao alterar agenda do professor");
             throw new ConflitoHorarioException("O professor já possui reserva neste horário");
         }
+        if (!reserva.getMateriais().isEmpty() && principal.getTipo() != TipoRecurso.SALA) {
+            throw new IllegalArgumentException("Uma reserva com materiais vinculados exige uma sala");
+        }
+        for (Recurso material : reserva.getMateriais()) {
+            if (material.isEmManutencao()) {
+                throw new RecursoIndisponivelException("Material em manutenção: " + material.getId());
+            }
+            if (reservas.existeConflitoIgnorando(material.getId(), EstadoReserva.ativos(),
+                    periodo.inicio(), periodo.fim(), id)) {
+                throw new ConflitoHorarioException("Material já reservado neste horário: " + material.getNome());
+            }
+        }
         String detalhes = "Recurso " + reserva.getRecurso().getId() + " -> " + recursoId
                 + "; professor " + (reserva.getProfessor() == null ? "-" : reserva.getProfessor().getId())
                 + " -> " + (professorId == null ? "-" : professorId)
