@@ -52,6 +52,7 @@ public class UsuarioService {
         int arroba = normalizado.lastIndexOf('@');
         String dominio = arroba < 0 ? "" : normalizado.substring(arroba + 1);
         if (arroba <= 0 || normalizado.indexOf('@') != arroba
+                || !normalizado.substring(0, arroba).matches("[a-z0-9_+%-]+(?:\\.[a-z0-9_+%-]+)*")
                 || !(dominio.equals("senac.br") || dominio.endsWith(".senac.br"))
                 || !dominio.matches("[a-z0-9]+(?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9]+(?:[a-z0-9-]*[a-z0-9])?)*")
                 || normalizado.length() > 80 || normalizado.contains(" ")) {
