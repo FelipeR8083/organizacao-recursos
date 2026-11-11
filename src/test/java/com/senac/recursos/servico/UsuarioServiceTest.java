@@ -118,4 +118,38 @@ class UsuarioServiceTest {
         verify(usuarios, never()).countByPerfilAndAtivo(any(), anyBoolean());
     }
 
+    @Test
+    void cadastroProfessorSenacFicaPendenteDeAprovacao() {
+        when(encoder.encode("senha-segura-123")).thenReturn("hash");
+        when(usuarios.save(any(Usuario.class))).thenAnswer(call -> call.getArgument(0));
+
+        Usuario professor = service.solicitarCadastroProfessor(" ANA@SP.SENAC.BR ", "senha-segura-123");
+
+        assertEquals("ana@sp.senac.br", professor.getUsername());
+        assertEquals(PerfilAcesso.PROFESSOR, professor.getPerfil());
+        assertFalse(professor.isAtivo());
+        verify(usuarios).save(any(Usuario.class));
+    }
+
+    @Test
+    void rejeitaEmailExternoNoCadastroProfessor() {
+        assertThrows(IllegalArgumentException.class,
+                () -> service.solicitarCadastroProfessor("ana@gmail.com", "senha-segura-123"));
+        verifyNoInteractions(usuarios, encoder);
+    }
+
+    @Test
+    void rejeitaDominioQueApenasTerminaComSenacBr() {
+        assertThrows(IllegalArgumentException.class,
+                () -> service.solicitarCadastroProfessor("ana@falsosenac.br", "senha-segura-123"));
+    }
+
+    @Test
+    void impedeCadastroProfessorDuplicado() {
+        when(usuarios.existsByLoginIgnoreCase("ana@sp.senac.br")).thenReturn(true);
+        assertThrows(IllegalArgumentException.class,
+                () -> service.solicitarCadastroProfessor("ana@sp.senac.br", "senha-segura-123"));
+        verify(usuarios, never()).save(any());
+    }
+
 }
