@@ -181,7 +181,7 @@ class AutorizacaoApiTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"token":"invalido"}
-                                """)
+                                """))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.erro").exists());
     }
