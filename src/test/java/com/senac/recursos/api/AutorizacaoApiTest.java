@@ -2,6 +2,8 @@ package com.senac.recursos.api;
 
 import com.senac.recursos.dominio.TipoRecurso;
 import com.senac.recursos.repositorio.RecursoRepository;
+import com.senac.recursos.repositorio.ReservaRepository;
+import com.senac.recursos.repositorio.ReservaAuditoriaRepository;
 import com.senac.recursos.repositorio.UsuarioRepository;
 import com.senac.recursos.dominio.Usuario;
 import com.senac.recursos.dominio.PerfilAcesso;
@@ -36,12 +38,14 @@ class AutorizacaoApiTest {
 
     @Autowired MockMvc mvc;
     @Autowired RecursoRepository recursos;
+    @Autowired ReservaRepository reservas;
+    @Autowired ReservaAuditoriaRepository auditoria;
     @Autowired UsuarioRepository usuarios;
     @Autowired PasswordEncoder encoder;
     @Autowired ObjectMapper mapper;
 
     @BeforeEach
-    void limpar() { recursos.deleteAll(); usuarios.deleteAll(); }
+    void limpar() { auditoria.deleteAll(); reservas.deleteAll(); recursos.deleteAll(); usuarios.deleteAll(); }
 
     @Test
     void apiExigeAutenticacao() throws Exception {
