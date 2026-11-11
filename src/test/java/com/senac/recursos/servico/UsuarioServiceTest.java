@@ -132,6 +132,35 @@ class UsuarioServiceTest {
     }
 
     @Test
+    void cadastroComEmailHabilitadoExigeVerificacaoEEnviaMensagem() {
+        EmailConfirmacaoProfessorService email = mock(EmailConfirmacaoProfessorService.class);
+        when(email.habilitado()).thenReturn(true);
+        when(encoder.encode("senha-segura-123")).thenReturn("hash");
+        when(usuarios.save(any(Usuario.class))).thenAnswer(call -> call.getArgument(0));
+        UsuarioService comEmail = new UsuarioService(usuarios, encoder, null, email);
+
+        Usuario professor = comEmail.solicitarCadastroProfessor("ana@sp.senac.br", "senha-segura-123");
+
+        assertFalse(professor.isAtivo());
+        assertTrue(professor.isVerificacaoEmailObrigatoria());
+        assertNull(professor.getEmailVerificadoEm());
+        verify(email).enviar(professor);
+    }
+
+    @Test
+    void falhaNoEnvioInterrompeCadastroParaRollbackTransacional() {
+        EmailConfirmacaoProfessorService email = mock(EmailConfirmacaoProfessorService.class);
+        when(email.habilitado()).thenReturn(true);
+        when(encoder.encode("senha-segura-123")).thenReturn("hash");
+        when(usuarios.save(any(Usuario.class))).thenAnswer(call -> call.getArgument(0));
+        doThrow(new IllegalStateException("SMTP indisponivel")).when(email).enviar(any());
+        UsuarioService comEmail = new UsuarioService(usuarios, encoder, null, email);
+
+        assertThrows(IllegalStateException.class,
+                () -> comEmail.solicitarCadastroProfessor("ana@sp.senac.br", "senha-segura-123"));
+    }
+
+    @Test
     void rejeitaEmailExternoNoCadastroProfessor() {
         assertThrows(IllegalArgumentException.class,
                 () -> service.solicitarCadastroProfessor("ana@gmail.com", "senha-segura-123"));
