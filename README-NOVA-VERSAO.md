@@ -1,25 +1,24 @@
-# Gestão de Recursos Acadêmicos — versão expandida
+# Guia de atualização segura — Organização de Recursos
 
-## O que foi acrescentado
-- Interface web responsiva em `src/main/resources/static/index.html` (abre em http://localhost:8080/).
-- Cadastro, listagem e edição de manutenção de recursos via API.
-- Listagem de reservas e transições de estado permitidas pela máquina de estados existente.
-- Histórico persistente de criação e transições de reservas, consultável por `GET /reservas/{id}/auditoria`.
-- Tratamento de requisições inválidas e mensagens de erro na interface.
-- Mantidos os testes e a lógica original de prevenção de conflitos com lock pessimista.
+Este arquivo substitui as instruções antigas do protótipo. Para requisitos, API e execução completa, consulte [README.md](README.md).
 
-## Executar no Windows
-1. Inicie seu PostgreSQL já existente: `docker start recursos-db`.
-2. Abra um terminal na pasta que contém `pom.xml`.
-3. Execute `& "C:\Maven\bin\mvn.cmd" spring-boot:run`.
-4. Abra `http://localhost:8080/` no navegador.
+## Estado validado
 
-## APIs
-- `GET /recursos`, `POST /recursos`, `PUT /recursos/{id}`.
-- `GET /reservas`, `POST /reservas`, `PATCH /reservas/{id}/estado`.
-- `GET /reservas/{id}/auditoria` — histórico cronológico de criação e mudanças de estado.
+A execução [CI 557](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43044676997) no commit `fe916322` concluiu com sucesso: **172 testes, zero falhas, zero erros**, incluindo testes com PostgreSQL via Testcontainers, verificação do Docker Compose e construção da imagem. SonarCloud foi ignorado por configuração; a instalação no computador do usuário e a migração de dados reais **não foram testadas**.
 
-## IMPORTANTE — NÃO É ENTREGA FINAL COMPLETA
-Esta versão é um protótipo funcional acadêmico, **sem autenticação nem autorização**. Não exponha a aplicação à internet nem use dados reais. Ainda faltam: autenticação e perfis, regras de autorização (inclusive aprovação de recursos restritos), retirada/devolução de materiais, edição de horários com verificação de conflitos, testes de ponta a ponta, testes de carga, documentação de rastreabilidade, integração SonarCloud e validação integral dos 14 requisitos. O histórico de reservas já possui persistência básica, mas ainda não identifica o usuário responsável porque não há autenticação. Não há evidência de cobertura mínima ou de aprovação de todos os testes neste pacote.
+## Reservas conjuntas
 
-O código foi estendido preservando a estrutura e os testes existentes. A compilação/execução precisa ser validada na sua máquina com Maven e PostgreSQL.
+A interface permite solicitar **uma sala e vários materiais** em uma única reserva. Os materiais são persistidos na tabela `reserva_material` (migração Flyway V7). Conflitos de horários são verificados para sala, professor vinculado e materiais. A aprovação de solicitações cabe ao perfil **ADMINISTRADOR**; um usuário sem essa permissão recebe HTTP 403.
+
+## Antes de atualizar uma instalação existente
+
+1. **Identifique qual PostgreSQL e qual volume estão em uso.** O `docker-compose.yml` cria o volume nomeado `postgres_data`, mas instalações anteriores podem usar outro banco ou contêiner. Não suponha que um volume novo contenha seus dados antigos.
+2. **Faça e confira um backup restaurável do banco existente**, antes de iniciar a versão com migrações Flyway. Preserve também o arquivo `.env` atual, sem enviá-lo ao Git.
+3. Confira se as credenciais e a URL de conexão apontam para o banco correto. Não suba um segundo PostgreSQL por engano, nem altere senhas de um volume já inicializado sem planejamento.
+4. Só depois do backup, aplique a atualização em uma cópia de teste do banco. Verifique a migração V7, os registros antigos, a autenticação e uma reserva com sala e dois materiais antes de atualizar a instalação principal.
+
+**Não execute `docker compose down -v`, `docker volume rm`, `docker system prune --volumes` nem comandos SQL de exclusão** para atualizar o sistema. Esses comandos podem destruir dados. `docker compose down` sem `-v` normalmente preserva os volumes, mas confirme a topologia da instalação antes de qualquer parada.
+
+## Validação local pendente
+
+O CI não comprova que a versão nova já está instalada ou que o banco real foi migrado. A validação local deve confirmar login de administrador e professor, permissões, criação de sala com múltiplos materiais, aprovação exclusivamente administrativa, conflitos, cancelamento e preservação do histórico. Não execute migrações em produção sem backup e teste de restauração.
