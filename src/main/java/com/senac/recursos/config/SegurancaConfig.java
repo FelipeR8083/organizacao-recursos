@@ -62,7 +62,7 @@ public class SegurancaConfig {
                         .requestMatchers(HttpMethod.DELETE, "/reservas/**")
                             .hasAnyRole("SOLICITANTE", "PROFESSOR", "RESPONSAVEL", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PATCH, "/reservas/**")
-                            .hasRole("ADMINISTRADOR")
+                            .hasAnyRole("RESPONSAVEL", "ADMINISTRADOR")
                         .anyRequest().authenticated())
                 .formLogin(form -> form.loginPage("/login.html").loginProcessingUrl("/login")
                         .defaultSuccessUrl("/", true).failureUrl("/login.html?erro")
