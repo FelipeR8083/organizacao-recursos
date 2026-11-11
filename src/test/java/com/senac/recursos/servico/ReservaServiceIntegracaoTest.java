@@ -91,9 +91,18 @@ class ReservaServiceIntegracaoTest {
     @Test
     void professorTambemNaoPodeTerHorariosSobrepostos() {
         Recurso professor = recursos.save(new Recurso(TipoRecurso.PROFESSOR, "Prof. Silva", false));
-        service.criar(professor.getId(), "coord.ana", hora(10), hora(12));
+        Recurso outraSala = recursos.save(new Recurso(TipoRecurso.SALA, "Sala 102", false));
+        service.criar(sala.getId(), professor.getId(), "coord.ana", hora(10), hora(12));
         assertThrows(ConflitoHorarioException.class,
-                () -> service.criar(professor.getId(), "coord.bia", hora(11), hora(13)));
+                () -> service.criar(outraSala.getId(), professor.getId(), "coord.bia", hora(11), hora(13)));
+    }
+
+    @Test
+    void naoPermiteProfessorComoRecursoPrincipal() {
+        Recurso professor = recursos.save(new Recurso(TipoRecurso.PROFESSOR, "Prof. Silva", false));
+        assertThrows(IllegalArgumentException.class,
+                () -> service.criar(professor.getId(), "coord.ana", hora(10), hora(11)));
+        assertEquals(0, reservas.count());
     }
 
     @Test
