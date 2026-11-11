@@ -143,6 +143,11 @@ class FluxoCompletoE2ETest {
         assertEquals(HttpStatus.FORBIDDEN, proibido.getStatusCode());
 
         TestRestTemplate responsavel = auth("responsavel-e2e", "senha-responsavel-123");
+        // O responsável pode gerir reservas, mas não pode administrar contas.
+        ResponseEntity<String> ativacaoProibida = responsavel.exchange("/usuarios/999999/ativo",
+                HttpMethod.PATCH, new HttpEntity<>(Map.of("ativo", true), jsonHeaders()), String.class);
+        assertEquals(HttpStatus.FORBIDDEN, ativacaoProibida.getStatusCode());
+
         ResponseEntity<JsonNode> aprovada = responsavel.exchange("/reservas/" + reservaId + "/estado",
                 HttpMethod.PATCH, new HttpEntity<>(Map.of("estado", "APROVADA"), jsonHeaders()), JsonNode.class);
         assertEquals(HttpStatus.OK, aprovada.getStatusCode());
