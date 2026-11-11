@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cadastro de professor · Gestão de Recursos</title>
+<style>
+:root{font-family:Inter,system-ui,Arial,sans-serif;color:#192b49;background:#eef3fb}*{box-sizing:border-box}
+body{min-height:100vh;margin:0;display:grid;place-items:center;padding:24px;background:linear-gradient(135deg,#132b50,#1e6cb1)}
+main{width:100%;max-width:460px;background:white;border-radius:22px;padding:clamp(24px,5vw,44px);box-shadow:0 20px 65px #071d3b44}
+h1{font-size:2rem;letter-spacing:-.04em;margin:0 0 10px}p{line-height:1.6;color:#526780}label{display:block;font-weight:650;margin:20px 0 8px}
+input{width:100%;padding:14px;border:1px solid #c7d4e4;border-radius:10px;font-size:1rem}input:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid #85b8ff;outline-offset:2px}
+button{width:100%;padding:15px;background:#175caa;color:white;border:0;border-radius:10px;font-weight:750;font-size:1rem;margin-top:25px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}
+#mensagem{margin-top:16px;line-height:1.5}a{color:#175caa}footer{margin-top:24px;text-align:center}
+</style></head><body><main>
+<h1>Cadastro de professor</h1><p>Use seu e-mail institucional Senac. Seu acesso ficará pendente até a aprovação do administrador.</p>
+<form id="formulario"><label for="email">E-mail institucional</label><input id="email" type="email" autocomplete="email" maxlength="80" required placeholder="nome@unidade.senac.br">
+<label for="senha">Senha (mínimo de 12 caracteres)</label><input id="senha" type="password" autocomplete="new-password" minlength="12" required>
+<button id="enviar" type="submit">Solicitar cadastro</button></form>
+<div id="mensagem" role="status" aria-live="polite"></div><footer><a href="/login.html">Voltar ao login</a></footer>
+</main><script>
+const formulario=document.getElementById('formulario'), mensagem=document.getElementById('mensagem'), enviar=document.getElementById('enviar');
+formulario.addEventListener('submit',async(event)=>{
+ event.preventDefault();enviar.disabled=true;mensagem.textContent='Enviando solicitação...';
+ try{
+  const resposta=await fetch('/cadastro-professor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('email').value,senha:document.getElementById('senha').value})});
+  const dados=await resposta.json().catch(()=>({}));
+  if(!resposta.ok)throw new Error(dados.erro||dados.mensagem||'Não foi possível concluir o cadastro.');
+  mensagem.style.color='#18663a';mensagem.textContent=dados.mensagem;formulario.reset();
+ }catch(erro){mensagem.style.color='#8b2929';mensagem.textContent=erro.message}
+ finally{enviar.disabled=false}
+});
+</script></body></html>
