@@ -175,4 +175,40 @@ class AutorizacaoApiTest {
                 .andExpect(jsonPath("$.estado").value("APROVADA"));
     }
 
+    @Test
+    void cadastroPublicoDeProfessorExigeAprovacaoAdmin() throws Exception {
+        mvc.perform(get("/cadastro.html")).andExpect(status().isOk());
+        mvc.perform(post("/cadastro-professor").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"maria@sp.senac.br\",\"senha\":\"senha-segura-123\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.mensagem").exists());
+
+        Usuario pendente = usuarios.findByLoginIgnoreCase("maria@sp.senac.br").orElseThrow();
+        org.junit.jupiter.api.Assertions.assertEquals(PerfilAcesso.PROFESSOR, pendente.getPerfil());
+        org.junit.jupiter.api.Assertions.assertFalse(pendente.isAtivo());
+
+        mvc.perform(get("/recursos").with(httpBasic("maria@sp.senac.br", "senha-segura-123")))
+                .andExpect(status().isUnauthorized());
+
+        mvc.perform(patch("/usuarios/" + pendente.getId() + "/ativo")
+                .contentType(MediaType.APPLICATION_JSON).content("{\"ativo\":true}"))
+                .andExpect(status().isUnauthorized());
+
+        mvc.perform(patch("/usuarios/" + pendente.getId() + "/ativo")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("admin").roles("ADMINISTRADOR"))
+                .contentType(MediaType.APPLICATION_JSON).content("{\"ativo\":true}"))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/recursos").with(httpBasic("maria@sp.senac.br", "senha-segura-123")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void cadastroPublicoNaoPermiteContaDeAdministrador() throws Exception {
+        mvc.perform(post("/cadastro-professor").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"admin@gmail.com\",\"senha\":\"senha-segura-123\",\"perfil\":\"ADMINISTRADOR\"}"))
+                .andExpect(status().isUnprocessableEntity());
+        org.junit.jupiter.api.Assertions.assertEquals(0, usuarios.count());
+    }
+
 }
