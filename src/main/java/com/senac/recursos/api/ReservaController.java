@@ -72,10 +72,13 @@ public class ReservaController {
     @PatchMapping("/{id}/estado")
     public Reserva alterarEstado(@PathVariable Long id, @Valid @RequestBody AlteracaoEstado req,
                                   Authentication autenticacao) {
-        boolean responsavel = autenticacao.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_RESPONSAVEL")
-                        || a.getAuthority().equals("ROLE_ADMINISTRADOR"));
-        return service.alterarEstado(id, req.estado(), autenticacao.getName(), responsavel);
+        boolean administrador = autenticacao != null && autenticacao.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR"));
+        if (!administrador) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Somente o administrador pode alterar o estado de reservas");
+        }
+        return service.alterarEstado(id, req.estado(), autenticacao.getName(), true);
     }
 
     @PostMapping
