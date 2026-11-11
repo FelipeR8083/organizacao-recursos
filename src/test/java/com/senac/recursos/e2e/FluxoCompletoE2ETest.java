@@ -161,7 +161,7 @@ class FluxoCompletoE2ETest {
         ResponseEntity<JsonNode> historico = responsavel.getForEntity(
                 "/reservas/" + reservaId + "/auditoria", JsonNode.class);
         assertEquals(2, historico.getBody().size());
-        assertEquals("admin-e2e", historico.getBody().get(1).get("origem").asText());
+        assertEquals("e2e-admin", historico.getBody().get(1).get("origem").asText());
 
         ResponseEntity<JsonNode> relatorio = responsavel.getForEntity(
                 "/relatorios/utilizacao?inicio=" + inicio.minusSeconds(60) + "&fim=" + fim.plusSeconds(60),
