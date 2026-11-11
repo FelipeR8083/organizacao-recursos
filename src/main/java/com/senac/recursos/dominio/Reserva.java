@@ -13,7 +13,7 @@ public class Reserva {
     private Recurso recurso;
     @ManyToOne
     private Recurso professor;
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "reserva_material", joinColumns = @JoinColumn(name = "reserva_id"), inverseJoinColumns = @JoinColumn(name = "material_id"))
     private List<Recurso> materiais = new ArrayList<>();
     @Column(nullable = false)
