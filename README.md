@@ -57,11 +57,7 @@ Para parar os serviços, preservando os dados do banco:
 docker compose down
 ```
 
-Para apagar também o volume de dados (operação destrutiva):
-
-```bash
-docker compose down -v
-```
+**Não use `docker compose down -v` para atualizar o sistema:** esse comando remove os volumes gerenciados pelo Compose e pode apagar o PostgreSQL. Se já existe um banco, confira o volume e faça backup antes de iniciar outra versão. Veja [o guia de atualização segura](README-NOVA-VERSAO.md).
 
 O Compose publica aplicação e PostgreSQL apenas em 127.0.0.1. DB_PASSWORD e as credenciais APP_ADMIN_* são obrigatórias via .env. O primeiro administrador é criado automaticamente na primeira inicialização. A API usa HTTP Basic; cadastre os perfis adicionais pela aba **Usuários** da interface (ou pela API administrativa `/usuarios`) usando as credenciais do administrador. Senhas são armazenadas com BCrypt e devem ter pelo menos 12 caracteres. Use HTTPS fora do ambiente local. O webhook é opcional: configure `NOTIFICACAO_URL` para envio HTTP; sem ele, as notificações ficam no modo simulado.
 
@@ -78,7 +74,7 @@ No Linux/macOS, exporte as mesmas três variáveis antes de executar `mvn spring
 
 A aplicação ficará disponível em `http://localhost:8080`. A interface web está em `src/main/resources/static/index.html`. O navegador pode solicitar as credenciais HTTP Basic; para comparar perfis distintos, abra sessões separadas (por exemplo, janela anônima).
 
-Na interface, o administrador vê cadastro de recursos e usuários; o responsável vê aprovação, retirada/devolução, relatórios e notificações; o solicitante vê apenas suas reservas e ações autorizadas. A aba de relatórios usa o período selecionado pelo usuário.
+Na interface, o **administrador** gerencia recursos, usuários e aprova/rejeita reservas; o **responsável** pode executar outras ações de gestão autorizadas, mas **não pode aprovar nem rejeitar reservas**; o **solicitante/professor** vê somente as próprias reservas e ações permitidas. É possível solicitar uma sala com vários materiais na mesma reserva. A aba de relatórios usa o período selecionado pelo usuário.
 
 ### Configuração do banco
 
@@ -102,7 +98,7 @@ Defina `DB_PASSWORD` no ambiente antes de iniciar a aplicação.
 | GET | `/reservas` | Lista reservas |
 | POST | `/reservas` | Solicita reserva |
 | PUT | `/reservas/{id}` | Titular altera reserva solicitada; responsável/administrador pode gerenciar |
-| PATCH | `/reservas/{id}/estado` | Responsável/administrador altera estado respeitando a máquina de estados |
+| PATCH | `/reservas/{id}/estado` | Somente administrador aprova/rejeita ou altera o estado, conforme a máquina de estados |
 | POST | `/reservas/{id}/retirada` | Responsável registra retirada de material aprovado |
 | POST | `/reservas/{id}/devolucao` | Responsável registra devolução e conclui a reserva |
 | DELETE | `/reservas/{id}` | Solicitante cancela a própria reserva; responsável/administrador pode cancelar |
@@ -130,14 +126,14 @@ Execute a suíte completa:
 mvn clean verify
 ```
 
-Os testes de integração usam Testcontainers e precisam de Docker. O relatório JaCoCo é gerado em `target/site/jacoco/index.html`. No CI aprovado [42708687473](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/42708687473), 115 testes passaram, com **87,81% de linhas** e **71,64% de branches**. O Maven agora verifica automaticamente as metas mínimas de 80%/70%; confirmar o resultado no SHA final após atualizações.
+Os testes de integração usam Testcontainers e precisam de Docker. O relatório JaCoCo é gerado em `target/site/jacoco/index.html`. No CI aprovado [557](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43044676997), no commit `fe916322`, **172 testes passaram, sem falhas ou erros**; compilação, JaCoCo, Docker Compose e imagem Docker foram aprovados. O Maven verifica as metas mínimas de cobertura de 80% de linhas e 70% de branches. Uma atualização posterior exige nova execução verde no SHA correspondente.
 
 O workflow do GitHub Actions executa `mvn -B verify` em pull requests e pushes para `main` e para a branch de melhorias, e publica o relatório como artefato quando disponível. SonarCloud é executado quando `SONAR_TOKEN` (secret) e `SONAR_ORGANIZATION`/`SONAR_PROJECT_KEY` (variables) estiverem configuradas nas configurações do repositório.
 
 ## Decisões de design
 
 - **Intervalo semiaberto [início, fim):** reservas adjacentes, como 10h–11h e 11h–12h, não conflitam.
-- **Concorrência na criação:** bloqueia recurso principal e professor vinculado em ordem crescente de ID e valida conflitos em ambos.
+- **Concorrência na criação:** bloqueia sala/recurso principal, professor vinculado e todos os materiais solicitados em ordem global crescente de ID, validando conflitos de horários entre eles.
 - **Concorrência nas transições:** o bloqueio pessimista da linha da reserva serializa alterações de estado simultâneas.
 - **Máquina de estados:** transições são definidas em `EstadoReserva`; estados finais não permitem novas transições.
 - **Auditoria transacional:** criação, mudança de estado, reagendamento e cancelamento geram eventos persistidos; quando autenticado, o login é registrado como origem. Cadastro/edição de recursos e gestão de usuários geram eventos administrativos imutáveis sem senhas.
@@ -147,7 +143,7 @@ O workflow do GitHub Actions executa `mvn -B verify` em pull requests e pushes p
 
 Implementado e coberto por testes no código atual:
 - Criação de reservas e validação de período.
-- Prevenção de sobreposição por recurso e professor vinculado.
+- Prevenção de sobreposição por sala, professor vinculado e múltiplos materiais.
 - Autenticação e autorização por perfil.
 - Pesquisa por tipo, capacidade, localização, competência e disponibilidade.
 - Alteração/cancelamento de reserva solicitada pelo titular.
@@ -166,7 +162,7 @@ Os **14 requisitos funcionais** têm implementação no código da branch de mel
 - O cenário JMeter foi executado e aprovado; os artefatos devem ser guardados junto da entrega.
 - A interface necessita de validação manual em celular/tablet e demonstração da Swagger UI.
 - Revisão por pares, evidências finais e apresentação devem ser concluídas.
-- O último CI precisa terminar verde no SHA final, incluindo a regra de JaCoCo; consulte Actions antes de integrar.
+- A execução 557 passou; confirme novamente o CI do SHA final antes de integrar atualizações posteriores.
 
 **Segurança:** HTTP Basic com BCrypt e papéis está implementado nesta branch. O ambiente Compose limita as portas ao localhost; não exponha publicamente sem HTTPS, gestão de segredos e revisão de segurança.
 
