@@ -50,7 +50,7 @@ class ReservaControllerTest {
         Reserva reserva = new Reserva(new Recurso(TipoRecurso.SALA, "Sala 101", false),
                 new Periodo(INICIO, FIM), "prof.ana");
         ReflectionTestUtils.setField(reserva, "id", 42L);
-        when(service.criar(eq(1L), isNull(), eq(java.util.List.of()), eq("prof.ana"), eq(INICIO), eq(FIM))).thenReturn(reserva);
+        when(service.criar(eq(1L), isNull(), isNull(), eq("prof.ana"), eq(INICIO), eq(FIM))).thenReturn(reserva);
 
         enviar(JSON_VALIDO)
                 .andExpect(status().isCreated())
@@ -60,7 +60,7 @@ class ReservaControllerTest {
 
     @Test
     void conflitoDeHorarioRetorna409ComMensagem() throws Exception {
-        when(service.criar(any(), isNull(), anyList(), any(), any(), any()))
+        when(service.criar(any(), isNull(), nullable(java.util.List.class), any(), any(), any()))
                 .thenThrow(new ConflitoHorarioException("Já existe reserva neste horário para o recurso"));
 
         enviar(JSON_VALIDO)
@@ -70,7 +70,7 @@ class ReservaControllerTest {
 
     @Test
     void recursoEmManutencaoRetorna422() throws Exception {
-        when(service.criar(any(), isNull(), anyList(), any(), any(), any()))
+        when(service.criar(any(), isNull(), nullable(java.util.List.class), any(), any(), any()))
                 .thenThrow(new RecursoIndisponivelException("Recurso em manutenção"));
 
         enviar(JSON_VALIDO)
@@ -80,7 +80,7 @@ class ReservaControllerTest {
 
     @Test
     void periodoInvalidoRetorna422() throws Exception {
-        when(service.criar(any(), isNull(), anyList(), any(), any(), any()))
+        when(service.criar(any(), isNull(), nullable(java.util.List.class), any(), any(), any()))
                 .thenThrow(new IllegalArgumentException("O término deve ser posterior ao início"));
 
         enviar(JSON_VALIDO)
@@ -90,7 +90,7 @@ class ReservaControllerTest {
 
     @Test
     void recursoInexistenteRetorna404() throws Exception {
-        when(service.criar(any(), isNull(), anyList(), any(), any(), any()))
+        when(service.criar(any(), isNull(), nullable(java.util.List.class), any(), any(), any()))
                 .thenThrow(new NoSuchElementException("Recurso não encontrado: 1"));
 
         enviar(JSON_VALIDO)
