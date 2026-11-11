@@ -113,6 +113,9 @@ public class ReservaService {
             principal = recursoId.equals(primeiroId) ? primeiro : segundo;
             professor = professorId.equals(primeiroId) ? primeiro : segundo;
         }
+        if (principal.getTipo() != TipoRecurso.SALA && principal.getTipo() != TipoRecurso.MATERIAL) {
+            throw new IllegalArgumentException("O recurso principal deve ser uma sala ou um material");
+        }
         if (principal.isEmManutencao() || (professor != null && professor.isEmManutencao())) {
             throw new RecursoIndisponivelException("Recurso ou professor em manutenção");
         }
@@ -205,6 +208,9 @@ public class ReservaService {
             professor = professorId.equals(primeiroId) ? primeiro : segundo;
         }
 
+        if (principal.getTipo() != TipoRecurso.SALA && principal.getTipo() != TipoRecurso.MATERIAL) {
+            throw new IllegalArgumentException("O recurso principal deve ser uma sala ou um material");
+        }
         if (principal.isEmManutencao() || (professor != null && professor.isEmManutencao())) {
             throw new RecursoIndisponivelException("Recurso ou professor em manutenção");
         }
