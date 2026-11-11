@@ -45,6 +45,33 @@ public class UsuarioService {
         return criado;
     }
 
+    /** Cadastro público: somente professor Senac, sempre pendente de aprovação. */
+    @Transactional
+    public Usuario solicitarCadastroProfessor(String email, String senha) {
+        String normalizado = email == null ? "" : email.trim().toLowerCase(java.util.Locale.ROOT);
+        int arroba = normalizado.lastIndexOf('@');
+        String dominio = arroba < 0 ? "" : normalizado.substring(arroba + 1);
+        if (arroba <= 0 || normalizado.indexOf('@') != arroba
+                || !(dominio.equals("senac.br") || dominio.endsWith(".senac.br"))
+                || normalizado.length() > 80 || normalizado.contains(" ")) {
+            throw new IllegalArgumentException("Informe um e-mail institucional do Senac válido");
+        }
+        if (senha == null || senha.length() < 12) {
+            throw new IllegalArgumentException("A senha deve ter pelo menos 12 caracteres");
+        }
+        if (usuarios.existsByLoginIgnoreCase(normalizado)) {
+            throw new IllegalArgumentException("Já existe usuário com este e-mail");
+        }
+        Usuario professor = new Usuario(normalizado, encoder.encode(senha), PerfilAcesso.PROFESSOR);
+        professor.setAtivo(false);
+        Usuario salvo = usuarios.save(professor);
+        if (auditoriaAdministrativa != null) {
+            auditoriaAdministrativa.registrar("USUARIO", salvo.getId(), "SOLICITACAO_CADASTRO",
+                    "login=" + salvo.getUsername() + ", perfil=PROFESSOR, ativo=false");
+        }
+        return salvo;
+    }
+
     @Transactional(readOnly = true)
     public List<Usuario> listar() { return usuarios.findAll(); }
 
