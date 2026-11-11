@@ -237,10 +237,20 @@ class AutorizacaoApiTest {
 
     @Test
     @WithMockUser(username = "responsavel", roles = "RESPONSAVEL")
-    void responsavelNaoPodeAprovarReservas() throws Exception {
-        mvc.perform(patch("/reservas/1/estado")
+    void responsavelPodeAnalisarEstadoDeReservas() throws Exception {
+        // Autorizado pelo filtro; a reserva inexistente deve retornar 404.
+        mvc.perform(patch("/reservas/999999/estado")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"estado\":\"APROVADA\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(username = "responsavel", roles = "RESPONSAVEL")
+    void responsavelNaoPodeAtivarProfessor() throws Exception {
+        mvc.perform(patch("/usuarios/999999/ativo")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"ativo\":true}"))
                 .andExpect(status().isForbidden());
     }
 
