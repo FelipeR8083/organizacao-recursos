@@ -135,6 +135,19 @@ class ReservaServiceIntegracaoTest {
     }
 
     @Test
+    void reagendamentoDeReservaConjuntaVerificaConflitoDoMaterial() {
+        Recurso projetor = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Projetor", false));
+        Recurso outraSala = recursos.save(new Recurso(TipoRecurso.SALA, "Sala 102", false));
+        Reserva primeira = service.criar(sala.getId(), null, java.util.List.of(projetor.getId()),
+                "prof.ana", hora(10), hora(11));
+        service.criar(outraSala.getId(), null, java.util.List.of(projetor.getId()),
+                "prof.bia", hora(12), hora(13));
+        assertThrows(ConflitoHorarioException.class,
+                () -> service.alterar(primeira.getId(), sala.getId(), null,
+                        hora(12), hora(13), "prof.ana", false));
+    }
+
+    @Test
     void reservaConjuntaRejeitaMateriaisDuplicadosOuEmManutencao() {
         Recurso material = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Projetor", false));
         assertThrows(IllegalArgumentException.class,
