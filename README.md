@@ -4,6 +4,15 @@ Sistema acadêmico para alocar **salas, professores e materiais** sem conflitos 
 
 Projeto de Qualidade de Software — Senac TADS 2026.2.
 
+## Autoria e colaboração
+
+Este projeto acadêmico foi desenvolvido em dupla por:
+
+- **Felipe** — [@FelipeR8083](https://github.com/FelipeR8083)
+- **Pietro** — [@pietrolaureano](https://github.com/pietrolaureano)
+
+O planejamento, desenvolvimento e os testes foram realizados em conjunto. Como a dupla compartilhou um computador durante o trabalho, parte dos commits foi enviada por uma única conta do GitHub. Por isso, o nome que aparece como autor de um commit não representa, sozinho, toda a colaboração no projeto.
+
 ## Tecnologias
 
 - Java 21
