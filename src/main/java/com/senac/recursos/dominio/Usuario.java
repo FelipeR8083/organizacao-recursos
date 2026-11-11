@@ -20,6 +20,10 @@ public class Usuario implements UserDetails {
     private PerfilAcesso perfil;
     @Column(nullable = false)
     private boolean ativo = true;
+    @Column(name = "verificacao_email_obrigatoria", nullable = false)
+    private boolean verificacaoEmailObrigatoria = false;
+    @Column(name = "email_verificado_em")
+    private java.time.Instant emailVerificadoEm;
 
     protected Usuario() {}
 
@@ -33,6 +37,10 @@ public class Usuario implements UserDetails {
     public PerfilAcesso getPerfil() { return perfil; }
     public boolean isAtivo() { return ativo; }
     public void setAtivo(boolean ativo) { this.ativo = ativo; }
+    public boolean isVerificacaoEmailObrigatoria() { return verificacaoEmailObrigatoria; }
+    public void setVerificacaoEmailObrigatoria(boolean obrigatoria) { this.verificacaoEmailObrigatoria = obrigatoria; }
+    public java.time.Instant getEmailVerificadoEm() { return emailVerificadoEm; }
+    public void setEmailVerificadoEm(java.time.Instant instante) { this.emailVerificadoEm = instante; }
     @Override public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + perfil.name()));
     }
