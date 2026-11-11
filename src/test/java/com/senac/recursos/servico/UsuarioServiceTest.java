@@ -152,4 +152,31 @@ class UsuarioServiceTest {
         verify(usuarios, never()).save(any());
     }
 
+    static Stream<String> emailsInstitucionaisInvalidos() {
+        return Stream.of(
+                "ana@senac.br.atacante.com",
+                "ana@falso-senac.br",
+                "ana@@senac.br",
+                "ana@senac.br outro@senac.br",
+                "ana@",
+                "ana@gmail.com"
+        );
+    }
+
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.MethodSource("emailsInstitucionaisInvalidos")
+    void rejeitaEmailsInstitucionaisForjadosSemGravar(String email) {
+        assertThrows(IllegalArgumentException.class,
+                () -> service.solicitarCadastroProfessor(email, "senha-segura-123"));
+        verifyNoInteractions(usuarios, encoder);
+    }
+
+    @Test
+    void rejeitaSenhaCurtaNoCadastroProfessorSemPersistir() {
+        assertThrows(IllegalArgumentException.class,
+                () -> service.solicitarCadastroProfessor("ana@sp.senac.br", "curta"));
+        verify(usuarios, never()).save(any());
+        verifyNoInteractions(encoder);
+    }
+
 }
