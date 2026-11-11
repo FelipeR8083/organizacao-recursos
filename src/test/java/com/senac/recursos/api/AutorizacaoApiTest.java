@@ -248,12 +248,12 @@ class AutorizacaoApiTest {
 
     @Test
     @WithMockUser(username = "responsavel", roles = "RESPONSAVEL")
-    void responsavelPodeAnalisarEstadoDeReservas() throws Exception {
-        // Autorizado pelo filtro; a reserva inexistente deve retornar 404.
+    void responsavelNaoPodeAnalisarEstadoDeReservas() throws Exception {
+        // Somente o administrador pode aprovar ou rejeitar solicitações.
         mvc.perform(patch("/reservas/999999/estado")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"estado\":\"APROVADA\"}"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
     }
 
     @Test
