@@ -31,7 +31,8 @@ public class SegurancaConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, Environment ambiente) throws Exception {
+        boolean producao = java.util.Arrays.asList(ambiente.getActiveProfiles()).contains("prod");
         return http
                 .csrf(csrf -> {
                     if (!producao) {
