@@ -48,5 +48,4 @@ Com `SPRING_PROFILES_ACTIVE=prod`, a aplicacao recusa a inicializacao se
 ou se `SMTP_HOST` estiver vazio ou definido como localhost.
 
 A validacao de configuracao nao substitui testes de entrega real de e-mail,
-TLS, DNS, SPF/DKIM/DMARC e controle de credenciais. Tambem permanece necessaria
-a revisao da protecao CSRF antes de expor a aplicacao publicamente.
+TLS, DNS, SPF/DKIM/DMARC e controle de credenciais. No perfil prod, a protecao CSRF usa cookie XSRF-TOKEN para requisicoes autenticadas que alteram dados. Clientes web devem enviar o token no cabecalho X-XSRF-TOKEN. Login, cadastro publico e confirmacao de e-mail estao temporariamente isentos de CSRF; essas excecoes precisam de revisao antes da exposicao publica.
