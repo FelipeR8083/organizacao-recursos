@@ -7,6 +7,8 @@ import com.senac.recursos.dominio.Usuario;
 import com.senac.recursos.dominio.PerfilAcesso;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.mock.web.MockHttpSession;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import org.springframework.test.web.servlet.MvcResult;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +38,7 @@ class AutorizacaoApiTest {
     @Autowired RecursoRepository recursos;
     @Autowired UsuarioRepository usuarios;
     @Autowired PasswordEncoder encoder;
+    @Autowired ObjectMapper mapper;
 
     @BeforeEach
     void limpar() { recursos.deleteAll(); usuarios.deleteAll(); }
@@ -135,10 +138,37 @@ class AutorizacaoApiTest {
                         .param("password", "senha-gestor-123"))
                 .andExpect(status().is3xxRedirection()).andReturn();
         MockHttpSession session = (MockHttpSession) login.getRequest().getSession(false);
-        mvc.perform(post("/recursos").session(session)
+        MvcResult recurso = mvc.perform(post("/recursos").session(session)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"tipo\":\"SALA\",\"nome\":\"Sala restrita\",\"restrito\":true}"))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated()).andReturn();
+        long recursoId = mapper.readTree(recurso.getResponse().getContentAsString()).get("id").asLong();
+
+        usuarios.save(new Usuario("professor1", encoder.encode("senha-prof-123456"), PerfilAcesso.PROFESSOR));
+        MvcResult loginProfessor = mvc.perform(post("/login")
+                        .param("username", "professor1").param("password", "senha-prof-123456"))
+                .andExpect(status().is3xxRedirection()).andReturn();
+        MockHttpSession sessaoProfessor = (MockHttpSession) loginProfessor.getRequest().getSession(false);
+        Instant inicio = Instant.now().plusSeconds(24 * 3600);
+        Instant fim = inicio.plusSeconds(3600);
+        String novaReserva = mapper.writeValueAsString(java.util.Map.of(
+                "recursoId", recursoId, "solicitante", "professor1",
+                "inicio", inicio.toString(), "fim", fim.toString()));
+        MvcResult criada = mvc.perform(post("/reservas").session(sessaoProfessor)
+                        .contentType(MediaType.APPLICATION_JSON).content(novaReserva))
+                .andExpect(status().isCreated()).andReturn();
+        long reservaId = mapper.readTree(criada.getResponse().getContentAsString()).get("id").asLong();
+
+        mvc.perform(patch("/reservas/" + reservaId + "/estado").session(sessaoProfessor)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"APROVADA\"}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/reservas").session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].solicitante").value("professor1"));
+        mvc.perform(patch("/reservas/" + reservaId + "/estado").session(session)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"APROVADA\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("APROVADA"));
     }
 
 }
