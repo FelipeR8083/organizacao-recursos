@@ -2,6 +2,8 @@ package com.senac.recursos.dominio;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Reserva {
@@ -11,6 +13,9 @@ public class Reserva {
     private Recurso recurso;
     @ManyToOne
     private Recurso professor;
+    @ManyToMany
+    @JoinTable(name = "reserva_material", joinColumns = @JoinColumn(name = "reserva_id"), inverseJoinColumns = @JoinColumn(name = "material_id"))
+    private List<Recurso> materiais = new ArrayList<>();
     @Column(nullable = false)
     private Instant inicio;
     @Column(nullable = false)
@@ -43,6 +48,13 @@ public class Reserva {
         this.inicio = periodo.inicio();
         this.fim = periodo.fim();
     }
+
+    public void definirMateriais(List<Recurso> novosMateriais) {
+        this.materiais.clear();
+        this.materiais.addAll(novosMateriais);
+    }
+
+    public List<Recurso> getMateriais() { return List.copyOf(materiais); }
 
     public void transicionarPara(EstadoReserva destino) {
         if (!estado.podeIrPara(destino)) {
