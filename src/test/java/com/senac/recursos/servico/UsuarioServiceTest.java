@@ -185,4 +185,29 @@ class UsuarioServiceTest {
         verifyNoInteractions(encoder);
     }
 
+    @Test
+    void impedeAtivacaoDeProfessorSemConfirmacaoObrigatoriaDeEmail() {
+        Usuario professor = new Usuario("ana@sp.senac.br", "hash", PerfilAcesso.PROFESSOR);
+        professor.setAtivo(false);
+        professor.setVerificacaoEmailObrigatoria(true);
+        when(usuarios.findById(42L)).thenReturn(Optional.of(professor));
+
+        IllegalStateException erro = assertThrows(IllegalStateException.class,
+                () -> service.alterarAtivo(42L, true, "admin"));
+        assertTrue(erro.getMessage().contains("e-mail institucional"));
+        assertFalse(professor.isAtivo());
+    }
+
+    @Test
+    void permiteAtivacaoDeProfessorComEmailConfirmado() {
+        Usuario professor = new Usuario("ana@sp.senac.br", "hash", PerfilAcesso.PROFESSOR);
+        professor.setAtivo(false);
+        professor.setVerificacaoEmailObrigatoria(true);
+        professor.setEmailVerificadoEm(java.time.Instant.now());
+        when(usuarios.findById(43L)).thenReturn(Optional.of(professor));
+
+        service.alterarAtivo(43L, true, "admin");
+        assertTrue(professor.isAtivo());
+    }
+
 }
