@@ -143,11 +143,7 @@ class FluxoCompletoE2ETest {
         assertEquals(HttpStatus.FORBIDDEN, proibido.getStatusCode());
 
         TestRestTemplate responsavel = auth("responsavel-e2e", "senha-responsavel-123");
-        ResponseEntity<String> tentativaResponsavel = responsavel.exchange("/reservas/" + reservaId + "/estado",
-                HttpMethod.PATCH, new HttpEntity<>(Map.of("estado", "APROVADA"), jsonHeaders()), String.class);
-        assertEquals(HttpStatus.FORBIDDEN, tentativaResponsavel.getStatusCode());
-
-        ResponseEntity<JsonNode> aprovada = admin.exchange("/reservas/" + reservaId + "/estado",
+        ResponseEntity<JsonNode> aprovada = responsavel.exchange("/reservas/" + reservaId + "/estado",
                 HttpMethod.PATCH, new HttpEntity<>(Map.of("estado", "APROVADA"), jsonHeaders()), JsonNode.class);
         assertEquals(HttpStatus.OK, aprovada.getStatusCode());
         assertEquals("APROVADA", aprovada.getBody().get("estado").asText());
@@ -155,7 +151,7 @@ class FluxoCompletoE2ETest {
         ResponseEntity<JsonNode> historico = responsavel.getForEntity(
                 "/reservas/" + reservaId + "/auditoria", JsonNode.class);
         assertEquals(2, historico.getBody().size());
-        assertEquals("e2e-admin", historico.getBody().get(1).get("origem").asText());
+        assertEquals("responsavel-e2e", historico.getBody().get(1).get("origem").asText());
 
         ResponseEntity<JsonNode> relatorio = responsavel.getForEntity(
                 "/relatorios/utilizacao?inicio=" + inicio.minusSeconds(60) + "&fim=" + fim.plusSeconds(60),
