@@ -235,4 +235,13 @@ class AutorizacaoApiTest {
                 .andExpect(redirectedUrl("/"));
     }
 
+    @Test
+    @WithMockUser(username = "responsavel", roles = "RESPONSAVEL")
+    void responsavelNaoPodeAprovarReservas() throws Exception {
+        mvc.perform(patch("/reservas/1/estado")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"estado\":\"APROVADA\"}"))
+                .andExpect(status().isForbidden());
+    }
+
 }
