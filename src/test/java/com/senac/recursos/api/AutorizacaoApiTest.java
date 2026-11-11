@@ -265,4 +265,44 @@ class AutorizacaoApiTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void professoresNaoVeemNemAlteramReservasDeOutrosProfessores() throws Exception {
+        usuarios.save(new Usuario("prof.a", encoder.encode("senha-segura-123"), PerfilAcesso.PROFESSOR));
+        usuarios.save(new Usuario("prof.b", encoder.encode("senha-segura-123"), PerfilAcesso.PROFESSOR));
+
+        MvcResult recurso = mvc.perform(post("/recursos")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
+                                .user("admin").roles("ADMINISTRADOR"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tipo\":\"SALA\",\"nome\":\"Sala de isolamento\"}"))
+                .andExpect(status().isCreated()).andReturn();
+        long recursoId = mapper.readTree(recurso.getResponse().getContentAsString()).get("id").asLong();
+        Instant inicio = Instant.now().plusSeconds(172800);
+        Instant fim = inicio.plusSeconds(3600);
+        String pedido = mapper.writeValueAsString(java.util.Map.of(
+                "recursoId", recursoId, "solicitante", "prof.a",
+                "inicio", inicio.toString(), "fim", fim.toString()));
+        MvcResult criada = mvc.perform(post("/reservas")
+                        .with(httpBasic("prof.a", "senha-segura-123"))
+                        .contentType(MediaType.APPLICATION_JSON).content(pedido))
+                .andExpect(status().isCreated()).andReturn();
+        long reservaId = mapper.readTree(criada.getResponse().getContentAsString()).get("id").asLong();
+
+        mvc.perform(get("/reservas").with(httpBasic("prof.b", "senha-segura-123")))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+        mvc.perform(get("/reservas/" + reservaId + "/auditoria")
+                        .with(httpBasic("prof.b", "senha-segura-123")))
+                .andExpect(status().isNotFound());
+        String alteracao = mapper.writeValueAsString(java.util.Map.of(
+                "recursoId", recursoId, "inicio", inicio.toString(), "fim", fim.toString()));
+        mvc.perform(put("/reservas/" + reservaId)
+                        .with(httpBasic("prof.b", "senha-segura-123"))
+                        .contentType(MediaType.APPLICATION_JSON).content(alteracao))
+                .andExpect(status().isForbidden());
+        mvc.perform(delete("/reservas/" + reservaId)
+                        .with(httpBasic("prof.b", "senha-segura-123")))
+                .andExpect(status().isForbidden());
+    }
+
 }
