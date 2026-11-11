@@ -15,17 +15,25 @@ public class UsuarioService {
     private final UsuarioRepository usuarios;
     private final PasswordEncoder encoder;
     private final AuditoriaAdministrativaService auditoriaAdministrativa;
+    private final EmailConfirmacaoProfessorService emailConfirmacao;
 
     public UsuarioService(UsuarioRepository usuarios, PasswordEncoder encoder) {
-        this(usuarios, encoder, null);
+        this(usuarios, encoder, null, null);
+    }
+
+    public UsuarioService(UsuarioRepository usuarios, PasswordEncoder encoder,
+                          AuditoriaAdministrativaService auditoriaAdministrativa) {
+        this(usuarios, encoder, auditoriaAdministrativa, null);
     }
 
     @Autowired
     public UsuarioService(UsuarioRepository usuarios, PasswordEncoder encoder,
-                          AuditoriaAdministrativaService auditoriaAdministrativa) {
+                          AuditoriaAdministrativaService auditoriaAdministrativa,
+                          EmailConfirmacaoProfessorService emailConfirmacao) {
         this.usuarios = usuarios;
         this.encoder = encoder;
         this.auditoriaAdministrativa = auditoriaAdministrativa;
+        this.emailConfirmacao = emailConfirmacao;
     }
 
     @Transactional
@@ -66,7 +74,12 @@ public class UsuarioService {
         }
         Usuario professor = new Usuario(normalizado, encoder.encode(senha), PerfilAcesso.PROFESSOR);
         professor.setAtivo(false);
+        boolean verificarEmail = emailConfirmacao != null && emailConfirmacao.habilitado();
+        professor.setVerificacaoEmailObrigatoria(verificarEmail);
         Usuario salvo = usuarios.save(professor);
+        if (verificarEmail) {
+            emailConfirmacao.enviar(salvo);
+        }
         if (auditoriaAdministrativa != null) {
             auditoriaAdministrativa.registrar("USUARIO", salvo.getId(), "SOLICITACAO_CADASTRO",
                     "login=" + salvo.getUsername() + ", perfil=PROFESSOR, ativo=false");
