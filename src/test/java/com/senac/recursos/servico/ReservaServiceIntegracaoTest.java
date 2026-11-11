@@ -130,6 +130,15 @@ class ReservaServiceIntegracaoTest {
                 () -> service.criar(sala.getId(), null,
                         java.util.List.of(material.getId(), material.getId()),
                         "prof.ana", hora(10), hora(11)));
+        Recurso indisponivel = new Recurso(TipoRecurso.MATERIAL, "Notebook manutenção", false);
+        indisponivel.setEmManutencao(true);
+        indisponivel = recursos.save(indisponivel);
+        Long indisponivelId = indisponivel.getId();
+        assertThrows(RecursoIndisponivelException.class,
+                () -> service.criar(sala.getId(), null,
+                        java.util.List.of(indisponivelId),
+                        "prof.ana", hora(10), hora(11)));
+        assertEquals(0, reservas.count());
     }
 
     @Test
