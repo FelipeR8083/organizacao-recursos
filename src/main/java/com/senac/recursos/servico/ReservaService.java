@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.TreeSet;
 import java.util.NoSuchElementException;
 
 @Service
@@ -182,6 +184,12 @@ public class ReservaService {
 
     @Transactional
     public Reserva criar(Long recursoId, Long professorId, String solicitante, Instant inicio, Instant fim) {
+        return criar(recursoId, professorId, List.of(), solicitante, inicio, fim);
+    }
+
+    @Transactional
+    public Reserva criar(Long recursoId, Long professorId, List<Long> materialIds,
+                         String solicitante, Instant inicio, Instant fim) {
         Periodo periodo = new Periodo(inicio, fim);
         String solicitanteNormalizado = solicitante == null ? "" : solicitante.trim();
         if (solicitanteNormalizado.isBlank()) {
@@ -191,6 +199,31 @@ public class ReservaService {
             throw new IllegalArgumentException("O professor deve ser um recurso diferente do recurso principal");
         }
 
+        List<Long> materiaisSolicitados = materialIds == null ? List.of() : materialIds;
+        if (materiaisSolicitados.stream().anyMatch(id -> id == null || id.equals(recursoId)
+                || id.equals(professorId))) {
+            throw new IllegalArgumentException("Materiais devem ser diferentes da sala e do professor");
+        }
+        if (new TreeSet<>(materiaisSolicitados).size() != materiaisSolicitados.size()) {
+            throw new IllegalArgumentException("Não repita o mesmo material");
+        }
+        if (!materiaisSolicitados.isEmpty() && recursos.findById(recursoId)
+                .map(recurso -> recurso.getTipo() != TipoRecurso.SALA).orElse(false)) {
+            throw new IllegalArgumentException("A reserva conjunta exige uma sala como recurso principal");
+        }
+        List<Recurso> materiais = new ArrayList<>();
+        // Bloqueio ordenado dos materiais para serializar solicitações concorrentes.
+        for (Long materialId : new TreeSet<>(materiaisSolicitados)) {
+            Recurso material = recursos.buscarComLock(materialId)
+                    .orElseThrow(() -> new NoSuchElementException("Material não encontrado: " + materialId));
+            if (material.getTipo() != TipoRecurso.MATERIAL) {
+                throw new IllegalArgumentException("O recurso vinculado deve ser do tipo MATERIAL");
+            }
+            if (material.isEmManutencao()) {
+                throw new RecursoIndisponivelException("Material em manutenção: " + materialId);
+            }
+            materiais.add(material);
+        }
         // Bloqueia as linhas em ordem crescente para reduzir risco de deadlock.
         Recurso principal;
         Recurso professor = null;
@@ -225,7 +258,15 @@ public class ReservaService {
             conflitosEvitados.registrar(professorId, periodo.inicio(), periodo.fim(), "Conflito na agenda do professor");
             throw new ConflitoHorarioException("O professor já possui reserva neste horário");
         }
-        Reserva criada = reservas.save(new Reserva(principal, professor, periodo, solicitanteNormalizado));
+        for (Recurso material : materiais) {
+            if (reservas.existeConflito(material.getId(), EstadoReserva.ativos(), periodo.inicio(), periodo.fim())) {
+                conflitosEvitados.registrar(material.getId(), periodo.inicio(), periodo.fim(), "Conflito no material");
+                throw new ConflitoHorarioException("Material já reservado neste horário: " + material.getNome());
+            }
+        }
+        Reserva novaReserva = new Reserva(principal, professor, periodo, solicitanteNormalizado);
+        novaReserva.definirMateriais(materiais);
+        Reserva criada = reservas.save(novaReserva);
         auditoria.save(new ReservaAuditoria(criada, null, EstadoReserva.SOLICITADA,
                 Instant.now(clock), origemAtual()));
         notificacoes.enviar(criada.getSolicitante(), "Reserva solicitada", "Sua solicitação de reserva " + criada.getId() + " foi registrada.");
