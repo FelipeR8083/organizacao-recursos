@@ -3,7 +3,8 @@
 ## Novo fluxo de uso
 
 1. O administrador entra pela nova tela `http://localhost:8080/login.html`.
-2. O professor acessa `http://localhost:8080/cadastro.html`, informa seu e-mail institucional `@senac.br` (ou subdomínio institucional) e define uma senha de pelo menos 12 caracteres. A conta é criada **inativa**, aguardando análise do administrador. O administrador também pode cadastrar usuários manualmente na aba **Usuários**.\n3. O administrador entra em **Usuários** e ativa a conta do professor após verificar sua identidade e vínculo institucional. **A aplicação ainda não envia e-mail de confirmação nem prova automaticamente a posse do endereço informado.**
+2. O professor acessa `http://localhost:8080/cadastro.html`, informa seu e-mail institucional `@senac.br` (ou subdomínio institucional) e define uma senha de pelo menos 12 caracteres. A conta é criada **inativa**, aguardando análise do administrador. O administrador também pode cadastrar usuários manualmente na aba **Usuários**.
+3. O administrador entra em **Usuários** e ativa a conta do professor após verificar sua identidade e vínculo institucional. **O envio de confirmação por e-mail foi implementado, mas fica desabilitado por padrão (`EMAIL_ENVIO_HABILITADO=false`). Sem SMTP configurado e envio habilitado, o administrador deve verificar manualmente a identidade e o vínculo institucional. Com envio habilitado, a confirmação do endereço também é exigida antes da ativação.**
 4. O professor entra com as próprias credenciais, vai em **Reservas**, seleciona sala, professor vinculado (opcional), período e clica em **Solicitar reserva**.
 5. A reserva é registrada no estado **SOLICITADA**, sem aprovação automática.
 6. O administrador entra na própria conta e vê a seção **Solicitações aguardando aprovação**, na parte superior da tela, com botões **Aprovar** e **Rejeitar**.
@@ -17,7 +18,7 @@
 - A API mantém autenticação HTTP Basic para ferramentas e testes existentes.
 - O botão **Sair da conta** encerra a sessão do navegador.
 - O banco PostgreSQL continua persistido no volume existente; **não** use `docker compose down -v` para atualizar.
-- Esta versão mantém a configuração anterior de CSRF desabilitado para compatibilidade com os endpoints REST; é destinada a execução local (porta 8080 vinculada a 127.0.0.1). Reavaliar CSRF antes de expor publicamente.
+- No perfil `prod`, a configuração habilita proteção CSRF com exceções específicas; fora dele, o CSRF está desabilitado. A segurança dessas exceções e o comportamento dos clientes REST precisam ser testados antes de qualquer exposição pública.
 
 ## Atualizar no computador Windows
 
@@ -34,7 +35,12 @@ Para enxergar a nova tela de login mesmo que o navegador tenha memorizado creden
 ## Cenário para validação manual
 
 - [ ] Login visual do admin e acesso à aba Usuários.
-- [ ] Professor se cadastra com e-mail Senac e senha de 12+ caracteres.\n- [ ] Conta pendente não consegue entrar; administrador verifica o vínculo institucional e ativa a conta.\n- [ ] E-mail externo é recusado no cadastro.\n- [ ] Perfil RESPONSAVEL não consegue aprovar/rejeitar reservas.
+- [ ] Professor se cadastra com e-mail Senac e senha de 12+ caracteres.
+- [ ] Conta pendente não consegue entrar; administrador verifica o vínculo institucional e ativa a conta.
+- [ ] E-mail externo é recusado no cadastro.
+- [ ] Com SMTP configurado e `EMAIL_ENVIO_HABILITADO=true`, professor recebe confirmação, confirma o endereço e somente depois pode ser ativado pelo administrador.
+- [ ] Sem envio habilitado, o administrador verifica manualmente o vínculo institucional; não considerar domínio de e-mail informado como prova de identidade.
+- [ ] Perfil RESPONSAVEL não consegue aprovar/rejeitar reservas.
 - [ ] Professor efetua login em janela anônima e solicita sala livre.
 - [ ] Professor vê o estado SOLICITADA, mas não vê botões para aprovar/rejeitar.
 - [ ] Admin acessa o painel de pendências e aprova a solicitação.
