@@ -176,6 +176,15 @@ class AutorizacaoApiTest {
     }
 
     @Test
+    void confirmacaoEmailPublicaNaoExigeLoginMasRejeitaTokenInvalido() throws Exception {
+        mvc.perform(post("/confirmacao-email-professor")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\\"token\\":\\"invalido\\"}"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.erro").exists());
+    }
+
+    @Test
     void cadastroPublicoDeProfessorExigeAprovacaoAdmin() throws Exception {
         mvc.perform(get("/cadastro.html")).andExpect(status().isOk());
         mvc.perform(post("/cadastro-professor").contentType(MediaType.APPLICATION_JSON)
