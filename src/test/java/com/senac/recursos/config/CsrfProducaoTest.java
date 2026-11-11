@@ -47,6 +47,6 @@ class CsrfProducaoTest {
         mvc.perform(post("/usuarios").cookie(resposta.getCookies())
                 .header("X-XSRF-TOKEN", token)
                 .contentType(MediaType.APPLICATION_JSON).content("{}"))
-                .andExpect(status().isNotEqualTo(403));
+                .andExpect(result -> org.junit.jupiter.api.Assertions.assertNotEquals(403, result.getResponse().getStatus()));
     }
 }
