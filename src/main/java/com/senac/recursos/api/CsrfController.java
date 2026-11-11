@@ -1,0 +1,15 @@
+package com.senac.recursos.api;
+
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.Map;
+
+/** Inicializa o token CSRF para clientes web da mesma origem. */
+@RestController
+public class CsrfController {
+    @GetMapping("/csrf")
+    public Map<String, String> token(CsrfToken token) {
+        return Map.of("headerName", token.getHeaderName(), "token", token.getToken());
+    }
+}
