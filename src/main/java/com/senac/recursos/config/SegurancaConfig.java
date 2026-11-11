@@ -43,8 +43,9 @@ public class SegurancaConfig {
                                     || path.startsWith("/auditoria-administrativa");
                         }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login.html", "/login", "/css/**", "/favicon.ico",
+                        .requestMatchers("/login.html", "/cadastro.html", "/login", "/css/**", "/favicon.ico",
                                 "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/cadastro-professor").permitAll()
                         .requestMatchers("/usuarios/**").hasRole("ADMINISTRADOR")
                         .requestMatchers("/auditoria-administrativa/**").hasRole("ADMINISTRADOR")
                         .requestMatchers("/relatorios/**", "/notificacoes/**").hasAnyRole("RESPONSAVEL", "ADMINISTRADOR")
