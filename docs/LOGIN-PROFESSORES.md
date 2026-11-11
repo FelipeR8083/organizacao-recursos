@@ -3,13 +3,13 @@
 ## Novo fluxo de uso
 
 1. O administrador entra pela nova tela `http://localhost:8080/login.html`.
-2. Na aba **Usuários**, cadastra um usuário com perfil **PROFESSOR**, informando login e senha inicial (mínimo de 12 caracteres). Compartilhe a senha por canal privado e troque-a se for exposta.
-3. O professor entra com as próprias credenciais, vai em **Reservas**, seleciona sala, professor vinculado (opcional), período e clica em **Solicitar reserva**.
-4. A reserva é registrada no estado **SOLICITADA**, sem aprovação automática.
-5. O administrador entra na própria conta e vê a seção **Solicitações aguardando aprovação**, na parte superior da tela, com botões **Aprovar** e **Rejeitar**.
-6. O administrador continua podendo cadastrar/editar recursos, colocar sala em manutenção e liberar manutenção, administrar usuários e consultar relatórios.
-7. O professor vê somente suas reservas e históricos. Não consegue cadastrar salas, colocar em manutenção, aprovar ou rejeitar solicitações de outros usuários.
-8. A aprovação de uma sala marcada como restrita é permitida ao ADMINISTRADOR e ao RESPONSAVEL, preservando o perfil existente.
+2. O professor acessa `http://localhost:8080/cadastro.html`, informa seu e-mail institucional `@senac.br` (ou subdomínio institucional) e define uma senha de pelo menos 12 caracteres. A conta é criada **inativa**, aguardando análise do administrador. O administrador também pode cadastrar usuários manualmente na aba **Usuários**.\n3. O administrador entra em **Usuários** e ativa a conta do professor após verificar sua identidade e vínculo institucional. **A aplicação ainda não envia e-mail de confirmação nem prova automaticamente a posse do endereço informado.**
+4. O professor entra com as próprias credenciais, vai em **Reservas**, seleciona sala, professor vinculado (opcional), período e clica em **Solicitar reserva**.
+5. A reserva é registrada no estado **SOLICITADA**, sem aprovação automática.
+6. O administrador entra na própria conta e vê a seção **Solicitações aguardando aprovação**, na parte superior da tela, com botões **Aprovar** e **Rejeitar**.
+7. O administrador continua podendo cadastrar/editar recursos, colocar sala em manutenção e liberar manutenção, administrar usuários e consultar relatórios.
+8. O professor vê somente suas reservas e históricos. Não consegue cadastrar salas, colocar em manutenção, aprovar ou rejeitar solicitações de outros usuários.
+9. A aprovação ou rejeição de reservas pela API é exclusiva do **ADMINISTRADOR**, inclusive para recursos restritos.
 
 ## Comportamento da autenticação
 
@@ -34,7 +34,7 @@ Para enxergar a nova tela de login mesmo que o navegador tenha memorizado creden
 ## Cenário para validação manual
 
 - [ ] Login visual do admin e acesso à aba Usuários.
-- [ ] Admin cadastra usuário PROFESSOR.
+- [ ] Professor se cadastra com e-mail Senac e senha de 12+ caracteres.\n- [ ] Conta pendente não consegue entrar; administrador verifica o vínculo institucional e ativa a conta.\n- [ ] E-mail externo é recusado no cadastro.\n- [ ] Perfil RESPONSAVEL não consegue aprovar/rejeitar reservas.
 - [ ] Professor efetua login em janela anônima e solicita sala livre.
 - [ ] Professor vê o estado SOLICITADA, mas não vê botões para aprovar/rejeitar.
 - [ ] Admin acessa o painel de pendências e aprova a solicitação.
