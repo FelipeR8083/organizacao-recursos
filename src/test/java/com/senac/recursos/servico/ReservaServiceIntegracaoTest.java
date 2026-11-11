@@ -106,6 +106,33 @@ class ReservaServiceIntegracaoTest {
     }
 
     @Test
+    void reservaSalaComDoisMateriaisEImpedeConflitos() {
+        Recurso projetor = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Projetor", false));
+        Recurso notebook = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Notebook", false));
+        Recurso outraSala = recursos.save(new Recurso(TipoRecurso.SALA, "Sala 102", false));
+
+        Reserva criada = service.criar(sala.getId(), null,
+                java.util.List.of(projetor.getId(), notebook.getId()),
+                "prof.ana", hora(10), hora(12));
+        assertEquals(2, criada.getMateriais().size());
+        assertThrows(ConflitoHorarioException.class,
+                () -> service.criar(outraSala.getId(), null,
+                        java.util.List.of(projetor.getId()),
+                        "prof.bia", hora(11), hora(13)));
+        assertThrows(ConflitoHorarioException.class,
+                () -> service.criar(notebook.getId(), "prof.caio", hora(11), hora(12)));
+    }
+
+    @Test
+    void reservaConjuntaRejeitaMateriaisDuplicadosOuEmManutencao() {
+        Recurso material = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Projetor", false));
+        assertThrows(IllegalArgumentException.class,
+                () -> service.criar(sala.getId(), null,
+                        java.util.List.of(material.getId(), material.getId()),
+                        "prof.ana", hora(10), hora(11)));
+    }
+
+    @Test
     void reservaCanceladaLiberaOHorario() {
         Reserva primeira = service.criar(sala.getId(), "prof.ana", hora(10), hora(11));
         primeira.transicionarPara(EstadoReserva.CANCELADA);
