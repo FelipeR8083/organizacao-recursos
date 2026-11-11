@@ -223,11 +223,21 @@ public class ReservaService {
                 .map(recurso -> recurso.getTipo() != TipoRecurso.SALA).orElse(false)) {
             throw new IllegalArgumentException("A reserva conjunta exige uma sala como recurso principal");
         }
+        // Trava todos os recursos em uma única ordem global para evitar deadlocks
+        // quando reservas concorrentes usam sala, professor e materiais diferentes.
+        TreeSet<Long> idsParaBloquear = new TreeSet<>(materiaisSolicitados);
+        idsParaBloquear.add(recursoId);
+        if (professorId != null) idsParaBloquear.add(professorId);
+        java.util.Map<Long, Recurso> bloqueados = new java.util.HashMap<>();
+        for (Long idRecurso : idsParaBloquear) {
+            bloqueados.put(idRecurso, recursos.buscarComLock(idRecurso)
+                    .orElseThrow(() -> new NoSuchElementException("Recurso não encontrado: " + idRecurso)));
+        }
+        Recurso principal = bloqueados.get(recursoId);
+        Recurso professor = professorId == null ? null : bloqueados.get(professorId);
         List<Recurso> materiais = new ArrayList<>();
-        // Bloqueio ordenado dos materiais para serializar solicitações concorrentes.
         for (Long materialId : new TreeSet<>(materiaisSolicitados)) {
-            Recurso material = recursos.buscarComLock(materialId)
-                    .orElseThrow(() -> new NoSuchElementException("Material não encontrado: " + materialId));
+            Recurso material = bloqueados.get(materialId);
             if (material.getTipo() != TipoRecurso.MATERIAL) {
                 throw new IllegalArgumentException("O recurso vinculado deve ser do tipo MATERIAL");
             }
@@ -235,22 +245,6 @@ public class ReservaService {
                 throw new RecursoIndisponivelException("Material em manutenção: " + materialId);
             }
             materiais.add(material);
-        }
-        // Bloqueia as linhas em ordem crescente para reduzir risco de deadlock.
-        Recurso principal;
-        Recurso professor = null;
-        if (professorId == null) {
-            principal = recursos.buscarComLock(recursoId)
-                    .orElseThrow(() -> new NoSuchElementException("Recurso não encontrado: " + recursoId));
-        } else {
-            Long primeiroId = Math.min(recursoId, professorId);
-            Long segundoId = Math.max(recursoId, professorId);
-            Recurso primeiro = recursos.buscarComLock(primeiroId)
-                    .orElseThrow(() -> new NoSuchElementException("Recurso não encontrado: " + primeiroId));
-            Recurso segundo = recursos.buscarComLock(segundoId)
-                    .orElseThrow(() -> new NoSuchElementException("Recurso não encontrado: " + segundoId));
-            principal = recursoId.equals(primeiroId) ? primeiro : segundo;
-            professor = professorId.equals(primeiroId) ? primeiro : segundo;
         }
 
         if (principal.getTipo() != TipoRecurso.SALA && principal.getTipo() != TipoRecurso.MATERIAL) {
