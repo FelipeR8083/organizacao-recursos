@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Confirmar e-mail institucional</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f5f7fa; color: #172b4d; margin: 0; padding: 2rem; }
+    main { max-width: 480px; margin: 5rem auto; padding: 2rem; background: white; border-radius: 12px; box-shadow: 0 4px 24px #0001; }
+    a { color: #0759a3; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Confirmação de e-mail</h1>
+  <p id="estado" role="status" aria-live="polite">Verificando seu link...</p>
+  <p><a href="/login.html">Voltar para o login</a></p>
+</main>
+<script>
+  (async () => {
+    const estado = document.getElementById('estado');
+    const token = location.hash.startsWith('#token=') ? location.hash.slice(7) : '';
+    history.replaceState(null, '', location.pathname);
+    if (!/^[0-9a-fA-F]{64}$/.test(token)) {
+      estado.textContent = 'Link inválido. Solicite um novo link de confirmação.';
+      return;
+    }
+    try {
+      const resposta = await fetch('/confirmacao-email-professor', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify({token})
+      });
+      estado.textContent = resposta.ok
+        ? 'E-mail confirmado. Aguarde a aprovação do administrador para acessar o sistema.'
+        : 'O link é inválido, expirou ou já foi utilizado.';
+    } catch (_) {
+      estado.textContent = 'Não foi possível confirmar agora. Tente novamente mais tarde.';
+    }
+  })();
+</script>
+</body>
+</html>
