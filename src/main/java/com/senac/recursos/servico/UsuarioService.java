@@ -88,6 +88,11 @@ public class UsuarioService {
                 && usuarios.countByPerfilAndAtivo(PerfilAcesso.ADMINISTRADOR, true) <= 1) {
             throw new IllegalStateException("O último administrador ativo não pode ser desativado");
         }
+        if (ativo && usuario.getPerfil() == PerfilAcesso.PROFESSOR
+                && usuario.isVerificacaoEmailObrigatoria()
+                && usuario.getEmailVerificadoEm() == null) {
+            throw new IllegalStateException("Confirme o e-mail institucional antes da aprovação administrativa");
+        }
         boolean anterior = usuario.isAtivo();
         usuario.setAtivo(ativo);
         if (auditoriaAdministrativa != null && anterior != ativo) {
