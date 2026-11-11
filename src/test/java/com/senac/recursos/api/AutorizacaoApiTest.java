@@ -102,7 +102,7 @@ class AutorizacaoApiTest {
         mvc.perform(get("/login.html"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Acesse sua conta")));
-        mvc.perform(get("/"))
+        mvc.perform(get("/").accept(MediaType.TEXT_HTML))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("**/login.html"));
     }
