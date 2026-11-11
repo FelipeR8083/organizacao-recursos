@@ -38,7 +38,9 @@ public class RelatorioService {
             for (Reserva reserva : todas) {
                 boolean utiliza = reserva.getRecurso().getId().equals(recurso.getId())
                         || (reserva.getProfessor() != null
-                        && reserva.getProfessor().getId().equals(recurso.getId()));
+                        && reserva.getProfessor().getId().equals(recurso.getId()))
+                        || reserva.getMateriais().stream()
+                        .anyMatch(material -> material.getId().equals(recurso.getId()));
                 if (!utiliza || !contabilizados.contains(reserva.getEstado())
                         || !reserva.getInicio().isBefore(fim) || !reserva.getFim().isAfter(inicio)) continue;
                 Instant de = reserva.getInicio().isAfter(inicio) ? reserva.getInicio() : inicio;
