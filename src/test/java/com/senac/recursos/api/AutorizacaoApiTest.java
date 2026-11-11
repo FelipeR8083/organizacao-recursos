@@ -6,6 +6,8 @@ import com.senac.recursos.repositorio.UsuarioRepository;
 import com.senac.recursos.dominio.Usuario;
 import com.senac.recursos.dominio.PerfilAcesso;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.test.web.servlet.MvcResult;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -86,6 +88,57 @@ class AutorizacaoApiTest {
                 .andExpect(status().isOk());
         mvc.perform(get("/recursos").with(httpBasic("ana", "senha-incorreta")))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void loginVisualAbreSemAutenticacao() throws Exception {
+        mvc.perform(get("/login.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Acesse sua conta")));
+        mvc.perform(get("/"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/login.html"));
+    }
+
+    @Test
+    void professorFazLoginNaTelaEConsultaSomenteSuaArea() throws Exception {
+        usuarios.save(new Usuario("prof.maria", encoder.encode("senha-professora-123"), PerfilAcesso.PROFESSOR));
+        MvcResult login = mvc.perform(post("/login")
+                        .param("username", "prof.maria")
+                        .param("password", "senha-professora-123"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/"))
+                .andReturn();
+        MockHttpSession session = (MockHttpSession) login.getRequest().getSession(false);
+        org.junit.jupiter.api.Assertions.assertNotNull(session);
+        mvc.perform(get("/sessao").session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.perfil").value("PROFESSOR"))
+                .andExpect(jsonPath("$.login").value("prof.maria"));
+        mvc.perform(get("/reservas").session(session))
+                .andExpect(status().isOk());
+        mvc.perform(post("/recursos").session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tipo\":\"SALA\",\"nome\":\"Sala proibida\"}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(patch("/reservas/1/estado").session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"estado\":\"APROVADA\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void administradorPodeAnalisarReservasRestritas() throws Exception {
+        usuarios.save(new Usuario("gestor", encoder.encode("senha-gestor-123"), PerfilAcesso.ADMINISTRADOR));
+        MvcResult login = mvc.perform(post("/login")
+                        .param("username", "gestor")
+                        .param("password", "senha-gestor-123"))
+                .andExpect(status().is3xxRedirection()).andReturn();
+        MockHttpSession session = (MockHttpSession) login.getRequest().getSession(false);
+        mvc.perform(post("/recursos").session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tipo\":\"SALA\",\"nome\":\"Sala restrita\",\"restrito\":true}"))
+                .andExpect(status().isCreated());
     }
 
 }
