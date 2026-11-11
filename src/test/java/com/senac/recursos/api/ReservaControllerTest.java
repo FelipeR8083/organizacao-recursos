@@ -59,6 +59,24 @@ class ReservaControllerTest {
     }
 
     @Test
+    void criaReservaConjuntaEncaminhaTodosOsMateriaisAoServico() throws Exception {
+        Reserva reserva = new Reserva(new Recurso(TipoRecurso.SALA, "Sala 101", false),
+                new Periodo(INICIO, FIM), "prof.ana");
+        ReflectionTestUtils.setField(reserva, "id", 43L);
+        when(service.criar(eq(1L), isNull(), eq(java.util.List.of(2L, 3L)),
+                eq("prof.ana"), eq(INICIO), eq(FIM))).thenReturn(reserva);
+
+        enviar("""
+                {"recursoId":1,"materialIds":[2,3],"solicitante":"prof.ana",
+                 "inicio":"2026-11-10T10:00:00Z","fim":"2026-11-10T11:00:00Z"}
+                """).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(43));
+
+        verify(service).criar(1L, null, java.util.List.of(2L, 3L),
+                "prof.ana", INICIO, FIM);
+    }
+
+    @Test
     void conflitoDeHorarioRetorna409ComMensagem() throws Exception {
         when(service.criar(any(), isNull(), nullable(java.util.List.class), any(), any(), any()))
                 .thenThrow(new ConflitoHorarioException("Já existe reserva neste horário para o recurso"));
