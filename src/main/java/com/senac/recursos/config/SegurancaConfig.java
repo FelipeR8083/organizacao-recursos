@@ -56,7 +56,7 @@ public class SegurancaConfig {
                                     || path.startsWith("/auditoria-administrativa");
                         }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login.html", "/cadastro.html", "/confirmar-email.html", "/login", "/css/**", "/favicon.ico",
+                        .requestMatchers("/login.html", "/cadastro.html", "/confirmar-email.html", "/csrf", "/login", "/css/**", "/favicon.ico",
                                 "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/cadastro-professor").permitAll()
                         .requestMatchers(HttpMethod.POST, "/confirmacao-email-professor").permitAll()
