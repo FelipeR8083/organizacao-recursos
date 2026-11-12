@@ -62,3 +62,17 @@ Este registro consolida problemas encontrados durante a revisão do código. **A
 | SONAR-06 | `login.html:54` | `autofocus` pode prejudicar navegação por leitores de tela | **Corrigido na branch**, atributo removido |
 
 **Limite desta triagem:** a indicação de correção só se torna evidência concluída após CI verde, merge e nova análise SonarCloud. Não classificar a questão de SQL como resolvida sem revisão pelo responsável do projeto. Não alterar a porta :8080 nem qualquer banco para corrigir alertas estáticos.
+
+
+## Verificação de segurança após SonarCloud via CI — 12/11/2026
+
+| ID | Prioridade | Diagnóstico no SonarCloud | Correção / evidência |
+|---|---|---|---|
+| SONAR-07 | Alta | Dependência de GitHub Action sem SHA completo em `.github/workflows/ci.yml:71`. | [PR #6](https://github.com/FelipeR8083/organizacao-recursos/pull/6) fixa o scanner SonarSource e as demais ações por SHA verificado. |
+| SONAR-08 | Média | `DB_PASSWORD` e `APP_ADMIN_PASSWORD` possuíam valores literais no workflow de carga. | [PR #6](https://github.com/FelipeR8083/organizacao-recursos/pull/6) usa senhas aleatórias efêmeras criadas no runner e mascaradas no log. |
+| SONAR-09 | Média | Primeiro download JMeter com `curl -L` poderia redirecionar para HTTP. | Opções `--proto '=https'` e `--proto-redir '=https'`, mantendo verificação SHA512. |
+| SONAR-10 | Média | Segundo download do checksum SHA512 com redirecionamento possivelmente inseguro. | Mesma restrição a HTTPS para URL e redirecionamentos. |
+| RSK-02 / RSK-07 | Alta (histórico) | O scanner de CI inicialmente encontrou 4 alertas de segurança no código novo e Quality Gate reprovado, embora o CI Maven executasse. | **Resolvido quanto ao Quality Gate** após PR #6: [CI na `main` 43313349056](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43313349056), check SonarCloud **success**, 1 nova questão e 0 hotspots **no código novo**; JaCoCo XML importado. Não equivale a zero vulnerabilidades em todo o histórico. |
+| RSK-08 | Média | O JMX atualizado inclui preflight `GET /csrf` e cookie por thread; o workflow agora também cria recurso com CSRF e separa as amostras POST/GET. | **Plano e CI corrigidos, mas execução JMeter pós-CSRF ainda não comprovada.** Não apresentar métricas históricas como resultado da nova versão. |
+
+**Métricas do CI validado**: 188 testes, 0 falhas, JaCoCo 91,85% linhas e 78,37% branches, Docker build e análise SonarCloud executados com sucesso. A issue de `CHAR(64)` na migração V6 continua com justificativa técnica; não alterar migração antiga já aplicada apenas para remover aviso do SonarCloud. A revisão final deve diferenciar problemas de *código novo* e problemas de *código geral*.
