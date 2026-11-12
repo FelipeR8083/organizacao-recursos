@@ -1,31 +1,32 @@
-# Ativar SonarQube Cloud (SonarCloud) — passo a passo
+# SonarQube Cloud — estado real e integração com JaCoCo (12/11/2026)
 
-Esta é a única integração de análise estática externa que ainda exige configuração da conta/equipe. **Não coloque tokens em commits, arquivos .env ou no chat.**
+O projeto [`FelipeR8083_organizacao-recursos`](https://sonarcloud.io/dashboard?id=FelipeR8083_organizacao-recursos&branch=main) já foi **importado e analisado automaticamente** pela integração do GitHub App SonarCloud.
 
-## 1. Criar e vincular projeto
+## Evidência já obtida
 
-1. Acesse https://sonarcloud.io e entre com sua conta GitHub.
-2. Vincule sua conta/organização GitHub, concedendo acesso ao repositório `FelipeR8083/organizacao-recursos` quando solicitado.
-3. Crie/importe o projeto do repositório. Copie do SonarQube Cloud os valores exatos de **organization key** e **project key**.
-4. Configure análise por GitHub Actions se a tela apresentar modos alternativos.
+- Commit analisado: merge do [PR #4](https://github.com/FelipeR8083/organizacao-recursos/pull/4), `60862cd8`, branch `main`.
+- Check do GitHub: `SonarCloud Code Analysis` — **success**, `Quality Gate passed`.
+- Resumo: **6 novas questões**, **0 Security Hotspots no código novo**, **0,0% de duplicação no código novo** e **0,0% de cobertura no código novo**.
+- As métricas do *código novo* não substituem a triagem de todas as questões/hotspots do histórico.
+- GitHub Actions: [run 43304807488](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43304807488), **185 testes, 0 falhas**, JaCoCo **91,73% linhas / 77,55% branches**, Docker build aprovado.
 
-Referência oficial: https://docs.sonarsource.com/sonarqube-cloud/getting-started/github
+**Importante:** o SonarCloud está executando uma **análise automática separada do GitHub Actions**. A etapa `Analisar no SonarCloud` de `.github/workflows/ci.yml` permanece `skipped` porque os parâmetros do CI ainda não foram configurados. Isso **não significa que a análise SonarCloud não aconteceu**.
 
-## 2. Configurar variáveis no GitHub
+## Pendente: enviar JaCoCo ao SonarCloud
 
-Abra https://github.com/FelipeR8083/organizacao-recursos/settings/secrets/actions
+O arquivo `target/site/jacoco/jacoco.xml` já é produzido por `mvn verify` e o workflow contém a ação SonarSource para importá-lo. Para habilitar essa modalidade:
 
-- Em **Repository secrets**, crie `SONAR_TOKEN` com um token do projeto/organização que possa executar análises.
-- Em **Repository variables**, crie `SONAR_ORGANIZATION` com a organization key.
-- Em **Repository variables**, crie `SONAR_PROJECT_KEY` com a project key.
+1. No SonarQube Cloud, verificar a modalidade atual de análise (`Automatic analysis`) e **mudar para análise por GitHub Actions**, conforme o assistente da plataforma, evitando dois mecanismos de análise simultâneos.
+2. No GitHub, acessar `https://github.com/FelipeR8083/organizacao-recursos/settings/secrets/actions`. Criar o **segredo** de repositório `SONAR_TOKEN` com um token criado na conta SonarQube Cloud. **Nunca compartilhar o token no chat, captura, código ou commit.**
+3. Em **Repository variables**, configurar `SONAR_ORGANIZATION=feliper8083` (confirmar a chave na organização Sonar) e `SONAR_PROJECT_KEY=FelipeR8083_organizacao-recursos` (confirmar no projeto).
+4. Executar o CI de uma nova alteração e comprovar que a etapa `Analisar no SonarCloud` **não** é ignorada; conferir a cobertura importada na página do Sonar e a classificação das 6 questões.
 
-Esses nomes já são usados em `.github/workflows/ci.yml`; a análise só executa quando os três estiverem configurados. O token é segredo e seu valor não deve aparecer em relatório, captura ou resposta do chat.
+Não declarar que a cobertura do SonarCloud é 91,73% enquanto a plataforma mostrar 0,0% para o código novo. **91,73% é a métrica JaCoCo do CI, com evidência separada e válida.**
 
-## 3. Executar e guardar evidência
+## Segurança e ressalvas
 
-1. Abra a pull request #1 ou faça um novo push do código.
-2. Confira no GitHub Actions que a etapa **Analisar no SonarCloud** executou com sucesso (não pode aparecer como skipped).
-3. Abra o projeto no SonarQube Cloud, confira Quality Gate, bugs e vulnerabilidades críticas e anexe captura ou link do relatório à entrega.
-4. Se houver alerta crítico, corrija, reexecute e atualize `docs/REGISTRO-DEFEITOS.md` e `docs/RELATORIO-QUALIDADE.md`.
+O PR #4 ativou CSRF em todos os perfis e a equipe validou login/logout e `GET /csrf` na instância de homologação `:8085`, com 185 testes automatizados. A análise após merge passou no Quality Gate, porém **não há triagem documentada do impacto/severidade das 6 novas questões**.
 
-**Status atual:** workflow e parâmetros preparados, mas análise real ainda não comprovada. Não afirmar zero vulnerabilidades sem relatório do serviço.
+O teste JMeter com 20 threads e 1 sucesso / 19 conflitos refere-se à implementação **anterior** à proteção CSRF obrigatória; o plano JMX atualizado ainda demanda nova execução caso essa evidência seja exigida para a versão final. A aplicação original em :8080 e o banco original em :5432 **não foram alterados**.
+
+[Documentação oficial de integração com GitHub](https://docs.sonarsource.com/sonarqube-cloud/getting-started/github)
