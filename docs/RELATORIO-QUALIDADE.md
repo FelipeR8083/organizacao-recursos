@@ -109,6 +109,10 @@ O [PR #7](https://github.com/FelipeR8083/organizacao-recursos/pull/7) habilitou 
 
 ## Protocolo de revisão por pares — Pietro (pendente de análise independente)
 
+**Registro de acompanhamento técnico e roteiro de revisão retrospectiva:** [consultar o documento específico](REGISTRO-ACOMPANHAMENTO-E-REVISAO-RETROSPECTIVA.md), com histórico verificável dos PRs #4–#7, links das evidências e campos para o parecer efetivo do revisor. As avaliações automatizadas feitas durante o desenvolvimento não equivalem à revisão por pares humana exigida naquele período.
+
+
+
 Esta seção abre um pedido de revisão **real** pelo integrante Pietro, pelo GitHub. O pedido de revisão não equivale a aprovação. O revisor deve verificar código e evidências, deixar comentários sobre pontos não atendidos e emitir sua própria decisão no PR; **não há aceite antecipado**.
 
 **Pontos sugeridos para a revisão do repositório em `main`:**
