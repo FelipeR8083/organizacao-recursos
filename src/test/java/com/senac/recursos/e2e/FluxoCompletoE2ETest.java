@@ -215,6 +215,40 @@ class FluxoCompletoE2ETest {
                 "/auditoria-administrativa", JsonNode.class);
         assertTrue(auditoriaAtualizada.getBody().toString().contains("ALTERACAO"));
 
+        // Um RESPONSAVEL pode solicitar uma reserva, mas somente outro RESPONSAVEL pode avaliá-la.
+        ResponseEntity<JsonNode> outroResponsavelCriado = admin.postForEntity("/usuarios",
+                new HttpEntity<>(Map.of("login", "responsavel2-e2e", "senha", "senha-responsavel2-123",
+                        "perfil", "RESPONSAVEL"), jsonHeaders()), JsonNode.class);
+        assertEquals(HttpStatus.CREATED, outroResponsavelCriado.getStatusCode());
+        TestRestTemplate segundoResponsavel = auth("responsavel2-e2e", "senha-responsavel2-123");
+
+        ResponseEntity<JsonNode> pedidoDoResponsavel = responsavel.postForEntity("/reservas",
+                new HttpEntity<>(Map.of("recursoId", salaId, "solicitante", "login-falsificado",
+                        "inicio", fim.plusSeconds(3600).toString(),
+                        "fim", fim.plusSeconds(7200).toString()), jsonHeaders()), JsonNode.class);
+        assertEquals(HttpStatus.CREATED, pedidoDoResponsavel.getStatusCode());
+        long reservaDoResponsavelId = pedidoDoResponsavel.getBody().get("id").asLong();
+
+        ResponseEntity<String> autoAprovacao = responsavel.exchange("/reservas/" + reservaDoResponsavelId + "/estado",
+                HttpMethod.PATCH, new HttpEntity<>(Map.of("estado", "APROVADA"), jsonHeaders()), String.class);
+        assertEquals(HttpStatus.FORBIDDEN, autoAprovacao.getStatusCode());
+        ResponseEntity<String> autoRejeicao = responsavel.exchange("/reservas/" + reservaDoResponsavelId + "/estado",
+                HttpMethod.PATCH, new HttpEntity<>(Map.of("estado", "REJEITADA"), jsonHeaders()), String.class);
+        assertEquals(HttpStatus.FORBIDDEN, autoRejeicao.getStatusCode());
+
+        ResponseEntity<JsonNode> avaliadoPorOutro = segundoResponsavel.exchange(
+                "/reservas/" + reservaDoResponsavelId + "/estado", HttpMethod.PATCH,
+                new HttpEntity<>(Map.of("estado", "APROVADA"), jsonHeaders()), JsonNode.class);
+        assertEquals(HttpStatus.OK, avaliadoPorOutro.getStatusCode());
+        assertEquals("APROVADA", avaliadoPorOutro.getBody().get("estado").asText());
+
+        ResponseEntity<JsonNode> auditoriaDaAprovacao = segundoResponsavel.getForEntity(
+                "/reservas/" + reservaDoResponsavelId + "/auditoria", JsonNode.class);
+        assertEquals(2, auditoriaDaAprovacao.getBody().size(),
+                "A autoaprovação negada não pode gerar auditoria de mudança de estado");
+        assertEquals("responsavel2-e2e",
+                auditoriaDaAprovacao.getBody().get(1).get("origem").asText());
+
         // RF-13/RF-14: a página responsiva e o contrato OpenAPI devem ser servidos pela aplicação real.
         ResponseEntity<String> pagina = admin.getForEntity("/", String.class);
         assertEquals(HttpStatus.OK, pagina.getStatusCode());
