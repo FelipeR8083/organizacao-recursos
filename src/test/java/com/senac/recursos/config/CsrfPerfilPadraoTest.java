@@ -12,7 +12,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/** No perfil padrao, a interface deve receber sinalizacao explicita sem token CSRF. */
+/** No perfil padrao, o token CSRF tambem e obrigatorio (nao apenas em producao). */
 @WebMvcTest(controllers = CsrfController.class)
 @Import(SegurancaConfig.class)
 class CsrfPerfilPadraoTest {
@@ -20,10 +20,19 @@ class CsrfPerfilPadraoTest {
     @MockBean UsuarioRepository usuarios;
 
     @Test
-    void endpointRetornaCsrfDesabilitadoSemErro500() throws Exception {
+    void endpointRetornaTokenCsrfMesmoSemPerfilProducao() throws Exception {
         mvc.perform(get("/csrf"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.enabled").value(false))
-                .andExpect(jsonPath("$.token").doesNotExist());
+                .andExpect(jsonPath("$.enabled").value(true))
+                .andExpect(jsonPath("$.headerName").value("X-CSRF-TOKEN"))
+                .andExpect(jsonPath("$.token").isNotEmpty());
+    }
+
+    @Test
+    @org.springframework.security.test.context.support.WithMockUser(roles = "ADMINISTRADOR")
+    void postSemTokenEhRejeitadoTambemNoPerfilPadrao() throws Exception {
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .post("/usuarios").contentType("application/json").content("{}"))
+                .andExpect(status().isForbidden());
     }
 }
