@@ -253,6 +253,25 @@ class AutorizacaoApiTest {
     }
 
     @Test
+    @WithMockUser(username = "administrador", roles = "ADMINISTRADOR")
+    void administradorNaoPodeMudarEstadoNemMovimentarMateriais() throws Exception {
+        mvc.perform(patch("/reservas/999/estado")
+                .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"APROVADA\"}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(patch("/reservas/999/estado")
+                .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"NAO_COMPARECEU\"}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/reservas/999/retirada"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/reservas/999/devolucao"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/reservas/999/materiais/888/retirada"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/reservas/999/materiais/888/devolucao"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(username = "responsavel", roles = "RESPONSAVEL")
     void responsavelPodeAcessarAprovacaoDeReservas() throws Exception {
         // 404 indica que a autorização passou e a reserva solicitada não existe.
