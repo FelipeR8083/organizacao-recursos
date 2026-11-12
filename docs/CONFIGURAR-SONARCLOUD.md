@@ -30,3 +30,13 @@ O PR #4 ativou CSRF em todos os perfis e a equipe validou login/logout e `GET /c
 O teste JMeter com 20 threads e 1 sucesso / 19 conflitos refere-se à implementação **anterior** à proteção CSRF obrigatória; o plano JMX atualizado ainda demanda nova execução caso essa evidência seja exigida para a versão final. A aplicação original em :8080 e o banco original em :5432 **não foram alterados**.
 
 [Documentação oficial de integração com GitHub](https://docs.sonarsource.com/sonarqube-cloud/getting-started/github)
+
+
+## Atualização de configuração — 12/11/2026, migração para análise pelo CI
+
+- No GitHub, segredo de Actions `SONAR_TOKEN` criado e confirmado na interface. **O valor não deve ser exibido ou versionado.**
+- Variáveis do repositório confirmadas: `SONAR_ORGANIZATION=feliper8083` e `SONAR_PROJECT_KEY=FelipeR8083_organizacao-recursos`.
+- O token mostrado durante a configuração inicial foi revogado; foi emitido um novo token para uso exclusivo como segredo.
+- A análise automática do projeto foi **desativada** pela equipe no painel `Administration → Analysis method` para evitar duplicação com o scanner do CI.
+- O último resultado confirmado antes da troca foi **Quality Gate aprovado** e **0 novas questões**; a triagem de confiabilidade do PR #5 foi concluída com 5 correções e 1 questão de SQL documentada sem alterar Flyway histórico.
+- **Próxima verificação:** CI de `main` deve executar a etapa `Analisar no SonarCloud` e importar `target/site/jacoco/jacoco.xml`. Não registrar cobertura no SonarCloud como concluída antes de observar o resultado da análise.
