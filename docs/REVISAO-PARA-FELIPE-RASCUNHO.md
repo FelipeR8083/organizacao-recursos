@@ -44,11 +44,11 @@ Após verificar o código, os testes e os achados acima, Felipe deve escrever ob
 - [ ] Li os trechos referenciados e conferi as evidências.
 - [ ] Verifiquei os pontos RF-REV-01 a RF-REV-04 e registrei minhas conclusões.
 - [ ] Identifiquei quais partes foram implementadas por outro integrante.
-- [ ] Registrei meu próprio parecer no GitHub, com data verdadeira.
+- [ ] Registrei meus próprios comentários no GitHub, com data verdadeira, sobre trechos realmente escritos pelo outro integrante.
 
 **Data da conferência por Felipe:** pendente.  
 **Achados aceitos/rejeitados pelo revisor:** pendente.  
-**Decisão de Felipe (Approve / Request changes / Comment):** pendente.  
-**Link da revisão enviada pela própria conta:** pendente.
+**Manifestação de Felipe sobre o código alheio (comentário ou revisão em PR aberto por outra pessoa):** pendente. **Felipe é autor do PR #8 e não pode aprovar formalmente o próprio pull request.** Para review de GitHub formal por Felipe, é necessário um PR de outro autor (por exemplo, código submetido por Pietro), caso exista.  
+**Link do comentário ou da revisão enviada pela própria conta:** pendente.
 
 **Nota de escopo:** esta preparação cobre código e evidências de toda a evolução, mas é **retrospectiva**. Não constitui revisão humana durante o desenvolvimento, conforme exigência informada pelo docente.
