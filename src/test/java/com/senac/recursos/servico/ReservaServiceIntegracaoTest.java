@@ -439,6 +439,49 @@ class ReservaServiceIntegracaoTest {
 
 
     @Test
+    void conclusaoManualNaoIgnoraEquipamentosPendentesEmReservaConjunta() {
+        Recurso projetor = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Projetor", false));
+        Recurso notebook = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Notebook", false));
+        Reserva reserva = service.criar(sala.getId(), null,
+                java.util.List.of(projetor.getId(), notebook.getId()),
+                "prof.ana", hora(10), hora(11));
+        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA, "responsavel", true);
+        movimentacaoService.retirar(reserva.getId(), projetor.getId(), "responsavel");
+        movimentacaoService.retirar(reserva.getId(), notebook.getId(), "responsavel");
+
+        assertThrows(IllegalStateException.class,
+                () -> service.alterarEstado(reserva.getId(), EstadoReserva.CONCLUIDA, "responsavel", true));
+        assertEquals(EstadoReserva.EM_USO, reservas.findById(reserva.getId()).orElseThrow().getEstado());
+        assertEquals(3, service.listarAuditoria(reserva.getId()).size());
+
+        movimentacaoService.devolver(reserva.getId(), projetor.getId(), "responsavel");
+        assertThrows(IllegalStateException.class,
+                () -> service.alterarEstado(reserva.getId(), EstadoReserva.CONCLUIDA, "responsavel", true));
+        assertEquals(EstadoReserva.EM_USO, reservas.findById(reserva.getId()).orElseThrow().getEstado());
+
+        movimentacaoService.devolver(reserva.getId(), notebook.getId(), "responsavel");
+        assertEquals(EstadoReserva.CONCLUIDA, reservas.findById(reserva.getId()).orElseThrow().getEstado());
+        assertEquals(4, service.listarAuditoria(reserva.getId()).size());
+    }
+
+    @Test
+    void conclusaoManualSemRetiradaDeMaterialPrincipalEhRecusada() {
+        Recurso projetor = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Projetor principal", false));
+        Reserva reserva = service.criar(projetor.getId(), "prof.ana", hora(10), hora(11));
+        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA, "responsavel", true);
+        service.alterarEstado(reserva.getId(), EstadoReserva.EM_USO, "responsavel", true);
+
+        assertThrows(IllegalStateException.class,
+                () -> service.alterarEstado(reserva.getId(), EstadoReserva.CONCLUIDA, "responsavel", true));
+        assertEquals(EstadoReserva.EM_USO, reservas.findById(reserva.getId()).orElseThrow().getEstado());
+        assertEquals(3, service.listarAuditoria(reserva.getId()).size());
+
+        movimentacaoService.retirar(reserva.getId(), projetor.getId(), "responsavel");
+        movimentacaoService.devolver(reserva.getId(), projetor.getId(), "responsavel");
+        assertEquals(EstadoReserva.CONCLUIDA, reservas.findById(reserva.getId()).orElseThrow().getEstado());
+    }
+
+    @Test
     void somenteResponsavelPodeAprovarReservaComMaterialAdicionalRestrito() {
         Recurso projetorRestrito = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Projetor restrito", true));
         Reserva reserva = service.criar(sala.getId(), null, java.util.List.of(projetorRestrito.getId()),
