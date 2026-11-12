@@ -52,7 +52,7 @@ Ambiente **exclusivamente isolado**: `http://localhost:8085`, banco `recursos_te
 ## Riscos e pendências reais
 
 1. **SonarCloud:** a análise do GitHub Actions já executa com `SONAR_TOKEN` protegido, importou XML JaCoCo e recebeu **Quality Gate aprovado** na `main` após PR #6. Check final registra **1 questão nova**, ainda sem aceite formal, e **0 hotspots no código novo**. Cinco questões de confiabilidade/acessibilidade foram corrigidas no PR #5; quatro alertas de segurança nos workflows (1 alto/3 médios) foram corrigidos no PR #6. Confirmar classificação global no painel antes de declarar ausência de vulnerabilidades críticas em todo o projeto. O indicador de **0% no código novo** não é o percentual global de cobertura.
-2. **Revisão por pares:** realizar revisão real pelo Pietro no pull request final; registrar a decisão/comentários.
+2. **Revisão por pares:** Pietro registrou revisão retrospectiva `COMMENTED` no PR #8, e Felipe publicou manifestação própria sobre reservas. A exigência adicional de revisão **durante** o desenvolvimento não foi atendida retrospectivamente; caberá ao professor avaliar essa evidência.
 3. **Evidências/apresentação:** guardar captura do CI final e indicadores JaCoCo, JMeter JTL/HTML, telas desktop/celular (360px e 768px), diagramas/RTM; roteiro em `docs/APRESENTACAO.md`.
 4. **Atualização de base legada:** Flyway V9 foi observado em **banco novo**, não sobre uma cópia de banco V8 com dados reais; preservar backup antes de uma futura atualização de produção.
 5. **Regra temporal:** o sistema permitiu antecipar `APROVADA → EM_USO` e concluir reserva antes do horário agendado. Registrar como risco/decisão pendente; não afirmar que essa restrição está implementada.
@@ -115,7 +115,7 @@ O [PR #7](https://github.com/FelipeR8083/organizacao-recursos/pull/7) habilitou 
 
 **Atualização verificada em 12/11/2026 (20h31 BRT):** `pietrolaureano` submeteu no [PR #8](https://github.com/FelipeR8083/organizacao-recursos/pull/8) uma revisão retrospectiva com estado **COMMENTED**, indicando que leu a análise técnica de segurança, APIs, testes e CI e concorda em manter PI-REV-01 a PI-REV-05 como melhorias e ressalvas. **Não foi uma aprovação (APPROVED)** e não demonstra revisão humana durante as etapas anteriores do desenvolvimento.
 
-**Felipe:** foi publicado [registro de concordância e síntese técnica](https://github.com/FelipeR8083/organizacao-recursos/pull/8#issuecomment-6839085749) **por assistente, a pedido expresso do integrante**, usando a [análise preparatória para Felipe](REVISAO-PARA-FELIPE-RASCUNHO.md). O comentário não afirma verificação pessoal independente do código e não é aprovação do próprio PR.
+**Felipe:** publicou pela própria conta a [manifestação técnica detalhada](https://github.com/FelipeR8083/organizacao-recursos/pull/8#issuecomment-6839223791), com avaliação retrospectiva sobre reservas, concorrência, movimentação de materiais e persistência. Houve também um [registro anterior elaborado por assistente a pedido do integrante](https://github.com/FelipeR8083/organizacao-recursos/pull/8#issuecomment-6839085749), identificado como tal. A manifestação de Felipe é comentário do autor do PR, **não** revisão aprovadora de um terceiro.
 
 **Documentos:** [análise para Felipe](REVISAO-PARA-FELIPE-RASCUNHO.md) e [análise para Pietro](REVISAO-PARA-PIETRO-RASCUNHO.md). O professor decide se a documentação retrospectiva gera crédito parcial diante da exigência de revisão durante o desenvolvimento.
 
@@ -131,4 +131,4 @@ Esta seção foi criada inicialmente como pedido de revisão **real** pelo integ
 
 **Como registrar a revisão:** utilizar a aba **Files changed** e **Review changes** do pull request aberto para comentar e selecionar `Comment`, `Approve` ou `Request changes` conforme a análise efetivamente realizada. É válido solicitar mudanças. O colaborador deve usar **sua própria conta GitHub**; nunca compartilhar credenciais.
 
-**Estado histórico ao abrir:** revisão solicitada e aguardando decisão. **Estado atual:** Pietro submeteu COMMENTED em 12/11/2026; Felipe solicitou publicação de seu registro documental assistido. Ainda não há APPROVED de Pietro.
+**Estado histórico ao abrir:** revisão solicitada e aguardando decisão. **Estado atual:** Pietro submeteu COMMENTED em 12/11/2026; Felipe publicou [seu parecer retrospectivo](https://github.com/FelipeR8083/organizacao-recursos/pull/8#issuecomment-6839223791) pela própria conta. Ainda não há APPROVED de Pietro.
