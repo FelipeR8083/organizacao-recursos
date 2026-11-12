@@ -148,11 +148,14 @@ class FluxoCompletoE2ETest {
                 HttpMethod.PATCH, new HttpEntity<>(Map.of("ativo", true), jsonHeaders()), String.class);
         assertEquals(HttpStatus.FORBIDDEN, ativacaoProibida.getStatusCode());
 
-        // Responsável acessa movimentos, mas a aprovação comum também pode ser feita pelo administrador.
+        // Responsável pode consultar movimentações; administração de usuários continua separada.
         assertEquals(HttpStatus.OK,
                 responsavel.getForEntity("/reservas/movimentacoes", String.class).getStatusCode());
 
-        ResponseEntity<JsonNode> aprovada = admin.exchange("/reservas/" + reservaId + "/estado",
+        ResponseEntity<String> adminNaoAprova = admin.exchange("/reservas/" + reservaId + "/estado",
+                HttpMethod.PATCH, new HttpEntity<>(Map.of("estado", "APROVADA"), jsonHeaders()), String.class);
+        assertEquals(HttpStatus.FORBIDDEN, adminNaoAprova.getStatusCode());
+        ResponseEntity<JsonNode> aprovada = responsavel.exchange("/reservas/" + reservaId + "/estado",
                 HttpMethod.PATCH, new HttpEntity<>(Map.of("estado", "APROVADA"), jsonHeaders()), JsonNode.class);
         assertEquals(HttpStatus.OK, aprovada.getStatusCode());
         assertEquals("APROVADA", aprovada.getBody().get("estado").asText());
@@ -160,7 +163,7 @@ class FluxoCompletoE2ETest {
         ResponseEntity<JsonNode> historico = responsavel.getForEntity(
                 "/reservas/" + reservaId + "/auditoria", JsonNode.class);
         assertEquals(2, historico.getBody().size());
-        assertEquals("e2e-admin", historico.getBody().get(1).get("origem").asText());
+        assertEquals("responsavel-e2e", historico.getBody().get(1).get("origem").asText());
 
         // RF-07: somente RESPONSAVEL aprova recurso restrito.
         ResponseEntity<JsonNode> especial = admin.postForEntity("/recursos",
