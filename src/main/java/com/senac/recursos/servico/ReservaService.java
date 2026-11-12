@@ -18,16 +18,18 @@ public class ReservaService {
     private final RecursoRepository recursos;
     private final ReservaRepository reservas;
     private final ReservaAuditoriaRepository auditoria;
+    private final MovimentacaoMaterialRepository movimentacoes;
     private final Clock clock;
     private final ConflitoEvitadoService conflitosEvitados;
     private final NotificacaoService notificacoes;
 
     public ReservaService(RecursoRepository recursos, ReservaRepository reservas,
                           ReservaAuditoriaRepository auditoria, ConflitoEvitadoService conflitosEvitados,
-                          NotificacaoService notificacoes) {
+                          NotificacaoService notificacoes, MovimentacaoMaterialRepository movimentacoes) {
         this.recursos = recursos;
         this.reservas = reservas;
         this.auditoria = auditoria;
+        this.movimentacoes = movimentacoes;
         this.conflitosEvitados = conflitosEvitados;
         this.notificacoes = notificacoes;
         this.clock = Clock.systemUTC();
@@ -79,6 +81,26 @@ public class ReservaService {
                 && login != null && reserva.getSolicitante().equalsIgnoreCase(login.trim())) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "Um responsável não pode avaliar a própria solicitação; outro responsável deve fazê-lo");
+        }
+        if (estado == EstadoReserva.CONCLUIDA) {
+            // Cada material, inclusive quando é o recurso principal, exige retirada e devolução.
+            // Sem esta validação, PATCH /reservas/{id}/estado encerraria uma reserva
+            // com equipamentos ainda pendentes, ignorando a proteção da devolução.
+            java.util.List<Long> idsMateriais = new java.util.ArrayList<>();
+            if (reserva.getRecurso().getTipo() == TipoRecurso.MATERIAL) {
+                idsMateriais.add(reserva.getRecurso().getId());
+            }
+            reserva.getMateriais().forEach(material -> idsMateriais.add(material.getId()));
+            if (!idsMateriais.isEmpty()) {
+                var devolvidos = movimentacoes.findAllByReserva_Id(id).stream()
+                        .filter(mov -> mov.getDevolucaoEm() != null)
+                        .map(MovimentacaoMaterial::getMaterialId)
+                        .collect(java.util.stream.Collectors.toSet());
+                if (!devolvidos.containsAll(idsMateriais)) {
+                    throw new IllegalStateException(
+                            "Devolva todos os materiais da reserva antes de conclui-la");
+                }
+            }
         }
         EstadoReserva anterior = reserva.getEstado();
         reserva.transicionarPara(estado);
