@@ -74,11 +74,13 @@ public class ReservaController {
                                   Authentication autenticacao) {
         boolean administrador = autenticacao != null && autenticacao.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR"));
-        if (!administrador) {
+        boolean responsavel = autenticacao != null && autenticacao.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_RESPONSAVEL"));
+        if (!administrador && !responsavel) {
             throw new org.springframework.security.access.AccessDeniedException(
-                    "Somente o administrador pode alterar o estado de reservas");
+                    "Somente administrador ou responsável pode alterar o estado de reservas");
         }
-        return service.alterarEstado(id, req.estado(), autenticacao.getName(), true);
+        return service.alterarEstado(id, req.estado(), autenticacao.getName(), responsavel);
     }
 
     @PostMapping
