@@ -70,8 +70,10 @@ Ver [docs/DIAGRAMAS-SEQUENCIA.md](DIAGRAMAS-SEQUENCIA.md), que contém o diagram
 | POST / PUT | `/recursos`, `/recursos/{id}` | ADMINISTRADOR |
 | GET / POST | `/reservas` | autenticado |
 | PUT / DELETE | `/reservas/{id}` | titular ou perfil privilegiado |
-| PATCH | `/reservas/{id}/estado` | RESPONSAVEL/ADMINISTRADOR; recurso restrito exige RESPONSAVEL |
-| POST | `/reservas/{id}/retirada`, `/devolucao` | RESPONSAVEL/ADMINISTRADOR |
+| PATCH | `/reservas/{id}/estado` | RESPONSAVEL/ADMINISTRADOR; restrição em sala, professor ou material exige RESPONSAVEL |
+| POST | `/reservas/{id}/retirada`, `/devolucao` | RESPONSAVEL/ADMINISTRADOR; reserva de um único material |
+| POST | `/reservas/{id}/materiais/{materialId}/retirada`, `/devolucao` | RESPONSAVEL/ADMINISTRADOR; material associado à reserva |
+| GET | `/reservas/movimentacoes` | RESPONSAVEL/ADMINISTRADOR |
 | GET | `/reservas/{id}/auditoria` | autenticado |
 | GET / POST / PATCH | `/usuarios`, `/usuarios/{id}/ativo` | ADMINISTRADOR |
 | GET | `/relatorios/**`, `/notificacoes` | RESPONSAVEL/ADMINISTRADOR |
@@ -91,7 +93,7 @@ As portas são publicadas somente em localhost. HTTP Basic deve ser usado soment
 
 ## Banco de dados e migrações
 
-Flyway executa `src/main/resources/db/migration/V1...V4`; Hibernate usa `ddl-auto: validate`. Para banco existente sem histórico Flyway, a configuração baseline version 1 preserva o schema anterior e aplica as migrações incrementais. A V2 cria índice único normalizado; se o banco legado contiver nomes duplicados, faça backup e resolva-os antes da migração, seguindo `LEIA-PRIMEIRO-DUPLICADOS.md`.
+Flyway executa as migrações SQL versionadas `V1` a `V9` (a `V9` libera movimentações por material sem remover registros antigos); Hibernate usa `ddl-auto: validate`. Para banco existente sem histórico Flyway, a configuração baseline version 1 preserva o schema anterior e aplica as migrações incrementais. A V2 cria índice único normalizado; se o banco legado contiver nomes duplicados, faça backup e resolva-os antes da migração, seguindo `LEIA-PRIMEIRO-DUPLICADOS.md`.
 
 ## Testes
 
