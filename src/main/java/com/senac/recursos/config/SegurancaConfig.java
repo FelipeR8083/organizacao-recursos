@@ -65,9 +65,12 @@ public class SegurancaConfig {
                         .requestMatchers("/relatorios/**", "/notificacoes/**").hasAnyRole("RESPONSAVEL", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/recursos/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/recursos/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/reservas/movimentacoes")
+                            .hasAnyRole("RESPONSAVEL", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/recursos/**", "/reservas/**")
                             .hasAnyRole("SOLICITANTE", "PROFESSOR", "RESPONSAVEL", "ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.POST, "/reservas/*/retirada", "/reservas/*/devolucao")
+                        .requestMatchers(HttpMethod.POST, "/reservas/*/retirada", "/reservas/*/devolucao",
+                                "/reservas/*/materiais/*/retirada", "/reservas/*/materiais/*/devolucao")
                             .hasAnyRole("RESPONSAVEL", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/reservas/**")
                             .hasAnyRole("SOLICITANTE", "PROFESSOR", "RESPONSAVEL", "ADMINISTRADOR")
