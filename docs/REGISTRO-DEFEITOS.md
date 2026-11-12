@@ -1,6 +1,6 @@
 # Registro de defeitos e riscos
 
-Este registro consolida problemas encontrados durante a revisão do código. "Fechado" significa que existe implementação nesta branch; a validação final depende do CI e da demonstração.
+Este registro consolida problemas encontrados durante a revisão do código. **As linhas mais antigas são históricas**; as informações de status mais recentes estão na seção de atualização de 12/11/2026 abaixo. O CI da `main` no commit `60862cd8` foi aprovado ([run 43304807488](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43304807488)).
 
 | ID | Prioridade | Problema observado | Correção nesta branch | Estado |
 |---|---|---|---|---|
@@ -39,3 +39,13 @@ Este registro consolida problemas encontrados durante a revisão do código. "Fe
 | RSK-07 | Alta | SonarCloud não executou; relatório final de segurança e Quality Gate indisponíveis. | **Em aberto**; análise estática não substituída pelo resultado dos testes/JaCoCo. |
 
 **Relatório atualizado:** `docs/RELATORIO-QUALIDADE.md`. A homologação na porta 8085 validou as movimentações e manutenção, sem alterar a porta 8080 original.
+
+## Atualização SonarCloud e CSRF — 12/11/2026 (após merge PR #4)
+
+| ID | Prioridade | Evidência | Estado |
+|---|---|---|---|
+| DEF-14 | Alta | SonarCloud inicialmente identificou duas instâncias de `java:S4502`: CSRF desabilitado no perfil padrão e ignorado em rotas de login/cadastro/confirmação. PR #4 removeu desativação e exceções, ativando CSRF universal e ajustando cliente e testes. | **Corrigido e integrado à `main`**; 185 testes aprovados e login/logout na homologação :8085. Nova análise SonarCloud aprovada no Quality Gate; triagem global dos alertas pendente. |
+| DEF-15 | Baixa | SonarCloud alertou o uso de cookie CSRF sem `HttpOnly`. PR #4 substituiu o repositório de token em cookie pelo repositório padrão da sessão. | **Corrigido no código**; nova análise da `main` teve 0 Security Hotspots **no código novo**, não sendo prova de 0 hotspots no histórico inteiro. |
+| RSK-02 / RSK-07 | Alta | Check `SonarCloud Code Analysis` no merge `60862cd8`: Quality Gate **aprovado**, **6 questões novas**, **0,0% cobertura do código novo no SonarCloud**. A etapa SonarCloud do GitHub Actions permanece `skipped`. | **Análise estática executada**, mas **triagem das 6 questões** e **integração JaCoCo** ainda pendentes. Separadamente, JaCoCo do CI: 91,73% linhas, 77,55% branches. |
+| RSK-08 | Média | JMeter anterior demonstrou 20 threads com 1 HTTP 201 e 19 HTTP 409, mas era anterior ao CSRF obrigatório. Plano JMX atualizado exige token e cookie por thread. | **Reexecução de carga pós-CSRF pendente**; não atribuir métricas antigas à implementação nova. |
+| RSK-09 | Média | Login, logout e `GET /csrf` foram validados em :8085; um POST sem token e sem autenticação retornou 401. | **Não registrar o 401 como prova de CSRF**. Testes automatizados com usuários autenticados validam HTTP 403 para mutações sem token; sem novas provas manuais. |
