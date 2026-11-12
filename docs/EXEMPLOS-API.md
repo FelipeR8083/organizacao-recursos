@@ -69,7 +69,7 @@ Cancelamento por titular ou gestor:
 DELETE /reservas/1
 ```
 
-Aprovação, apenas por RESPONSAVEL ou ADMINISTRADOR quando a reserva não é restrita. Para sala, professor vinculado **ou material adicional** marcado como restrito, a política exige RESPONSAVEL. O administrador recebe HTTP 403 ao tentar aprovar esse pedido:
+Aprovação de reservas comuns por RESPONSAVEL ou ADMINISTRADOR. Para sala, professor vinculado **ou material adicional** marcado como restrito, a aprovação é exclusiva de RESPONSAVEL. O administrador recebe HTTP 403 ao tentar aprovar esse pedido:
 
 ```http
 PATCH /reservas/1/estado
