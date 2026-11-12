@@ -57,15 +57,15 @@ Fonte: enunciado oficial "Especificação do Projeto — Qualidade 2026.2", seç
 | Teste de concorrência | Implementado no código/testes | Teste automatizado para solicitações simultâneas do mesmo recurso. |
 | TDD/BDD com evidências | Documentado | `docs/EVIDENCIA-BDD.md` reúne critérios Dado/Quando/Então, mapeamento a testes E2E e links de falha/correção/sucesso no CI do RF-03. Não afirma que todo o projeto foi construído por TDD. |
 | GitHub Actions em pull requests | Implementado | Workflow executa em pull_request e push nas branches configuradas. |
-| JaCoCo | Metas atingidas | GitHub Actions [42708687473](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/42708687473) mediu 87,81% de linhas e 71,64% de branches, com 115 testes aprovados. O `pom.xml` contém regra de check para bloquear regressões abaixo de 80%/70%; validar no SHA final. |
+| JaCoCo | Metas atingidas | GitHub Actions [43217218310](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43217218310) mediu 91,70% de linhas e 77,44% de branches, com 179 testes aprovados. O `pom.xml` contém regra de check para bloquear regressões abaixo de 80%/70%; validar no SHA final. |
 | SonarCloud | Parcial | Workflow e `sonar-project.properties` estão preparados; falta cadastrar SONAR_TOKEN, SONAR_ORGANIZATION e SONAR_PROJECT_KEY e executar análise real. |
 | JMeter | Evidência aprovada | GitHub Actions [42711044633](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/42711044633): 20 solicitações concorrentes, 1 HTTP 201, 19 HTTP 409, latência média 106,9 ms, P95 209 ms. JTL, HTML e resumo publicados como artefatos. |
 | Autorização, validação e erros seguros | Implementado no código/testes | HTTP Basic + BCrypt + RBAC e autorização por titularidade testada em serviço e E2E; mensagens HTTP compreensíveis. Falta revisão externa de segurança para garantir a meta de zero vulnerabilidades críticas. |
 
 ## Metas mensuráveis do enunciado
 
-- [x] Cobertura mínima de 80% de linhas — 87,81% no CI 42708687473.
-- [x] Cobertura mínima de 70% de branches — 71,64% no CI 42708687473.
+- [x] Cobertura mínima de 80% de linhas — 91,70% no CI 43217218310.
+- [x] Cobertura mínima de 70% de branches — 77,44% no CI 43217218310.
 - [x] Todos os 14 requisitos funcionais rastreados nesta RTM, com risco, teste e evidência.
 - [ ] Zero bugs ou vulnerabilidades críticas, comprovados por análise e triagem.
 
