@@ -405,6 +405,20 @@ class ReservaServiceIntegracaoTest {
 
 
     @Test
+    void somenteResponsavelPodeAprovarReservaComMaterialAdicionalRestrito() {
+        Recurso projetorRestrito = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Projetor restrito", true));
+        Reserva reserva = service.criar(sala.getId(), null, java.util.List.of(projetorRestrito.getId()),
+                "prof.ana", hora(10), hora(11));
+
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA, "admin", false));
+        assertEquals(EstadoReserva.SOLICITADA, reservas.findById(reserva.getId()).orElseThrow().getEstado());
+
+        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA, "responsavel", true);
+        assertEquals(EstadoReserva.APROVADA, reservas.findById(reserva.getId()).orElseThrow().getEstado());
+    }
+
+    @Test
     void somenteResponsavelPodeAprovarReservaDeRecursoRestrito() {
         Recurso salaRestrita = recursos.save(new Recurso(TipoRecurso.SALA, "Sala restrita", true));
         Reserva reserva = service.criar(salaRestrita.getId(), "prof.ana", hora(10), hora(11));
