@@ -27,9 +27,13 @@
       return;
     }
     try {
+      const tokenResposta = await fetch('/csrf', {credentials:'same-origin'});
+      if (!tokenResposta.ok) throw new Error('Falha na proteção CSRF');
+      const csrf = await tokenResposta.json();
+      if (csrf.enabled !== true || !csrf.token) throw new Error('Token CSRF indisponível');
       const resposta = await fetch('/confirmacao-email-professor', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', [csrf.headerName]:csrf.token},
         credentials: 'same-origin',
         body: JSON.stringify({token})
       });
