@@ -41,11 +41,12 @@ class CsrfProducaoTest {
     @Test
     @WithMockUser(roles = "ADMINISTRADOR")
     void requisicaoComTokenUltrapassaFiltroCsrf() throws Exception {
-        var resposta = mvc.perform(get("/csrf")).andReturn().getResponse();
+        var resultado = mvc.perform(get("/csrf")).andReturn();
+        var resposta = resultado.getResponse();
         String token = new com.fasterxml.jackson.databind.ObjectMapper()
                 .readTree(resposta.getContentAsString()).get("token").asText();
         mvc.perform(post("/usuarios")
-                .session((org.springframework.mock.web.MockHttpSession) resposta.getRequest().getSession())
+                .session((org.springframework.mock.web.MockHttpSession) resultado.getRequest().getSession())
                 .header("X-CSRF-TOKEN", token)
                 .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(result -> org.junit.jupiter.api.Assertions.assertNotEquals(403, result.getResponse().getStatus()));
