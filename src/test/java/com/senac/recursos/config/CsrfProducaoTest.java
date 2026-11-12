@@ -27,7 +27,7 @@ class CsrfProducaoTest {
     void endpointDisponibilizaToken() throws Exception {
         mvc.perform(get("/csrf"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.headerName").value("X-XSRF-TOKEN"))
+                .andExpect(jsonPath("$.headerName").value("X-CSRF-TOKEN"))
                 .andExpect(jsonPath("$.token").isNotEmpty());
     }
 
@@ -44,8 +44,9 @@ class CsrfProducaoTest {
         var resposta = mvc.perform(get("/csrf")).andReturn().getResponse();
         String token = new com.fasterxml.jackson.databind.ObjectMapper()
                 .readTree(resposta.getContentAsString()).get("token").asText();
-        mvc.perform(post("/usuarios").cookie(resposta.getCookies())
-                .header("X-XSRF-TOKEN", token)
+        mvc.perform(post("/usuarios")
+                .session((org.springframework.mock.web.MockHttpSession) resposta.getRequest().getSession())
+                .header("X-CSRF-TOKEN", token)
                 .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(result -> org.junit.jupiter.api.Assertions.assertNotEquals(403, result.getResponse().getStatus()));
     }
