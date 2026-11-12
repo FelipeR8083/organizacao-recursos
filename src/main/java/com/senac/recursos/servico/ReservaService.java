@@ -72,7 +72,8 @@ public class ReservaService {
         Reserva reserva = reservas.buscarComLock(id)
                 .orElseThrow(() -> new NoSuchElementException("Reserva não encontrada"));
         boolean recursoRestrito = reserva.getRecurso().isRestrito()
-                || (reserva.getProfessor() != null && reserva.getProfessor().isRestrito());
+                || (reserva.getProfessor() != null && reserva.getProfessor().isRestrito())
+                || reserva.getMateriais().stream().anyMatch(Recurso::isRestrito);
         if (estado == EstadoReserva.APROVADA && recursoRestrito && !responsavel) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "Somente um responsável pode aprovar reserva de recurso restrito");
