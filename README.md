@@ -4,6 +4,8 @@ Sistema acadêmico para alocar **salas, professores e materiais** sem conflitos 
 
 Projeto de Qualidade de Software — Senac TADS 2026.2.
 
+> **Para avaliação e entrega:** comece pelo [Guia de entrega e evidências verificáveis](docs/ENTREGA-FINAL.md). Ele reúne RTM, testes, JaCoCo, SonarCloud, JMeter, diagramas, revisão retrospectiva da dupla, roteiro de demonstração e pendências honestamente identificadas.
+
 ## Autoria e colaboração
 
 Este projeto acadêmico foi desenvolvido em dupla por:
@@ -128,7 +130,7 @@ Erros de validação retornam HTTP 400; conflitos de horário e transições inv
 
 ## Teste de carga
 
-O plano e o script Apache JMeter estão em `docs/PLANO-TESTE-CARGA.md` e `jmeter/reservas-concorrentes.jmx`. O workflow [JMeter #42711044633](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/42711044633) executou 20 reservas concorrentes: **1 HTTP 201, 19 HTTP 409**, média de 106,9 ms e P95 de 209 ms. As evidências JTL, HTML e resumo estão nos artefatos da execução.
+O plano e o script Apache JMeter estão em `docs/PLANO-TESTE-CARGA.md` e `jmeter/reservas-concorrentes.jmx`. A **evidência atual pós-CSRF** é o [JMeter na main #43316844059](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43316844059): **20 GET /csrf HTTP 200**, 20 POST concorrentes (**1 HTTP 201, 19 HTTP 409**), **média 38,5 ms, P95 117 ms e máximo 122 ms** para os POST. Artefatos JTL e HTML disponíveis. A execução [#42711044633](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/42711044633) é histórica, **anterior ao CSRF obrigatório**.
 
 ## Testes e cobertura
 
@@ -138,7 +140,7 @@ Execute a suíte completa:
 mvn clean verify
 ```
 
-Os testes de integração usam Testcontainers e precisam de Docker. O relatório JaCoCo é gerado em `target/site/jacoco/index.html`. No CI aprovado [557](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43044676997), no commit `fe916322`, **172 testes passaram, sem falhas ou erros**; compilação, JaCoCo, Docker Compose e imagem Docker foram aprovados. O Maven verifica as metas mínimas de cobertura de 80% de linhas e 70% de branches. Uma atualização posterior exige nova execução verde no SHA correspondente.
+Os testes de integração usam Testcontainers e precisam de Docker. O relatório JaCoCo é gerado em `target/site/jacoco/index.html`. No [CI de referência final do código na main](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43316844286), **188 testes passaram, sem falhas ou erros**, cobertura JaCoCo de **91,85% de linhas** e **78,37% de branches**; compilação/build Docker e validações automatizadas documentadas. O Maven verifica as metas de 80% linhas / 70% branches. Os números pertencem ao SHA da execução indicada; atualização posterior requer novo CI verde.
 
 O workflow do GitHub Actions executa `mvn -B verify` em pull requests e pushes para `main` e para a branch de melhorias, e publica o relatório como artefato quando disponível. SonarCloud é executado quando `SONAR_TOKEN` (secret) e `SONAR_ORGANIZATION`/`SONAR_PROJECT_KEY` (variables) estiverem configuradas nas configurações do repositório.
 
