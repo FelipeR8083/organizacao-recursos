@@ -69,7 +69,7 @@ Cancelamento por titular ou gestor:
 DELETE /reservas/1
 ```
 
-Aprovação, apenas por RESPONSAVEL ou ADMINISTRADOR quando a reserva não é restrita. Para recurso marcado como restrito, a política exige RESPONSAVEL:
+Aprovação, apenas por RESPONSAVEL ou ADMINISTRADOR quando a reserva não é restrita. Para sala, professor vinculado **ou material adicional** marcado como restrito, a política exige RESPONSAVEL. O administrador recebe HTTP 403 ao tentar aprovar esse pedido:
 
 ```http
 PATCH /reservas/1/estado
@@ -92,6 +92,18 @@ RESPONSAVEL/ADMINISTRADOR pode registrar retirada de material aprovado e devolu�
 POST /reservas/1/retirada
 POST /reservas/1/devolucao
 ```
+
+Para uma reserva de **sala com materiais adicionais**, utilize um movimento por material. Se a sala possuir dois materiais, cada retirada e devolução deverá apontar o ID do material correspondente:
+
+```http
+GET /reservas/movimentacoes
+POST /reservas/1/materiais/2/retirada
+POST /reservas/1/materiais/3/retirada
+POST /reservas/1/materiais/2/devolucao
+POST /reservas/1/materiais/3/devolucao
+```
+
+O estado muda para `EM_USO` na primeira retirada e só muda para `CONCLUIDA` após **todos os materiais associados** serem devolvidos. Somente RESPONSAVEL/ADMINISTRADOR têm acesso. Um material não vinculado à reserva é recusado; tentar retirar o mesmo material duas vezes também é recusado. A migração `V9` preserva movimentações anteriores, sem permitir duplicidade do mesmo material na mesma reserva.
 
 Relatórios disponíveis para RESPONSAVEL/ADMINISTRADOR:
 
