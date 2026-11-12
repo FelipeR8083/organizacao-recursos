@@ -29,6 +29,19 @@
 - [ ] Revisar documentação técnica com evidências reais, montar apresentação/slides, arquivar JaCoCo, SonarCloud e JMeter.
 - [ ] Integrar branches somente depois da homologação e repetir CI no SHA final. As branches de coautoria ainda são cópias de teste; refazer a inclusão da coautoria depois das correções, sem substituir a main por push forçado sem plano.
 
+## Evidência de responsividade — 12/11/2026
+
+**Ambiente:** `http://localhost:8085`, Edge DevTools em emulação responsiva. Evidências PNG capturadas pela equipe na sessão de homologação (guardar/anexar os arquivos originais à entrega, pois as imagens não foram incorporadas ao repositório).
+
+| Largura | Tela | Verificação observada |
+|---|---|---|
+| **360 px** | Login | Cabeçalho, rótulos, campos, botão e link de cadastro institucional visíveis sem sobreposição aparente. |
+| **360 px** | Recursos | Indicadores e filtros empilhados; tabela possui rolagem horizontal e as colunas de manutenção/ação foram alcançadas manualmente. |
+| **360 px** | Reservas | Formulário em uma coluna e listagem com três reservas; demais colunas consultáveis por deslocamento horizontal relatado pela equipe. |
+| **768 px** | Reservas | Indicadores em três colunas, navegação horizontal, formulário em duas colunas, lista legível; coluna de ações parcialmente fora da captura, com verificação de rolagem específica ainda pendente. |
+
+**Resultado:** inspeção visual básica favorável para celular (360 px) e tablet (768 px), sem falhas de layout óbvias nas capturas fornecidas. Não equivale a certificação de acessibilidade nem cobre os testes de teclado, zoom 200%, largura 390 px ou validação física em dispositivos reais. Esses itens permanecem pendentes, assim como captura final em anexo formal.
+
 ## Critérios de conclusão
 
 A entrega só poderá ser declarada integralmente aprovada depois de: todos os requisitos críticos testados em API e interface, pipeline verde no código destinado à entrega, cobertura acima das duas metas, SonarCloud executado e sem bugs/vulnerabilidades críticas não resolvidos, artefatos JMeter, revisão por pares, responsividade validada e demonstração preparada.
