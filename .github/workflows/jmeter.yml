@@ -2,7 +2,7 @@ name: JMeter - Carga de Reservas
 
 on:
   push:
-    branches: [melhorias/qualidade-e-requisitos]
+    branches: [main, correcao/jmeter-pos-csrf-20261112]
     paths:
       - '.github/workflows/jmeter.yml'
       - 'jmeter/**'
