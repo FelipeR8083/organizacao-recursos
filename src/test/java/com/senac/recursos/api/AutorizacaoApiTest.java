@@ -208,11 +208,11 @@ class AutorizacaoApiTest {
         mvc.perform(get("/recursos").with(httpBasic("maria@sp.senac.br", "senha-segura-123")))
                 .andExpect(status().isUnauthorized());
 
-        mvc.perform(patch("/usuarios/" + pendente.getId() + "/ativo")
+        mvc.perform(patch("/usuarios/" + pendente.getId() + "/ativo").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content("{\"ativo\":true}"))
                 .andExpect(status().isUnauthorized());
 
-        mvc.perform(patch("/usuarios/" + pendente.getId() + "/ativo")
+        mvc.perform(patch("/usuarios/" + pendente.getId() + "/ativo").with(csrf())
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("admin").roles("ADMINISTRADOR"))
                 .contentType(MediaType.APPLICATION_JSON).content("{\"ativo\":true}"))
                 .andExpect(status().isOk());
@@ -241,7 +241,7 @@ class AutorizacaoApiTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login.html?erro"));
 
-        mvc.perform(patch("/usuarios/" + professor.getId() + "/ativo")
+        mvc.perform(patch("/usuarios/" + professor.getId() + "/ativo").with(csrf())
                         .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
                                 .user("admin").roles("ADMINISTRADOR"))
                         .contentType(MediaType.APPLICATION_JSON).content("{\"ativo\":true}"))
