@@ -14,8 +14,8 @@
 **Ambiente:** usar banco isolado `recursos_teste_v9` e porta de teste 8085. Antes de executar, criar backup da base `recursos_teste_v8`. NÃO utilizar a base original `recursos` nem interromper `organizacao-recursos` na porta 8080.
 
 - [ ] Iniciar a nova versão com Flyway V9. Confirmar logs: migração V9 aplicada, Hibernate iniciado, sem erros, e seis reservas preservadas na cópia.
-- [ ] ADMINISTRADOR aprova reserva de recurso **comum**; continua proibido de aprovar **restrito**.
-- [ ] RESPONSAVEL aprova reserva restrita, inclusive quando apenas o projetor adicional é restrito.
+- [ ] ADMINISTRADOR gerencia usuários, recursos e manutenção, mas não aprova/rejeita nenhuma reserva, nem registra retirada/devolução.
+- [ ] RESPONSAVEL aprova/rejeita pedido comum e restrito, registra início/fim/ausência e movimentações; pode criar sua própria reserva, mas só outro RESPONSAVEL pode avaliá-la.
 - [ ] PROFESSOR recebe 403 ao tentar aprovar ou acessar movimentações; só vê as próprias reservas.
 - [ ] Sala com **dois materiais**: retirar cada um, tentar duplicar retirada, devolver o primeiro (reserva permanece EM_USO), devolver o segundo (reserva CONCLUIDA); conferir auditoria.
 - [ ] Tela **Usuários**: ADMINISTRADOR lista/cadastra/ativa/desativa; professor e responsável recebem 403; confirmação de e-mail institucional conforme configuração de teste.
