@@ -7,7 +7,7 @@
 - Stack: Java 21, Spring Boot 3.3, PostgreSQL 16, JUnit 5, Testcontainers, WireMock, JaCoCo e JMeter.
 - Versão verificada: `main`, após [PRs #4](https://github.com/FelipeR8083/organizacao-recursos/pull/4), [#5](https://github.com/FelipeR8083/organizacao-recursos/pull/5) e [#6](https://github.com/FelipeR8083/organizacao-recursos/pull/6), commit de integração técnica `746cc14e77c112973220c8262269ffdaaa34254e`.
 - Base destinada à entrega: `main`, já integrada por pull request; revisão formal de outro integrante ainda não foi registrada.
-- **Decisão:** versão funcional candidata à entrega acadêmica **com ressalvas explicitadas**. GitHub Actions e SonarQube Cloud executaram na `main`, com **Quality Gate aprovado**. O SonarCloud passou de **6 para 1 questão nova** após PR #5; a questão residual é de recomendação de tipo SQL `VARCHAR2` incompatível com o contexto PostgreSQL/migração Flyway histórica. A importação de JaCoCo pelo scanner está comprovada; permanecem a reexecução de carga pós-CSRF, a revisão por pares e a triagem formal da questão residual. Não afirmar ausência global de vulnerabilidades críticas sem examinar a classificação das questões.
+- **Decisão:** versão funcional candidata à entrega acadêmica **com ressalvas explicitadas**. GitHub Actions e SonarQube Cloud executaram na `main`, com **Quality Gate aprovado**. O SonarCloud passou de **6 para 1 questão nova** após PR #5; a questão residual é de recomendação de tipo SQL `VARCHAR2` incompatível com o contexto PostgreSQL/migração Flyway histórica. A importação de JaCoCo pelo scanner está comprovada; a carga pós-CSRF foi reexecutada com sucesso no GitHub Actions; permanecem a revisão por pares e a triagem formal da questão residual. Não afirmar ausência global de vulnerabilidades críticas sem examinar a classificação das questões.
 
 ## Resultado automatizado (evidência verificada)
 
@@ -23,7 +23,7 @@
 
 Fonte: [GitHub Actions 43313349056 — CI verde na `main` após PR #6](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43313349056). 188 testes passaram, build Docker e etapa `Analisar no SonarCloud` concluídos. Logs da análise: `Sensor JaCoCo XML Report Importer` e `Importing 1 report(s)`, além de publicação bem-sucedida. O check `SonarCloud Code Analysis` no commit `746cc14e` voltou ao estado **success / Quality Gate passed** após a correção de alertas de segurança nos workflows.
 
-**Carga concorrente (evidência histórica anterior à proteção CSRF obrigatória):** [GitHub Actions 42711044633](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/42711044633), JMeter com 20 pedidos simultâneos ao mesmo recurso: **1 HTTP 201 e 19 HTTP 409**, média de 106,9 ms, P95 209 ms. Plano `jmeter/reservas-concorrentes.jmx`; arquivar os relatórios JTL/HTML junto da entrega.
+**Carga concorrente pós-CSRF — evidência atual da `main`:** [JMeter 43316844059](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43316844059), 20 GET `/csrf` HTTP 200, 20 POST de reservas simultâneas, **1 HTTP 201 e 19 HTTP 409**, média **38,5 ms**, **P95 117 ms**, máximo **122 ms** para os POST. Artefatos `evidencias-jmeter` (JTL e HTML) disponíveis. A [execução histórica anterior ao CSRF 42711044633](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/42711044633) também passou, mas suas latências (média 106,9 ms, P95 209 ms) não substituem as medições atuais.
 
 **BDD/TDD:** `docs/EVIDENCIA-BDD.md` documenta cenários e evidências de evolução do RF-03. Não se afirma que todas as funcionalidades foram feitas com TDD.
 
@@ -65,7 +65,7 @@ A análise automática de código do GitHub App [SonarCloud Code Analysis](https
 
 O SonarCloud analisa automaticamente o repositório via GitHub App, mas ainda **não recebe o arquivo `target/site/jacoco/jacoco.xml`**. O CI Java, separadamente, comprovou 91,73% de linhas e 77,55% de branches via JaCoCo. O workflow já contém etapa condicional de análise com relatório JaCoCo, atualmente ignorada pela ausência de `SONAR_TOKEN`, `SONAR_ORGANIZATION` e `SONAR_PROJECT_KEY`; migrar para análise via GitHub Actions exige alinhar as configurações no Sonar para evitar análises duplicadas.
 
-A correção de CSRF do [PR #4](https://github.com/FelipeR8083/organizacao-recursos/pull/4) liga a proteção em todos os perfis e foi testada por 185 testes automatizados, login, logout e consulta `/csrf` em homologação isolada :8085. Uma chamada anônima de teste sem token retornou **401**, o que **não comprova isoladamente rejeição por CSRF**; a verificação de HTTP 403 sem token foi feita pela suíte automatizada com usuário autenticado. Reexecutar JMeter para números de carga da nova versão.
+A correção de CSRF do [PR #4](https://github.com/FelipeR8083/organizacao-recursos/pull/4) liga a proteção em todos os perfis e foi testada por 185 testes automatizados, login, logout e consulta `/csrf` em homologação isolada :8085. Uma chamada anônima de teste sem token retornou **401**, o que **não comprova isoladamente rejeição por CSRF**; a verificação de HTTP 403 sem token foi feita pela suíte automatizada com usuário autenticado. O JMeter pós-CSRF foi reexecutado com sucesso na versão integrada à `main` ([run 43316844059](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43316844059)).
 
 
 ## Revisão de confiabilidade e acessibilidade — PR #5 (12/11/2026)
@@ -82,9 +82,17 @@ A questão remanescente está na migração histórica `V6__verificacao_email_pr
 
 Com a substituição da análise automática por análise via GitHub Actions, o SonarCloud apontou **4 questões de segurança no código novo**: 1 de prioridade alta por dependência de ação não fixada em SHA completo e 3 médias por senhas literais no workflow JMeter e downloads com redirecionamento não restrito a HTTPS.
 
-O [PR #6](https://github.com/FelipeR8083/organizacao-recursos/pull/6) fixou as dependências por hashes de commit verificados, gerou credenciais efêmeras mascaradas para o JMeter e restringiu downloads e redirecionamentos a HTTPS. O workflow JMeter também foi adaptado para obter token e cookie de sessão antes de criar recurso, e para distinguir preflight de reserva na contagem de amostras; **a carga não foi reexecutada**.
+O [PR #6](https://github.com/FelipeR8083/organizacao-recursos/pull/6) fixou as dependências por hashes de commit verificados, gerou credenciais efêmeras mascaradas para o JMeter e restringiu downloads e redirecionamentos a HTTPS. O workflow JMeter também foi adaptado para obter token e cookie de sessão antes de criar recurso, e para distinguir preflight de reserva na contagem de amostras; **a carga foi reexecutada após PR #7, com evidência aprovada na `main`**.
 
 O CI do PR #6 e da `main` executou **188 testes (0 falhas)**, cobertura **91,85% linhas / 78,37% branches**, build Docker e scanner SonarCloud. O check no merge `746cc14e` confirmou **Quality Gate passed**, **1 nova questão** e **0 Security Hotspots no código novo**. O relatório `target/site/jacoco/jacoco.xml` foi **importado pelo scanner**. A linha de base contém uma questão residual de SQL `CHAR(64)` já documentada, porém não há confirmação formal, nesta execução, de que essa seja exatamente a única questão exibida no filtro de código novo; conferir no painel antes de fechar a triagem.
+
+
+
+## Evidência de concorrência pós-CSRF — PR #7 (12/11/2026)
+
+O [PR #7](https://github.com/FelipeR8083/organizacao-recursos/pull/7) habilitou o JMeter pelo GitHub Actions na `main` e corrigiu o cálculo de P95 (posto mais próximo, separado do máximo). O [run final 43316844059](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43316844059) **passou** com **20 GET CSRF HTTP 200**, **20 POST de reservas**, **1 HTTP 201** e **19 HTTP 409**. Latência dos POST: **média 38,5 ms, P95 117 ms, máximo 122 ms**. Há artefatos JTL e HTML, e o JTL foi conferido independentemente com 40 amostras. O [CI da `main` após o PR #7, run 43316844286](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43316844286) também foi aprovado.
+
+**Limites:** a prova ocorreu em runner efêmero do GitHub com banco novo, não no PostgreSQL original nem na homologação local; HTTP 409 é o conflito esperado. Não foram estabelecidas metas formais de latência de produção. O teste não inclui migração real V8→V9 sobre banco populado nem resolve a regra temporal de transições e revisão por pares.
 
 
 ## Referências
@@ -96,4 +104,4 @@ O CI do PR #6 e da `main` executou **188 testes (0 falhas)**, cobertura **91,85%
 - [Homologação e checklist](HOMOLOGACAO-FINAL-2026-11-12.md)
 - [Roteiro de apresentação](APRESENTACAO.md)
 
-**Conclusão:** a equipe demonstrou funcionamento de grande parte do escopo exigido, atingiu as metas automatizadas de cobertura e obteve **Quality Gate aprovado** no SonarCloud para a `main`. A entrega como versão candidata é tecnicamente justificável **com riscos explicitados**; o JaCoCo XML foi importado ao Sonar, os alertas de segurança de CI foram corrigidos com Quality Gate aprovado e ainda restam triagem de 1 questão no código novo, revisão por pares e nova execução JMeter da versão com CSRF. O relatório não certifica cumprimento de 100% dos requisitos de evidência nem qualidade de produção.
+**Conclusão:** a equipe demonstrou funcionamento de grande parte do escopo exigido, atingiu as metas automatizadas de cobertura e obteve **Quality Gate aprovado** no SonarCloud para a `main`. A entrega como versão candidata é tecnicamente justificável **com riscos explicitados**; o JaCoCo XML foi importado ao Sonar, os alertas de segurança de CI foram corrigidos com Quality Gate aprovado e ainda restam triagem formal da questão residual do SonarCloud, revisão por pares e validação final de outros requisitos manuais. O relatório não certifica cumprimento de 100% dos requisitos de evidência nem qualidade de produção.
