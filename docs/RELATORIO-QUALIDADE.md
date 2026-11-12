@@ -6,8 +6,8 @@
 - Equipe: **Felipe e Pietro** (ver autoria e créditos no repositório).
 - Stack: Java 21, Spring Boot 3.3, PostgreSQL 16, JUnit 5, Testcontainers, WireMock, JaCoCo e JMeter.
 - Versão verificada: `main`, após [PRs #4](https://github.com/FelipeR8083/organizacao-recursos/pull/4), [#5](https://github.com/FelipeR8083/organizacao-recursos/pull/5) e [#6](https://github.com/FelipeR8083/organizacao-recursos/pull/6), commit de integração técnica `746cc14e77c112973220c8262269ffdaaa34254e`.
-- Base destinada à entrega: `main`, já integrada por pull request; revisão formal de outro integrante ainda não foi registrada.
-- **Decisão:** versão funcional candidata à entrega acadêmica **com ressalvas explicitadas**. GitHub Actions e SonarQube Cloud executaram na `main`, com **Quality Gate aprovado**. O SonarCloud passou de **6 para 1 questão nova** após PR #5; a questão residual é de recomendação de tipo SQL `VARCHAR2` incompatível com o contexto PostgreSQL/migração Flyway histórica. A importação de JaCoCo pelo scanner está comprovada; a carga pós-CSRF foi reexecutada com sucesso no GitHub Actions; permanecem a revisão por pares e a triagem formal da questão residual. Não afirmar ausência global de vulnerabilidades críticas sem examinar a classificação das questões.
+- Base destinada à entrega: `main`, já integrada por pull request; revisão retrospectiva de Pietro registrada em 12/11/2026 com estado **COMMENTED**, sem aprovação (PR #8).
+- **Decisão:** versão funcional candidata à entrega acadêmica **com ressalvas explicitadas**. GitHub Actions e SonarQube Cloud executaram na `main`, com **Quality Gate aprovado**. O SonarCloud passou de **6 para 1 questão nova** após PR #5; a questão residual é de recomendação de tipo SQL `VARCHAR2` incompatível com o contexto PostgreSQL/migração Flyway histórica. A importação de JaCoCo pelo scanner está comprovada; a carga pós-CSRF foi reexecutada com sucesso no GitHub Actions; permanecem a avaliação do atendimento à exigência de revisão **durante** o desenvolvimento e a triagem formal da questão residual. Não afirmar ausência global de vulnerabilidades críticas sem examinar a classificação das questões.
 
 ## Resultado automatizado (evidência verificada)
 
@@ -104,16 +104,22 @@ O [PR #7](https://github.com/FelipeR8083/organizacao-recursos/pull/7) habilitou 
 - [Homologação e checklist](HOMOLOGACAO-FINAL-2026-11-12.md)
 - [Roteiro de apresentação](APRESENTACAO.md)
 
-**Conclusão:** a equipe demonstrou funcionamento de grande parte do escopo exigido, atingiu as metas automatizadas de cobertura e obteve **Quality Gate aprovado** no SonarCloud para a `main`. A entrega como versão candidata é tecnicamente justificável **com riscos explicitados**; o JaCoCo XML foi importado ao Sonar, os alertas de segurança de CI foram corrigidos com Quality Gate aprovado e ainda restam triagem formal da questão residual do SonarCloud, revisão por pares e validação final de outros requisitos manuais. O relatório não certifica cumprimento de 100% dos requisitos de evidência nem qualidade de produção.
+**Conclusão:** a equipe demonstrou funcionamento de grande parte do escopo exigido, atingiu as metas automatizadas de cobertura e obteve **Quality Gate aprovado** no SonarCloud para a `main`. A entrega como versão candidata é tecnicamente justificável **com riscos explicitados**; o JaCoCo XML foi importado ao Sonar, os alertas de segurança de CI foram corrigidos com Quality Gate aprovado e ainda restam triagem formal da questão residual do SonarCloud, validação de suficiência da revisão retrospectiva para a exigência de revisão **durante o desenvolvimento** e validação final de outros requisitos manuais. O relatório não certifica cumprimento de 100% dos requisitos de evidência nem qualidade de produção.
 
 
-## Protocolo de revisão por pares — Pietro (pendente de análise independente)
+## Revisão retrospectiva por pares — registro efetivo de Pietro e declaração de Felipe
 
-**Registro de acompanhamento técnico e roteiro de revisão retrospectiva:** [consultar o documento específico](REGISTRO-ACOMPANHAMENTO-E-REVISAO-RETROSPECTIVA.md), com histórico verificável dos PRs #4–#7, links das evidências e campos para o parecer efetivo do revisor. As avaliações automatizadas feitas durante o desenvolvimento não equivalem à revisão por pares humana exigida naquele período.
+**Registro de acompanhamento técnico e roteiro de revisão retrospectiva:** [consultar o documento específico](REGISTRO-ACOMPANHAMENTO-E-REVISAO-RETROSPECTIVA.md), com histórico verificável dos PRs #1–#7, links das evidências e roteiro de revisão. As avaliações automatizadas feitas durante o desenvolvimento não equivalem à revisão por pares humana exigida naquele período.
 
 
 
-Esta seção abre um pedido de revisão **real** pelo integrante Pietro, pelo GitHub. O pedido de revisão não equivale a aprovação. O revisor deve verificar código e evidências, deixar comentários sobre pontos não atendidos e emitir sua própria decisão no PR; **não há aceite antecipado**.
+**Atualização verificada em 12/11/2026 (20h31 BRT):** `pietrolaureano` submeteu no [PR #8](https://github.com/FelipeR8083/organizacao-recursos/pull/8) uma revisão retrospectiva com estado **COMMENTED**, indicando que leu a análise técnica de segurança, APIs, testes e CI e concorda em manter PI-REV-01 a PI-REV-05 como melhorias e ressalvas. **Não foi uma aprovação (APPROVED)** e não demonstra revisão humana durante as etapas anteriores do desenvolvimento.
+
+**Felipe:** foi publicado [registro de concordância e síntese técnica](https://github.com/FelipeR8083/organizacao-recursos/pull/8#issuecomment-6839085749) **por assistente, a pedido expresso do integrante**, usando a [análise preparatória para Felipe](REVISAO-PARA-FELIPE-RASCUNHO.md). O comentário não afirma verificação pessoal independente do código e não é aprovação do próprio PR.
+
+**Documentos:** [análise para Felipe](REVISAO-PARA-FELIPE-RASCUNHO.md) e [análise para Pietro](REVISAO-PARA-PIETRO-RASCUNHO.md). O professor decide se a documentação retrospectiva gera crédito parcial diante da exigência de revisão durante o desenvolvimento.
+
+Esta seção foi criada inicialmente como pedido de revisão **real** pelo integrante Pietro, pelo GitHub. O pedido de revisão não equivale a aprovação. O revisor deve verificar código e evidências, deixar comentários sobre pontos não atendidos e emitir sua própria decisão no PR; **não há aceite antecipado**.
 
 **Pontos sugeridos para a revisão do repositório em `main`:**
 
@@ -125,4 +131,4 @@ Esta seção abre um pedido de revisão **real** pelo integrante Pietro, pelo Gi
 
 **Como registrar a revisão:** utilizar a aba **Files changed** e **Review changes** do pull request aberto para comentar e selecionar `Comment`, `Approve` ou `Request changes` conforme a análise efetivamente realizada. É válido solicitar mudanças. O colaborador deve usar **sua própria conta GitHub**; nunca compartilhar credenciais.
 
-**Estado ao abrir:** revisão solicitada/aguardando decisão. Após a decisão real do Pietro, acrescentar link para o comentário ou aprovação com data; não preencher previamente uma conclusão.
+**Estado histórico ao abrir:** revisão solicitada e aguardando decisão. **Estado atual:** Pietro submeteu COMMENTED em 12/11/2026; Felipe solicitou publicação de seu registro documental assistido. Ainda não há APPROVED de Pietro.
