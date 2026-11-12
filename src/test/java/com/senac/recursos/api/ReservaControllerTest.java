@@ -117,7 +117,7 @@ class ReservaControllerTest {
     }
 
     @Test
-    void transicaoDeEstadoValidaEhEncaminhadaAoServico() throws Exception {
+    void administradorNaoAlteraEstadoDaReserva() throws Exception {
         mvc.perform(patch("/reservas/42/estado")
                         .principal(new UsernamePasswordAuthenticationToken("admin", "n/a",
                                 java.util.List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRADOR"))))
@@ -125,8 +125,8 @@ class ReservaControllerTest {
                         .content("""
                                 {"estado":"APROVADA"}
                                 """))
-                .andExpect(status().isOk());
-        verify(service).alterarEstado(42L, EstadoReserva.APROVADA, "admin", false);
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(service);
     }
 
     @Test
