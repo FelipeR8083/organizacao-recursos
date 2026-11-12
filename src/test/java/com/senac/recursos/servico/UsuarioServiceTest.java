@@ -207,6 +207,25 @@ class UsuarioServiceTest {
     }
 
     @Test
+    void cadastroAceitaParteLocalComCaracteresPermitidos() {
+        when(encoder.encode("senha-segura-123")).thenReturn("hash");
+        when(usuarios.save(any(Usuario.class))).thenAnswer(call -> call.getArgument(0));
+        Usuario professor = service.solicitarCadastroProfessor(
+                "ana.silva_2026+curso%turma-sp@unidade-1.senac.br", "senha-segura-123");
+        assertEquals("ana.silva_2026+curso%turma-sp@unidade-1.senac.br",
+                professor.getUsername());
+        assertFalse(professor.isAtivo());
+    }
+
+    @Test
+    void cadastroRejeitaEmailsLongosAntesDeValidarSegmentos() {
+        assertThrows(IllegalArgumentException.class,
+                () -> service.solicitarCadastroProfessor(
+                        "a.".repeat(10000) + "a@sp.senac.br", "senha-segura-123"));
+        verifyNoInteractions(usuarios, encoder);
+    }
+
+    @Test
     void rejeitaSenhaCurtaNoCadastroProfessorSemPersistir() {
         assertThrows(IllegalArgumentException.class,
                 () -> service.solicitarCadastroProfessor("ana@sp.senac.br", "curta"));
