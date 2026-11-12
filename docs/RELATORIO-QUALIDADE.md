@@ -5,9 +5,9 @@
 - Projeto: **Gestão de Recursos Acadêmicos** — Senac TADS / Qualidade de Software.
 - Equipe: **Felipe e Pietro** (ver autoria e créditos no repositório).
 - Stack: Java 21, Spring Boot 3.3, PostgreSQL 16, JUnit 5, Testcontainers, WireMock, JaCoCo e JMeter.
-- Versão verificada: `main`, após [PR #4](https://github.com/FelipeR8083/organizacao-recursos/pull/4) e [PR #5](https://github.com/FelipeR8083/organizacao-recursos/pull/5), commit de integração `219b4abdd664a4e7aff2d03a96b32ffe6c8f1516`.
+- Versão verificada: `main`, após [PRs #4](https://github.com/FelipeR8083/organizacao-recursos/pull/4), [#5](https://github.com/FelipeR8083/organizacao-recursos/pull/5) e [#6](https://github.com/FelipeR8083/organizacao-recursos/pull/6), commit de integração técnica `746cc14e77c112973220c8262269ffdaaa34254e`.
 - Base destinada à entrega: `main`, já integrada por pull request; revisão formal de outro integrante ainda não foi registrada.
-- **Decisão:** versão funcional candidata à entrega acadêmica **com ressalvas explicitadas**. GitHub Actions e SonarQube Cloud executaram na `main`, com **Quality Gate aprovado**. O SonarCloud passou de **6 para 1 questão nova** após PR #5; a questão residual é de recomendação de tipo SQL `VARCHAR2` incompatível com o contexto PostgreSQL/migração Flyway histórica. Permanecem importação de cobertura JaCoCo, ensaio de carga pós-CSRF e revisão por pares. Não afirmar ausência global de vulnerabilidades críticas sem examinar a classificação das questões.
+- **Decisão:** versão funcional candidata à entrega acadêmica **com ressalvas explicitadas**. GitHub Actions e SonarQube Cloud executaram na `main`, com **Quality Gate aprovado**. O SonarCloud passou de **6 para 1 questão nova** após PR #5; a questão residual é de recomendação de tipo SQL `VARCHAR2` incompatível com o contexto PostgreSQL/migração Flyway histórica. A importação de JaCoCo pelo scanner está comprovada; permanecem a reexecução de carga pós-CSRF, a revisão por pares e a triagem formal da questão residual. Não afirmar ausência global de vulnerabilidades críticas sem examinar a classificação das questões.
 
 ## Resultado automatizado (evidência verificada)
 
@@ -19,9 +19,9 @@
 | Build Docker no CI | Concluir | **Sucesso** |
 | Banco real / integração | Testcontainers | Testes de integração PostgreSQL concluídos |
 | Notificações webhook | WireMock | Testes automatizados concluídos |
-| SonarQube Cloud / SonarCloud | Quality Gate / triagem de segurança | **Quality Gate aprovado no GitHub App, 1 questão nova após PR #5; 0 hotspots no código novo; cobertura do código novo no Sonar = 0,0% (integração JaCoCo pendente)** |
+| SonarQube Cloud / SonarCloud | Quality Gate / triagem de segurança | **Quality Gate aprovado no SonarCloud via GitHub Actions no PR #6; 1 questão nova e 0 hotspots no código novo; relatório JaCoCo XML importado; 0,0% de cobertura em código novo no check não equivale à cobertura global** |
 
-Fonte: [GitHub Actions 43306929799 — PR #5, 188 testes e Docker build aprovados](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43306929799). O merge do PR #5 iniciou a [execução adicional da `main` 43307450221](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43307450221). JaCoCo e resultados da suíte estão disponíveis nos logs e artefatos da execução. A etapa **"Analisar no SonarCloud"** deste workflow ainda é `skipped` porque as variáveis/segredo não estão configurados, **mas a análise automática do GitHub App SonarCloud executou separadamente e aprovou o Quality Gate**.
+Fonte: [GitHub Actions 43313349056 — CI verde na `main` após PR #6](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43313349056). 188 testes passaram, build Docker e etapa `Analisar no SonarCloud` concluídos. Logs da análise: `Sensor JaCoCo XML Report Importer` e `Importing 1 report(s)`, além de publicação bem-sucedida. O check `SonarCloud Code Analysis` no commit `746cc14e` voltou ao estado **success / Quality Gate passed** após a correção de alertas de segurança nos workflows.
 
 **Carga concorrente (evidência histórica anterior à proteção CSRF obrigatória):** [GitHub Actions 42711044633](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/42711044633), JMeter com 20 pedidos simultâneos ao mesmo recurso: **1 HTTP 201 e 19 HTTP 409**, média de 106,9 ms, P95 209 ms. Plano `jmeter/reservas-concorrentes.jmx`; arquivar os relatórios JTL/HTML junto da entrega.
 
@@ -51,12 +51,12 @@ Ambiente **exclusivamente isolado**: `http://localhost:8085`, banco `recursos_te
 
 ## Riscos e pendências reais
 
-1. **SonarCloud:** o GitHub App concluiu a análise em `main` e **aprovou o Quality Gate**; resultado inicial exibiu **6 questões novas**; após PR #5 a nova análise indicou **1 questão nova**, **0 hotspots no código novo**, **0,0% de cobertura no código novo** (sem JaCoCo importado). A questão residual de `CHAR(64)` está documentada como recomendação inadequada para migração Flyway PostgreSQL; falta revisão formal da classificação no Sonar e configuração via CI para importar cobertura. A etapa `Analisar no SonarCloud` do GitHub Actions continua `skipped`. A meta de zero bugs/vulnerabilidades críticas **não pode ser declarada integralmente comprovada** pelo resumo do check. Guia: `docs/CONFIGURAR-SONARCLOUD.md`.
+1. **SonarCloud:** a análise do GitHub Actions já executa com `SONAR_TOKEN` protegido, importou XML JaCoCo e recebeu **Quality Gate aprovado** na `main` após PR #6. Check final registra **1 questão nova**, ainda sem aceite formal, e **0 hotspots no código novo**. Cinco questões de confiabilidade/acessibilidade foram corrigidas no PR #5; quatro alertas de segurança nos workflows (1 alto/3 médios) foram corrigidos no PR #6. Confirmar classificação global no painel antes de declarar ausência de vulnerabilidades críticas em todo o projeto. O indicador de **0% no código novo** não é o percentual global de cobertura.
 2. **Revisão por pares:** realizar revisão real pelo Pietro no pull request final; registrar a decisão/comentários.
 3. **Evidências/apresentação:** guardar captura do CI final e indicadores JaCoCo, JMeter JTL/HTML, telas desktop/celular (360px e 768px), diagramas/RTM; roteiro em `docs/APRESENTACAO.md`.
 4. **Atualização de base legada:** Flyway V9 foi observado em **banco novo**, não sobre uma cópia de banco V8 com dados reais; preservar backup antes de uma futura atualização de produção.
 5. **Regra temporal:** o sistema permitiu antecipar `APROVADA → EM_USO` e concluir reserva antes do horário agendado. Registrar como risco/decisão pendente; não afirmar que essa restrição está implementada.
-6. **Execução final:** CI do PR #5 confirmado com sucesso ([run 43306929799](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43306929799)); nova `main` integrada no SHA `219b4abd` e [run 43307450221](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43307450221). Preservar logs/artefatos do run final.
+6. **Execução final:** [CI principal do PR #6 na `main` — run 43313349056](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43313349056) verde no SHA `746cc14e`, 188 testes e JaCoCo importado. Preservar logs/artefatos; commits posteriores apenas de documentação precisam ser distinguidos da versão de código validada.
 7. **Conta professor:** domínio Senac é validado; confirmação real de e-mail requer SMTP/configuração de produção e não foi verificada na homologação.
 
 ## Segurança / SonarQube Cloud — verificação após PR #4 (12/11/2026)
@@ -77,6 +77,16 @@ O [PR #5](https://github.com/FelipeR8083/organizacao-recursos/pull/5) corrigiu a
 A questão remanescente está na migração histórica `V6__verificacao_email_professor.sql`, que usa `CHAR(64)` para armazenar um hash hexadecimal de comprimento fixo. **Não** substituímos por `VARCHAR2` (tipo de Oracle, incompatível com PostgreSQL) nem alteramos uma migração Flyway já aplicada, cujo checksum seria modificado. A equipe deve considerar a classificação como falso positivo/aceitação fundamentada no SonarCloud após revisão; **não há aceite formal registrado**. A cobertura do SonarCloud permanece pendente de importação, independentemente da cobertura JaCoCo do CI.
 
 
+
+## Correção dos alertas do scanner de CI — PR #6 (12/11/2026)
+
+Com a substituição da análise automática por análise via GitHub Actions, o SonarCloud apontou **4 questões de segurança no código novo**: 1 de prioridade alta por dependência de ação não fixada em SHA completo e 3 médias por senhas literais no workflow JMeter e downloads com redirecionamento não restrito a HTTPS.
+
+O [PR #6](https://github.com/FelipeR8083/organizacao-recursos/pull/6) fixou as dependências por hashes de commit verificados, gerou credenciais efêmeras mascaradas para o JMeter e restringiu downloads e redirecionamentos a HTTPS. O workflow JMeter também foi adaptado para obter token e cookie de sessão antes de criar recurso, e para distinguir preflight de reserva na contagem de amostras; **a carga não foi reexecutada**.
+
+O CI do PR #6 e da `main` executou **188 testes (0 falhas)**, cobertura **91,85% linhas / 78,37% branches**, build Docker e scanner SonarCloud. O check no merge `746cc14e` confirmou **Quality Gate passed**, **1 nova questão** e **0 Security Hotspots no código novo**. O relatório `target/site/jacoco/jacoco.xml` foi **importado pelo scanner**. A linha de base contém uma questão residual de SQL `CHAR(64)` já documentada, porém não há confirmação formal, nesta execução, de que essa seja exatamente a única questão exibida no filtro de código novo; conferir no painel antes de fechar a triagem.
+
+
 ## Referências
 
 - [Especificação do professor](https://afonsolelis.github.io/aulas_senac/pages/qualidade2/especificacao-projeto.html)
@@ -86,4 +96,4 @@ A questão remanescente está na migração histórica `V6__verificacao_email_pr
 - [Homologação e checklist](HOMOLOGACAO-FINAL-2026-11-12.md)
 - [Roteiro de apresentação](APRESENTACAO.md)
 
-**Conclusão:** a equipe demonstrou funcionamento de grande parte do escopo exigido, atingiu as metas automatizadas de cobertura e obteve **Quality Gate aprovado** no SonarCloud para a `main`. A entrega como versão candidata é tecnicamente justificável **com riscos explicitados**; a cobertura ainda não foi importada ao Sonar, as seis questões iniciais foram triadas, cinco corrigidas e uma justificada tecnicamente; não há nova execução JMeter da versão com CSRF. O relatório não certifica cumprimento de 100% dos requisitos de evidência nem qualidade de produção.
+**Conclusão:** a equipe demonstrou funcionamento de grande parte do escopo exigido, atingiu as metas automatizadas de cobertura e obteve **Quality Gate aprovado** no SonarCloud para a `main`. A entrega como versão candidata é tecnicamente justificável **com riscos explicitados**; o JaCoCo XML foi importado ao Sonar, os alertas de segurança de CI foram corrigidos com Quality Gate aprovado e ainda restam triagem de 1 questão no código novo, revisão por pares e nova execução JMeter da versão com CSRF. O relatório não certifica cumprimento de 100% dos requisitos de evidência nem qualidade de produção.
