@@ -71,12 +71,14 @@ public class ReservaService {
         }
         Reserva reserva = reservas.buscarComLock(id)
                 .orElseThrow(() -> new NoSuchElementException("Reserva não encontrada"));
-        boolean recursoRestrito = reserva.getRecurso().isRestrito()
-                || (reserva.getProfessor() != null && reserva.getProfessor().isRestrito())
-                || reserva.getMateriais().stream().anyMatch(Recurso::isRestrito);
-        if (estado == EstadoReserva.APROVADA && recursoRestrito && !responsavel) {
+        if (!responsavel && (estado == EstadoReserva.APROVADA || estado == EstadoReserva.REJEITADA)) {
             throw new org.springframework.security.access.AccessDeniedException(
-                    "Somente um responsável pode aprovar reserva de recurso restrito");
+                    "Somente um responsável pode aprovar ou rejeitar reservas");
+        }
+        if ((estado == EstadoReserva.APROVADA || estado == EstadoReserva.REJEITADA)
+                && login != null && reserva.getSolicitante().equalsIgnoreCase(login.trim())) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Um responsável não pode avaliar a própria solicitação; outro responsável deve fazê-lo");
         }
         EstadoReserva anterior = reserva.getEstado();
         reserva.transicionarPara(estado);
