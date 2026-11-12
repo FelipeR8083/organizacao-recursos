@@ -24,7 +24,7 @@ A suíte Maven/JaCoCo registrou **91,85% de linhas / 78,37% de branches**, resul
 ## Riscos e cuidados
 
 - Continua registrada 1 questão nova no Sonar; conferir seu conteúdo antes de declarar a inexistência de problemas críticos no projeto inteiro. A classificação `CHAR(64)`/Flyway precisa de revisão formal e justificativa se for aceita.
-- O teste JMeter com 20 threads e **1 HTTP 201 / 19 HTTP 409** é uma evidência **histórica**, anterior ao CSRF obrigatório. O plano JMX e workflow foram adaptados para obter tokens por sessão e credenciais efêmeras, mas **não houve reexecução comprovada após essa mudança**.
+- O teste histórico JMeter anterior ao CSRF obrigatório foi complementado pela [execução pós-CSRF na `main` 43316844059](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43316844059): 20 GET CSRF HTTP 200, 20 POST, **1 HTTP 201 + 19 HTTP 409**, média 38,5 ms, P95 117 ms (posto mais próximo), máximo 122 ms. O workflow utiliza tokens por sessão e credenciais efêmeras.
 - A aplicação local original `:8080` e seu PostgreSQL `:5432` permanecem intocados. A homologação isolada `:8085` recebeu a versão de CSRF do PR #4, mas não se afirma que a imagem local tenha sido reconstruída após PRs #5 e #6.
 - A aprovação formal de revisão pelo colega e a demonstração final ainda precisam ser evidenciadas.
 
