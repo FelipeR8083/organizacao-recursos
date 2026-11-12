@@ -105,3 +105,20 @@ O [PR #7](https://github.com/FelipeR8083/organizacao-recursos/pull/7) habilitou 
 - [Roteiro de apresentação](APRESENTACAO.md)
 
 **Conclusão:** a equipe demonstrou funcionamento de grande parte do escopo exigido, atingiu as metas automatizadas de cobertura e obteve **Quality Gate aprovado** no SonarCloud para a `main`. A entrega como versão candidata é tecnicamente justificável **com riscos explicitados**; o JaCoCo XML foi importado ao Sonar, os alertas de segurança de CI foram corrigidos com Quality Gate aprovado e ainda restam triagem formal da questão residual do SonarCloud, revisão por pares e validação final de outros requisitos manuais. O relatório não certifica cumprimento de 100% dos requisitos de evidência nem qualidade de produção.
+
+
+## Protocolo de revisão por pares — Pietro (pendente de análise independente)
+
+Esta seção abre um pedido de revisão **real** pelo integrante Pietro, pelo GitHub. O pedido de revisão não equivale a aprovação. O revisor deve verificar código e evidências, deixar comentários sobre pontos não atendidos e emitir sua própria decisão no PR; **não há aceite antecipado**.
+
+**Pontos sugeridos para a revisão do repositório em `main`:**
+
+- [ ] Segurança: CSRF universal, autenticação/autorização por perfil, manutenção de cookie/sessão; examinar `SegurancaConfig.java`, controllers e testes.
+- [ ] Concorrência: bloqueio pessimista e conflitos de reserva, resultado JMeter 20 POST = 1 HTTP 201 + 19 HTTP 409 após CSRF, [run 43316844059](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43316844059).
+- [ ] Automação: 188 testes sem falhas, JaCoCo linhas 91,85% / branches 78,37%, [CI integrado após PR #7, run 43316844286](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43316844286).
+- [ ] Análise estática: SonarCloud Quality Gate aprovado; revisar a questão residual e a justificativa de `CHAR(64)` na migração histórica `V6`, sem trocar por tipo Oracle nem modificar checksum de migração já aplicada.
+- [ ] Ressalvas de homologação: regra temporal de transição antecipada, migração `V8 → V9` não validada em banco populado, ausência de envio SMTP de confirmação de e-mail em ambiente real, e evidência de responsividade limitada às capturas existentes.
+
+**Como registrar a revisão:** utilizar a aba **Files changed** e **Review changes** do pull request aberto para comentar e selecionar `Comment`, `Approve` ou `Request changes` conforme a análise efetivamente realizada. É válido solicitar mudanças. O colaborador deve usar **sua própria conta GitHub**; nunca compartilhar credenciais.
+
+**Estado ao abrir:** revisão solicitada/aguardando decisão. Após a decisão real do Pietro, acrescentar link para o comentário ou aprovação com data; não preencher previamente uma conclusão.
