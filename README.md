@@ -83,7 +83,7 @@ No Linux/macOS, exporte as mesmas três variáveis antes de executar `mvn spring
 
 A aplicação ficará disponível em `http://localhost:8080`. A interface web está em `src/main/resources/static/index.html`. O navegador pode solicitar as credenciais HTTP Basic; para comparar perfis distintos, abra sessões separadas (por exemplo, janela anônima).
 
-Na interface, o **administrador** gerencia recursos e usuários e pode avaliar reservas comuns; o **responsável** aprova solicitações especiais e pode gerenciar reservas. Somente o perfil RESPONSAVEL aprova salas, professores ou materiais restritos. O **solicitante/professor** vê somente as próprias reservas e ações permitidas. É possível solicitar uma sala com vários materiais na mesma reserva. A aba de relatórios usa o período selecionado pelo usuário.
+Na interface, o **administrador** gerencia pessoas, recursos e manutenção; o **responsável** avalia solicitações (comuns ou restritas), registra início/fim, ausência e movimentações de materiais. O responsável também pode reservar, **mas outro responsável deve aprovar sua solicitação**. Professores e coordenadores atuam como solicitantes (contas `PROFESSOR` ou `SOLICITANTE`) e veem apenas as próprias reservas. O administrador pode consultar reservas para auditoria, mas não muda seus estados nem registra retiradas/devoluções. É possível solicitar uma sala com vários materiais na mesma reserva. A aba de relatórios usa o período selecionado pelo usuário.
 
 ### Configuração do banco
 
@@ -107,12 +107,12 @@ Defina `DB_PASSWORD` no ambiente antes de iniciar a aplicação.
 | GET | `/reservas` | Lista reservas |
 | POST | `/reservas` | Solicita reserva |
 | PUT | `/reservas/{id}` | Titular altera reserva solicitada; responsável/administrador pode gerenciar |
-| PATCH | `/reservas/{id}/estado` | RESPONSAVEL e ADMINISTRADOR; somente RESPONSAVEL aprova recursos restritos (sala, professor ou material adicional) |
-| POST | `/reservas/{id}/retirada` | Responsável registra retirada de material aprovado |
+| PATCH | `/reservas/{id}/estado` | Somente RESPONSAVEL muda estados, incluindo aprovar, rejeitar, iniciar, concluir e não compareceu; não pode aprovar/rejeitar reserva própria |
+| POST | `/reservas/{id}/retirada` | Somente RESPONSAVEL registra retirada de material aprovado |
 | POST | `/reservas/{id}/devolucao` | Devolução de reserva com um único material, concluindo após a devolução |
-| GET | `/reservas/movimentacoes` | RESPONSAVEL/ADMINISTRADOR consultam retiradas e devoluções |
-| POST | `/reservas/{id}/materiais/{materialId}/retirada` | Registra retirada de cada material de uma reserva conjunta |
-| POST | `/reservas/{id}/materiais/{materialId}/devolucao` | Registra devolução; conclui quando todos os materiais voltam |
+| GET | `/reservas/movimentacoes` | RESPONSAVEL registra movimentações; ADMINISTRADOR pode consultar o histórico |
+| POST | `/reservas/{id}/materiais/{materialId}/retirada` | Somente RESPONSAVEL registra retirada de cada material de uma reserva conjunta |
+| POST | `/reservas/{id}/materiais/{materialId}/devolucao` | Somente RESPONSAVEL registra devolução; conclui quando todos os materiais voltam |
 | DELETE | `/reservas/{id}` | Solicitante cancela a própria reserva; responsável/administrador pode cancelar |
 | GET | `/sessao` | Retorna login e perfil da sessão autenticada |
 | GET | `/usuarios` | Administrador lista usuários |
