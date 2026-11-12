@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import org.springframework.test.web.servlet.MvcResult;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +64,7 @@ class AutorizacaoApiTest {
     @Test
     @WithMockUser(username = "solicitante", roles = "SOLICITANTE")
     void solicitanteNaoPodeCadastrarRecursos() throws Exception {
-        mvc.perform(post("/recursos").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/recursos").with(csrf()).contentType(MediaType.APPLICATION_JSON)
                         .content("""
                             {"tipo":"SALA","nome":"Sala bloqueada","restrito":false,"emManutencao":false}
                             """))
@@ -73,7 +74,7 @@ class AutorizacaoApiTest {
     @Test
     @WithMockUser(username = "admin", roles = "ADMINISTRADOR")
     void administradorPodeCadastrarRecursos() throws Exception {
-        mvc.perform(post("/recursos").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/recursos").with(csrf()).contentType(MediaType.APPLICATION_JSON)
                         .content("""
                             {"tipo":"SALA","nome":"Sala autorizada","restrito":false,"emManutencao":false}
                             """))
@@ -83,7 +84,7 @@ class AutorizacaoApiTest {
     @Test
     @WithMockUser(username = "solicitante", roles = "SOLICITANTE")
     void solicitanteNaoPodeAlterarEstadoDaReserva() throws Exception {
-        mvc.perform(patch("/reservas/1/estado").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(patch("/reservas/1/estado").with(csrf()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"estado\":\"CANCELADA\"}"))
                 .andExpect(status().isForbidden());
     }
@@ -110,7 +111,7 @@ class AutorizacaoApiTest {
     @Test
     void professorFazLoginNaTelaEConsultaSomenteSuaArea() throws Exception {
         usuarios.save(new Usuario("prof.maria", encoder.encode("senha-professora-123"), PerfilAcesso.PROFESSOR));
-        MvcResult login = mvc.perform(post("/login")
+        MvcResult login = mvc.perform(post("/login").with(csrf())
                         .param("username", "prof.maria")
                         .param("password", "senha-professora-123"))
                 .andExpect(status().is3xxRedirection())
@@ -124,11 +125,11 @@ class AutorizacaoApiTest {
                 .andExpect(jsonPath("$.login").value("prof.maria"));
         mvc.perform(get("/reservas").session(session))
                 .andExpect(status().isOk());
-        mvc.perform(post("/recursos").session(session)
+        mvc.perform(post("/recursos").with(csrf()).session(session)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"tipo\":\"SALA\",\"nome\":\"Sala proibida\"}"))
                 .andExpect(status().isForbidden());
-        mvc.perform(patch("/reservas/1/estado").session(session)
+        mvc.perform(patch("/reservas/1/estado").with(csrf()).session(session)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"estado\":\"APROVADA\"}"))
                 .andExpect(status().isForbidden());
@@ -137,19 +138,19 @@ class AutorizacaoApiTest {
     @Test
     void administradorNaoAprovaReservaRestritaEResponsavelAprova() throws Exception {
         usuarios.save(new Usuario("gestor", encoder.encode("senha-gestor-123"), PerfilAcesso.ADMINISTRADOR));
-        MvcResult login = mvc.perform(post("/login")
+        MvcResult login = mvc.perform(post("/login").with(csrf())
                         .param("username", "gestor")
                         .param("password", "senha-gestor-123"))
                 .andExpect(status().is3xxRedirection()).andReturn();
         MockHttpSession session = (MockHttpSession) login.getRequest().getSession(false);
-        MvcResult recurso = mvc.perform(post("/recursos").session(session)
+        MvcResult recurso = mvc.perform(post("/recursos").with(csrf()).session(session)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"tipo\":\"SALA\",\"nome\":\"Sala restrita\",\"restrito\":true}"))
                 .andExpect(status().isCreated()).andReturn();
         long recursoId = mapper.readTree(recurso.getResponse().getContentAsString()).get("id").asLong();
 
         usuarios.save(new Usuario("professor1", encoder.encode("senha-prof-123456"), PerfilAcesso.PROFESSOR));
-        MvcResult loginProfessor = mvc.perform(post("/login")
+        MvcResult loginProfessor = mvc.perform(post("/login").with(csrf())
                         .param("username", "professor1").param("password", "senha-prof-123456"))
                 .andExpect(status().is3xxRedirection()).andReturn();
         MockHttpSession sessaoProfessor = (MockHttpSession) loginProfessor.getRequest().getSession(false);
@@ -158,23 +159,23 @@ class AutorizacaoApiTest {
         String novaReserva = mapper.writeValueAsString(java.util.Map.of(
                 "recursoId", recursoId, "solicitante", "professor1",
                 "inicio", inicio.toString(), "fim", fim.toString()));
-        MvcResult criada = mvc.perform(post("/reservas").session(sessaoProfessor)
+        MvcResult criada = mvc.perform(post("/reservas").with(csrf()).session(sessaoProfessor)
                         .contentType(MediaType.APPLICATION_JSON).content(novaReserva))
                 .andExpect(status().isCreated()).andReturn();
         long reservaId = mapper.readTree(criada.getResponse().getContentAsString()).get("id").asLong();
 
-        mvc.perform(patch("/reservas/" + reservaId + "/estado").session(sessaoProfessor)
+        mvc.perform(patch("/reservas/" + reservaId + "/estado").with(csrf()).session(sessaoProfessor)
                         .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"APROVADA\"}"))
                 .andExpect(status().isForbidden());
         mvc.perform(get("/reservas").session(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].solicitante").value("professor1"));
-        mvc.perform(patch("/reservas/" + reservaId + "/estado").session(session)
+        mvc.perform(patch("/reservas/" + reservaId + "/estado").with(csrf()).session(session)
                         .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"APROVADA\"}"))
                 .andExpect(status().isForbidden());
 
         usuarios.save(new Usuario("responsavel1", encoder.encode("senha-responsavel-123"), PerfilAcesso.RESPONSAVEL));
-        mvc.perform(patch("/reservas/" + reservaId + "/estado")
+        mvc.perform(patch("/reservas/" + reservaId + "/estado").with(csrf())
                         .with(httpBasic("responsavel1", "senha-responsavel-123"))
                         .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"APROVADA\"}"))
                 .andExpect(status().isOk())
@@ -183,7 +184,7 @@ class AutorizacaoApiTest {
 
     @Test
     void confirmacaoEmailPublicaNaoExigeLoginMasRejeitaTokenInvalido() throws Exception {
-        mvc.perform(post("/confirmacao-email-professor")
+        mvc.perform(post("/confirmacao-email-professor").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"token":"invalido"}
@@ -195,7 +196,7 @@ class AutorizacaoApiTest {
     @Test
     void cadastroPublicoDeProfessorExigeAprovacaoAdmin() throws Exception {
         mvc.perform(get("/cadastro.html")).andExpect(status().isOk());
-        mvc.perform(post("/cadastro-professor").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/cadastro-professor").with(csrf()).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"maria@sp.senac.br\",\"senha\":\"senha-segura-123\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.mensagem").exists());
@@ -222,7 +223,7 @@ class AutorizacaoApiTest {
 
     @Test
     void cadastroPublicoNaoPermiteContaDeAdministrador() throws Exception {
-        mvc.perform(post("/cadastro-professor").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/cadastro-professor").with(csrf()).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"admin@gmail.com\",\"senha\":\"senha-segura-123\",\"perfil\":\"ADMINISTRADOR\"}"))
                 .andExpect(status().isUnprocessableEntity());
         org.junit.jupiter.api.Assertions.assertEquals(0, usuarios.count());
@@ -235,7 +236,7 @@ class AutorizacaoApiTest {
         professor.setAtivo(false);
         professor = usuarios.save(professor);
 
-        mvc.perform(post("/login").param("username", "joao@sp.senac.br")
+        mvc.perform(post("/login").with(csrf()).param("username", "joao@sp.senac.br")
                         .param("password", "senha-segura-123"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login.html?erro"));
@@ -246,7 +247,7 @@ class AutorizacaoApiTest {
                         .contentType(MediaType.APPLICATION_JSON).content("{\"ativo\":true}"))
                 .andExpect(status().isOk());
 
-        mvc.perform(post("/login").param("username", "joao@sp.senac.br")
+        mvc.perform(post("/login").with(csrf()).param("username", "joao@sp.senac.br")
                         .param("password", "senha-segura-123"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/"));
@@ -255,19 +256,19 @@ class AutorizacaoApiTest {
     @Test
     @WithMockUser(username = "administrador", roles = "ADMINISTRADOR")
     void administradorNaoPodeMudarEstadoNemMovimentarMateriais() throws Exception {
-        mvc.perform(patch("/reservas/999/estado")
+        mvc.perform(patch("/reservas/999/estado").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"APROVADA\"}"))
                 .andExpect(status().isForbidden());
-        mvc.perform(patch("/reservas/999/estado")
+        mvc.perform(patch("/reservas/999/estado").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"NAO_COMPARECEU\"}"))
                 .andExpect(status().isForbidden());
-        mvc.perform(post("/reservas/999/retirada"))
+        mvc.perform(post("/reservas/999/retirada").with(csrf()))
                 .andExpect(status().isForbidden());
-        mvc.perform(post("/reservas/999/devolucao"))
+        mvc.perform(post("/reservas/999/devolucao").with(csrf()))
                 .andExpect(status().isForbidden());
-        mvc.perform(post("/reservas/999/materiais/888/retirada"))
+        mvc.perform(post("/reservas/999/materiais/888/retirada").with(csrf()))
                 .andExpect(status().isForbidden());
-        mvc.perform(post("/reservas/999/materiais/888/devolucao"))
+        mvc.perform(post("/reservas/999/materiais/888/devolucao").with(csrf()))
                 .andExpect(status().isForbidden());
     }
 
@@ -275,7 +276,7 @@ class AutorizacaoApiTest {
     @WithMockUser(username = "responsavel", roles = "RESPONSAVEL")
     void responsavelPodeAcessarAprovacaoDeReservas() throws Exception {
         // 404 indica que a autorização passou e a reserva solicitada não existe.
-        mvc.perform(patch("/reservas/999999/estado")
+        mvc.perform(patch("/reservas/999999/estado").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"estado\":\"APROVADA\"}"))
                 .andExpect(status().isNotFound());
@@ -286,9 +287,9 @@ class AutorizacaoApiTest {
     void professorNaoPodeRegistrarMovimentacoesNemConsultarHistoricoDeRetiradas() throws Exception {
         mvc.perform(get("/reservas/movimentacoes"))
                 .andExpect(status().isForbidden());
-        mvc.perform(post("/reservas/999/materiais/888/retirada"))
+        mvc.perform(post("/reservas/999/materiais/888/retirada").with(csrf()))
                 .andExpect(status().isForbidden());
-        mvc.perform(post("/reservas/999/materiais/888/devolucao"))
+        mvc.perform(post("/reservas/999/materiais/888/devolucao").with(csrf()))
                 .andExpect(status().isForbidden());
     }
 
@@ -302,7 +303,7 @@ class AutorizacaoApiTest {
     @Test
     @WithMockUser(username = "responsavel", roles = "RESPONSAVEL")
     void responsavelNaoPodeAtivarProfessor() throws Exception {
-        mvc.perform(patch("/usuarios/999999/ativo")
+        mvc.perform(patch("/usuarios/999999/ativo").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"ativo\":true}"))
                 .andExpect(status().isForbidden());
@@ -313,7 +314,7 @@ class AutorizacaoApiTest {
         usuarios.save(new Usuario("prof.a", encoder.encode("senha-segura-123"), PerfilAcesso.PROFESSOR));
         usuarios.save(new Usuario("prof.b", encoder.encode("senha-segura-123"), PerfilAcesso.PROFESSOR));
 
-        MvcResult recurso = mvc.perform(post("/recursos")
+        MvcResult recurso = mvc.perform(post("/recursos").with(csrf())
                         .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
                                 .user("admin").roles("ADMINISTRADOR"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -325,7 +326,7 @@ class AutorizacaoApiTest {
         String pedido = mapper.writeValueAsString(java.util.Map.of(
                 "recursoId", recursoId, "solicitante", "prof.a",
                 "inicio", inicio.toString(), "fim", fim.toString()));
-        MvcResult criada = mvc.perform(post("/reservas")
+        MvcResult criada = mvc.perform(post("/reservas").with(csrf())
                         .with(httpBasic("prof.a", "senha-segura-123"))
                         .contentType(MediaType.APPLICATION_JSON).content(pedido))
                 .andExpect(status().isCreated()).andReturn();
@@ -339,11 +340,11 @@ class AutorizacaoApiTest {
                 .andExpect(status().isNotFound());
         String alteracao = mapper.writeValueAsString(java.util.Map.of(
                 "recursoId", recursoId, "inicio", inicio.toString(), "fim", fim.toString()));
-        mvc.perform(put("/reservas/" + reservaId)
+        mvc.perform(put("/reservas/" + reservaId).with(csrf())
                         .with(httpBasic("prof.b", "senha-segura-123"))
                         .contentType(MediaType.APPLICATION_JSON).content(alteracao))
                 .andExpect(status().isForbidden());
-        mvc.perform(delete("/reservas/" + reservaId)
+        mvc.perform(delete("/reservas/" + reservaId).with(csrf())
                         .with(httpBasic("prof.b", "senha-segura-123")))
                 .andExpect(status().isForbidden());
     }
