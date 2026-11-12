@@ -1,0 +1,4 @@
+ALTER TABLE reserva_auditoria
+    ADD COLUMN IF NOT EXISTS tipo_evento VARCHAR(30) NOT NULL DEFAULT 'ESTADO';
+ALTER TABLE reserva_auditoria
+    ADD COLUMN IF NOT EXISTS detalhes VARCHAR(500);

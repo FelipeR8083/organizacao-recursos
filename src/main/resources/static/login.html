@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Entrar · Gestão de Recursos Acadêmicos</title>
+  <style>
+    :root{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#192b49;background:#eef3fb}
+    *{box-sizing:border-box}
+    body{min-height:100vh;margin:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(350px,520px)}
+    .hero{padding:clamp(35px,7vw,110px);color:#fff;background:linear-gradient(145deg,#132b50 10%,#174a83 70%,#1e6cb1);display:flex;flex-direction:column;justify-content:space-between;gap:50px}
+    .brand{display:flex;align-items:center;gap:14px;font-weight:750;font-size:1.12rem;letter-spacing:.01em}
+    .symbol{width:44px;height:44px;background:#fff;color:#164c8e;display:grid;place-items:center;border-radius:13px;font-size:23px}
+    h1{font-size:clamp(2.3rem,4.2vw,4rem);line-height:1.09;letter-spacing:-.045em;margin:0 0 22px;max-width:620px}
+    .hero p{color:#d7e7fc;font-size:1.1rem;max-width:490px;line-height:1.7;margin:0}
+    .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid #ffffff4b;border-radius:100px;padding:9px 14px;font-size:.88rem;width:max-content;margin-bottom:24px;color:#eaf3ff}
+    .hero small{color:#c5d8ef}
+    .right{display:flex;align-items:center;justify-content:center;padding:38px 28px}
+    .card{width:100%;max-width:395px}
+    .eyebrow{color:#2467af;font-weight:800;font-size:.85rem;letter-spacing:.09em;text-transform:uppercase}
+    h2{font-size:2.1rem;letter-spacing:-.04em;margin:12px 0 8px;color:#142b52}
+    .subtitle{color:#61718a;line-height:1.65;margin:0 0 30px}
+    label{display:block;font-size:.93rem;font-weight:650;margin:19px 0 8px}
+    input{width:100%;padding:15px 16px;border:1px solid #c7d4e4;background:white;border-radius:11px;font-size:1rem;outline-offset:3px}
+    input:focus-visible,button:focus-visible{outline:3px solid #85b8ff;outline-offset:2px}
+    button{width:100%;border:0;cursor:pointer;padding:16px;border-radius:11px;background:#175caa;color:#fff;font-weight:750;font-size:1rem;margin-top:25px;transition:background .15s}
+    button:hover{background:#114b8b}
+    .note{background:#e8f0fa;color:#375576;padding:13px 15px;border-radius:10px;font-size:.88rem;line-height:1.55;margin-top:28px}
+    .alert{border-radius:10px;padding:13px 15px;font-size:.92rem;line-height:1.5;margin:19px 0}
+    .error{background:#fde8e8;color:#8b2929}.success{background:#e0f5e8;color:#18663a}
+    .footer{color:#687c93;font-size:.8rem;margin-top:36px;text-align:center}
+    @media(max-width:900px){body{display:flex;flex-direction:column}.hero{padding:34px 28px;gap:14px}.hero h1{font-size:2rem;margin-bottom:12px}.hero .pill,.hero small{display:none}.hero p{font-size:.95rem}.right{padding:36px 24px}}
+    @media(prefers-reduced-motion:reduce){button{transition:none}}
+  </style>
+</head>
+<body>
+  <section class="hero" aria-label="Apresentação do sistema">
+    <div class="brand"><span class="symbol" aria-hidden="true">▦</span> Gestão de Recursos Acadêmicos</div>
+    <div>
+      <span class="pill">● Plataforma acadêmica</span>
+      <h1>Seu espaço para ensinar e organizar.</h1>
+      <p>Professores solicitam salas e materiais. A administração analisa pedidos, gerencia recursos e acompanha cada reserva.</p>
+    </div>
+    <small>Projeto acadêmico · Senac</small>
+  </section>
+  <main class="right">
+    <div class="card">
+      <div class="eyebrow">Bem-vindo de volta</div>
+      <h2>Acesse sua conta</h2>
+      <p class="subtitle">Entre com suas credenciais. Professores podem solicitar cadastro institucional; o acesso depende de aprovação administrativa.</p>
+      <div id="mensagem" role="status" aria-live="polite"></div>
+      <form action="/login" method="post">
+        <label for="username">Usuário</label>
+        <input id="username" name="username" type="text" autocomplete="username" required autofocus maxlength="80" placeholder="Seu nome de usuário">
+        <label for="password">Senha</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Digite sua senha">
+        <button type="submit">Entrar no sistema</button>
+      </form>
+      <p class="note">Professor do Senac? <a href="/cadastro.html">Crie sua conta institucional</a>. O acesso será liberado após aprovação do administrador.</p>
+      <p class="footer">Acesso reservado a usuários autorizados</p>
+    </div>
+  </main>
+  <script>
+    const params = new URLSearchParams(location.search), msg = document.getElementById('mensagem');
+    if (params.has('erro')) { msg.className = 'alert error'; msg.textContent = 'Usuário ou senha incorretos. Confira os dados e tente novamente.'; }
+    if (params.has('saiu')) { msg.className = 'alert success'; msg.textContent = 'Você saiu do sistema com segurança.'; }
+  </script>
+</body>
+</html>

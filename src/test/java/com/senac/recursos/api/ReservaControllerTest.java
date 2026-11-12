@@ -2,11 +2,15 @@ package com.senac.recursos.api;
 
 import com.senac.recursos.dominio.*;
 import com.senac.recursos.servico.*;
+import com.senac.recursos.repositorio.UsuarioRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -18,10 +22,13 @@ import java.util.stream.Stream;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /** Testa o contrato HTTP do controller; o serviço é isolado com mock (teste unitário). */
 @WebMvcTest(ReservaController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class ReservaControllerTest {
 
     private static final Instant INICIO = Instant.parse("2026-11-10T10:00:00Z");
@@ -32,6 +39,7 @@ class ReservaControllerTest {
 
     @Autowired MockMvc mvc;
     @MockBean ReservaService service;
+    @MockBean UsuarioRepository usuarios;
 
     private ResultActions enviar(String json) throws Exception {
         return mvc.perform(post("/reservas").contentType(MediaType.APPLICATION_JSON).content(json));
@@ -42,7 +50,7 @@ class ReservaControllerTest {
         Reserva reserva = new Reserva(new Recurso(TipoRecurso.SALA, "Sala 101", false),
                 new Periodo(INICIO, FIM), "prof.ana");
         ReflectionTestUtils.setField(reserva, "id", 42L);
-        when(service.criar(eq(1L), eq("prof.ana"), eq(INICIO), eq(FIM))).thenReturn(reserva);
+        when(service.criar(eq(1L), isNull(), isNull(), eq("prof.ana"), eq(INICIO), eq(FIM))).thenReturn(reserva);
 
         enviar(JSON_VALIDO)
                 .andExpect(status().isCreated())
@@ -51,8 +59,26 @@ class ReservaControllerTest {
     }
 
     @Test
+    void criaReservaConjuntaEncaminhaTodosOsMateriaisAoServico() throws Exception {
+        Reserva reserva = new Reserva(new Recurso(TipoRecurso.SALA, "Sala 101", false),
+                new Periodo(INICIO, FIM), "prof.ana");
+        ReflectionTestUtils.setField(reserva, "id", 43L);
+        when(service.criar(eq(1L), isNull(), eq(java.util.List.of(2L, 3L)),
+                eq("prof.ana"), eq(INICIO), eq(FIM))).thenReturn(reserva);
+
+        enviar("""
+                {"recursoId":1,"materialIds":[2,3],"solicitante":"prof.ana",
+                 "inicio":"2026-11-10T10:00:00Z","fim":"2026-11-10T11:00:00Z"}
+                """).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(43));
+
+        verify(service).criar(1L, null, java.util.List.of(2L, 3L),
+                "prof.ana", INICIO, FIM);
+    }
+
+    @Test
     void conflitoDeHorarioRetorna409ComMensagem() throws Exception {
-        when(service.criar(any(), any(), any(), any()))
+        when(service.criar(any(), isNull(), nullable(java.util.List.class), any(), any(), any()))
                 .thenThrow(new ConflitoHorarioException("Já existe reserva neste horário para o recurso"));
 
         enviar(JSON_VALIDO)
@@ -62,7 +88,7 @@ class ReservaControllerTest {
 
     @Test
     void recursoEmManutencaoRetorna422() throws Exception {
-        when(service.criar(any(), any(), any(), any()))
+        when(service.criar(any(), isNull(), nullable(java.util.List.class), any(), any(), any()))
                 .thenThrow(new RecursoIndisponivelException("Recurso em manutenção"));
 
         enviar(JSON_VALIDO)
@@ -72,7 +98,7 @@ class ReservaControllerTest {
 
     @Test
     void periodoInvalidoRetorna422() throws Exception {
-        when(service.criar(any(), any(), any(), any()))
+        when(service.criar(any(), isNull(), nullable(java.util.List.class), any(), any(), any()))
                 .thenThrow(new IllegalArgumentException("O término deve ser posterior ao início"));
 
         enviar(JSON_VALIDO)
@@ -82,12 +108,95 @@ class ReservaControllerTest {
 
     @Test
     void recursoInexistenteRetorna404() throws Exception {
-        when(service.criar(any(), any(), any(), any()))
+        when(service.criar(any(), isNull(), nullable(java.util.List.class), any(), any(), any()))
                 .thenThrow(new NoSuchElementException("Recurso não encontrado: 1"));
 
         enviar(JSON_VALIDO)
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.erro").value("Recurso não encontrado: 1"));
+    }
+
+    @Test
+    void administradorNaoAlteraEstadoDaReserva() {
+        // O teste isolado do controlador não instala o filtro de segurança.
+        // O status HTTP 403 é validado por AutorizacaoApiTest/FluxoCompletoE2ETest.
+        org.junit.jupiter.api.Assertions.assertThrows(jakarta.servlet.ServletException.class, () ->
+                mvc.perform(patch("/reservas/42/estado")
+                        .principal(new UsernamePasswordAuthenticationToken("admin", "n/a",
+                                java.util.List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRADOR"))))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"estado":"APROVADA"}
+                                """)));
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void aprovacaoDoResponsavelEhEncaminhadaComPapelCorreto() throws Exception {
+        mvc.perform(patch("/reservas/42/estado")
+                        .principal(new UsernamePasswordAuthenticationToken("resp", "n/a",
+                                java.util.List.of(new SimpleGrantedAuthority("ROLE_RESPONSAVEL"))))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"estado\":\"APROVADA\"}"))
+                .andExpect(status().isOk());
+        verify(service).alterarEstado(42L, EstadoReserva.APROVADA, "resp", true);
+    }
+
+    @Test
+    void transicaoSemEstadoRetorna400ESemChamarServico() throws Exception {
+        mvc.perform(patch("/reservas/42/estado")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void consultaAuditoriaRetornaLista() throws Exception {
+        when(service.listarAuditoria(42L)).thenReturn(java.util.List.of());
+        mvc.perform(get("/reservas/42/auditoria"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+    }
+
+    @Test
+    void consultaAuditoriaExpõeDadosDoEvento() throws Exception {
+        Reserva reserva = new Reserva(new Recurso(TipoRecurso.SALA, "Sala 101", false),
+                new Periodo(INICIO, FIM), "prof.ana");
+        ReflectionTestUtils.setField(reserva, "id", 42L);
+        ReservaAuditoria evento = new ReservaAuditoria(reserva, null,
+                EstadoReserva.SOLICITADA, INICIO, "API");
+        when(service.listarAuditoria(42L)).thenReturn(java.util.List.of(evento));
+
+        mvc.perform(get("/reservas/42/auditoria"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].reservaId").value(42))
+                .andExpect(jsonPath("$[0].estadoAnterior").doesNotExist())
+                .andExpect(jsonPath("$[0].estadoNovo").value("SOLICITADA"))
+                .andExpect(jsonPath("$[0].ocorridoEm").value("2026-11-10T10:00:00Z"))
+                .andExpect(jsonPath("$[0].origem").value("API"));
+    }
+
+    @Test
+    void reservaInexistenteNaConsultaDeAuditoriaRetorna404() throws Exception {
+        when(service.listarAuditoria(404L))
+                .thenThrow(new NoSuchElementException("Reserva não encontrada"));
+
+        mvc.perform(get("/reservas/404/auditoria"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.erro").value("Reserva não encontrada"));
+    }
+
+    @Test
+    void estadoDesconhecidoRetorna400ESemChamarServico() throws Exception {
+        mvc.perform(patch("/reservas/42/estado")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"estado":"ESTADO_QUE_NAO_EXISTE"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").value("Dados enviados inválidos"));
+        verifyNoInteractions(service);
     }
 
     static Stream<String> corposInvalidos() {
