@@ -3,7 +3,7 @@
 **Projeto:** Gestão de Recursos Acadêmicos — Qualidade de Software (Senac TADS)  
 **Data de preparação deste registro:** 12/11/2026  
 **Origem:** reconstrução documental a partir dos pull requests, diffs, relatórios e execuções do GitHub.  
-**Situação da revisão independente:** solicitada a `pietrolaureano` no [PR #8](https://github.com/FelipeR8083/organizacao-recursos/pull/8), **ainda não concluída** na data da preparação deste documento.
+**Situação atual:** revisão retrospectiva enviada por `pietrolaureano` no [PR #8](https://github.com/FelipeR8083/organizacao-recursos/pull/8), em 12/11/2026 às 20h31 (BRT), estado **COMMENTED** (não APPROVED). Felipe solicitou publicação de [seu registro técnico documental assistido](https://github.com/FelipeR8083/organizacao-recursos/pull/8#issuecomment-6839085749).
 
 > **Transparência acadêmica:** o professor solicitou revisão por pares **durante** o desenvolvimento. A equipe não registrou uma revisão formal por outro integrante naquele período. O material abaixo comprova avaliações e correções técnicas realizadas ao longo do trabalho, mas **não deve ser apresentado como se Pietro tivesse revisado ou aprovado essas alterações na época**. Este documento é uma reconstrução retrospectiva, preparada com apoio de IA, para subsidiar uma revisão humana real agora e solicitar, se cabível, avaliação parcial da evidência existente.
 
@@ -58,18 +58,18 @@ O revisor deve examinar o código e os diffs históricos (além dos resumos), co
 - [ ] **Concorrência e métricas (PR #7):** conferir JMX, workflow e critério de 1 criação (201) para 19 conflitos (409), além do cálculo de P95 sobre o JTL.
 - [ ] **Questões em aberto:** avaliar o alerta de `CHAR(64)` no Flyway V6, a migração V8→V9 ainda não validada com base populada, transições temporais antecipadas e ausência de homologação SMTP real.
 
-### 4. Registro da decisão do revisor (não preenchido)
+### 4. Registro da revisão retrospectiva enviada por Pietro
 
-| Campo | A preencher pelo revisor depois da análise |
+| Campo | Registro confirmado |
 | --- | --- |
 | Revisor | Pietro — conta GitHub `pietrolaureano` |
-| Data efetiva da análise | **Pendente** |
-| Trechos examinados | **Pendente** |
-| Achados, sugestões ou solicitações de mudança | **Pendente** |
-| Decisão (Comment / Request changes / Approve) | **Pendente** |
-| Link da revisão no GitHub | **Pendente** |
+| Data da submissão da revisão | **12/11/2026, 20h31 (BRT)** |
+| Escopo declarado no comentário | Análise técnica de segurança, APIs, testes e CI, com itens PI-REV-01 a PI-REV-05. Não houve comprovação de leitura de cada arquivo individualmente. |
+| Achados e sugestões reconhecidos | Concordou em manter PI-REV-01 a PI-REV-05 como melhorias e ressalvas documentadas. |
+| Estado da revisão | **COMMENTED** (comentário de revisão; sem APPROVED) |
+| Link do PR com a revisão | [PR #8](https://github.com/FelipeR8083/organizacao-recursos/pull/8) |
 
-A decisão deve ser registrada por **Pietro na própria conta**, por `Files changed → Review changes` no PR #8. Ele pode usar o navegador do celular, se conseguir acessar a interface de revisão. A data será a da submissão real. **Uma aprovação não deve ser escolhida antes da análise.**
+A revisão descrita acima foi **submetida pela conta `pietrolaureano`** no PR #8. O estado foi COMMENTED e não equivale a aprovação. A documentação deve preservar a data real, sem insinuar que a revisão ocorreu nas etapas anteriores do desenvolvimento.
 
 ## 5. Texto de apresentação honesta da evidência ao professor
 
@@ -84,4 +84,4 @@ A decisão deve ser registrada por **Pietro na própria conta**, por `Files chan
 
 **Dúvida sobre quem deve revisar:** a [especificação oficial](https://afonsolelis.github.io/aulas_senac/pages/qualidade2/especificacao-projeto.html) exige “repositório com histórico de trabalho e revisão por pares”, mas não define explicitamente se apenas um integrante da dupla deve revisar ou se os dois devem fazê-lo. Para atender com mais robustez, sugerimos revisões recíprocas de partes realmente desenvolvidas pelo outro, **sem presumir autoria ou aprovação**, e confirmar a quantidade exigida com o professor.
 
-**Estado final deste documento:** cronologia técnica ampliada para o desenvolvimento **inteiro** e roteiro pronto; **parecer independente de Pietro ainda pendente**.
+**Estado final deste documento:** cronologia técnica do projeto inteiro; **Pietro enviou revisão retrospectiva em COMMENTED**; Felipe possui [registro documental publicado a seu pedido](https://github.com/FelipeR8083/organizacao-recursos/pull/8#issuecomment-6839085749), não aprovação ou revisão formal por terceiro.
