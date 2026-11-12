@@ -1,6 +1,6 @@
 # ADR-002 — Aprovação de recursos restritos e movimentação individual de materiais
 
-**Estado:** aceito na branch de homologação (requer validação operacional antes de integrar à main).  
+**Estado:** política de aprovação parcialmente substituída pela ADR-003 (gestão de materiais V9 permanece válida).  
 **Data:** 12/11/2026  
 **Requisitos:** RF-01, RF-07, RF-09, RF-10 e RF-13.
 
