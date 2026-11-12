@@ -36,12 +36,12 @@ public class EmailConfirmacaoProfessorService {
             throw new IllegalStateException("Envio de verificacao de e-mail desabilitado");
         }
         String token = verificacao.emitir(professor);
-        // Remove barras finais sem regex para manter custo linear mesmo com entradas extensas.
-        String baseUrl = urlPublica;
-        while (baseUrl.endsWith("/")) {
-            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+        // Remove barras finais em uma unica varredura, sem backtracking nem copias repetidas.
+        int ultimo = urlPublica.length();
+        while (ultimo > 0 && urlPublica.charAt(ultimo - 1) == '/') {
+            ultimo--;
         }
-        String url = baseUrl + "/confirmar-email.html#token=" + token;
+        String url = urlPublica.substring(0, ultimo) + "/confirmar-email.html#token=" + token;
         SimpleMailMessage mensagem = new SimpleMailMessage();
         mensagem.setFrom(origem);
         mensagem.setTo(professor.getUsername());
