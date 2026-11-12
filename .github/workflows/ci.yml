@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, melhorias/qualidade-e-requisitos]
+    branches: [main, melhorias/qualidade-e-requisitos, ajuste/perfis-responsavel-aprovacao]
 
 # O pipeline só precisa ler o código e publicar artefatos do próprio run.
 permissions:
