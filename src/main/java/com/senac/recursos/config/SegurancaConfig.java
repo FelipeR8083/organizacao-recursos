@@ -75,7 +75,7 @@ public class SegurancaConfig {
                             .hasAnyRole("SOLICITANTE", "PROFESSOR", "RESPONSAVEL", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/reservas/**")
                             .hasAnyRole("SOLICITANTE", "PROFESSOR", "RESPONSAVEL", "ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.PATCH, "/reservas/*/estado").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PATCH, "/reservas/*/estado").hasAnyRole("RESPONSAVEL", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PATCH, "/reservas/**")
                             .hasAnyRole("RESPONSAVEL", "ADMINISTRADOR")
                         .anyRequest().authenticated())
