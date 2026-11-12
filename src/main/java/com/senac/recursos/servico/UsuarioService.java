@@ -59,11 +59,11 @@ public class UsuarioService {
         String normalizado = email == null ? "" : email.trim().toLowerCase(java.util.Locale.ROOT);
         int arroba = normalizado.lastIndexOf('@');
         String dominio = arroba < 0 ? "" : normalizado.substring(arroba + 1);
-        if (arroba <= 0 || normalizado.indexOf('@') != arroba
-                || !normalizado.substring(0, arroba).matches("[a-z0-9_+%-]+(?:\\.[a-z0-9_+%-]+)*")
+        if (normalizado.length() > 80 || arroba <= 0
+                || normalizado.indexOf('@') != arroba
+                || !parteLocalValida(normalizado, arroba)
                 || !(dominio.equals("senac.br") || dominio.endsWith(".senac.br"))
-                || !dominio.matches("[a-z0-9]+(?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9]+(?:[a-z0-9-]*[a-z0-9])?)*")
-                || normalizado.length() > 80 || normalizado.contains(" ")) {
+                || !dominioValido(dominio)) {
             throw new IllegalArgumentException("Informe um e-mail institucional do Senac válido");
         }
         if (senha == null || senha.length() < 12) {
@@ -85,6 +85,47 @@ public class UsuarioService {
                     "login=" + salvo.getUsername() + ", perfil=PROFESSOR, ativo=false");
         }
         return salvo;
+    }
+
+
+    /**
+     * Valida as mesmas regras ASCII aceitas no cadastro, sem regex com backtracking.
+     * A parte local aceita segmentos alfanumericos e _ + % - separados por pontos.
+     */
+    private static boolean parteLocalValida(String email, int tamanho) {
+        if (tamanho == 0) return false;
+        boolean ultimoEraPonto = true;
+        for (int i = 0; i < tamanho; i++) {
+            char ch = email.charAt(i);
+            if (ch == '.') {
+                if (ultimoEraPonto) return false;
+                ultimoEraPonto = true;
+            } else if ((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')
+                    || ch == '_' || ch == '+' || ch == '%' || ch == '-') {
+                ultimoEraPonto = false;
+            } else {
+                return false;
+            }
+        }
+        return !ultimoEraPonto;
+    }
+
+    /** Rotulos DNS iniciam e terminam com letra ou numero; hifen so no meio. */
+    private static boolean dominioValido(String dominio) {
+        if (dominio.isEmpty()) return false;
+        boolean inicioRotulo = true;
+        for (int i = 0; i < dominio.length(); i++) {
+            char ch = dominio.charAt(i);
+            if (ch == '.') {
+                if (inicioRotulo || dominio.charAt(i - 1) == '-') return false;
+                inicioRotulo = true;
+            } else {
+                boolean alfanumerico = (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9');
+                if ((inicioRotulo && !alfanumerico) || (!alfanumerico && ch != '-')) return false;
+                inicioRotulo = false;
+            }
+        }
+        return !inicioRotulo && dominio.charAt(dominio.length() - 1) != '-';
     }
 
     @Transactional(readOnly = true)
