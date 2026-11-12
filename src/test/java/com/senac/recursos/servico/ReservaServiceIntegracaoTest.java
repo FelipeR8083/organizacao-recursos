@@ -124,7 +124,7 @@ class ReservaServiceIntegracaoTest {
     }
 
     @Test
-    void aprovacaoAdministrativaPreservaMateriaisDaReservaConjunta() {
+    void aprovacaoPorResponsavelPreservaMateriaisDaReservaConjunta() {
         Recurso projetor = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Projetor", false));
         Recurso notebook = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Notebook", false));
         Reserva solicitada = service.criar(sala.getId(), null,
@@ -132,7 +132,7 @@ class ReservaServiceIntegracaoTest {
                 "prof.ana", hora(10), hora(12));
 
         Reserva aprovada = service.alterarEstado(solicitada.getId(),
-                EstadoReserva.APROVADA, "admin", true);
+                EstadoReserva.APROVADA, "responsavel", true);
 
         assertEquals(EstadoReserva.APROVADA, aprovada.getEstado());
         assertEquals(2, reservas.findById(aprovada.getId()).orElseThrow().getMateriais().size());
@@ -217,7 +217,7 @@ class ReservaServiceIntegracaoTest {
     @Test
     void criaAuditoriaNaCriacaoEEmCadaMudancaDeEstado() {
         Reserva reserva = service.criar(sala.getId(), "prof.ana", hora(10), hora(11));
-        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA);
+        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA, "responsavel", true);
         service.alterarEstado(reserva.getId(), EstadoReserva.EM_USO);
 
         var eventos = service.listarAuditoria(reserva.getId());
@@ -327,7 +327,7 @@ class ReservaServiceIntegracaoTest {
     @Test
     void notificacoesSimuladasSaoGeradasNaSolicitacaoETransicao() {
         Reserva reserva = service.criar(sala.getId(), "prof.ana", hora(10), hora(11));
-        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA);
+        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA, "responsavel", true);
         var enviadas = notificacoes.findByDestinatarioIgnoreCaseOrderByOcorridoEmDesc("prof.ana");
         assertEquals(2, enviadas.size());
         assertTrue(enviadas.stream().anyMatch(n -> n.getAssunto().equals("Reserva solicitada")));
@@ -340,7 +340,7 @@ class ReservaServiceIntegracaoTest {
     void registraRetiradaEDevolucaoDeMaterialComHistoricoDeEstados() {
         Recurso projetor = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Projetor E2E", false));
         Reserva reserva = service.criar(projetor.getId(), "prof.ana", hora(10), hora(11));
-        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA);
+        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA, "responsavel", true);
 
         var retirada = movimentacaoService.retirar(reserva.getId(), "responsavel");
         assertNotNull(retirada.getRetiradaEm());
@@ -361,7 +361,7 @@ class ReservaServiceIntegracaoTest {
         Recurso naoReservado = recursos.save(new Recurso(TipoRecurso.MATERIAL, "Item externo", false));
         Reserva reserva = service.criar(sala.getId(), null,
                 java.util.List.of(projetor.getId(), notebook.getId()), "prof.ana", hora(10), hora(11));
-        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA, "admin", false);
+        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA, "responsavel", true);
 
         assertThrows(IllegalArgumentException.class,
                 () -> movimentacaoService.retirar(reserva.getId(), naoReservado.getId(), "responsavel"));
@@ -431,7 +431,7 @@ class ReservaServiceIntegracaoTest {
     @Test
     void reservaAprovadaNaoPodeSerReagendada() {
         Reserva reserva = service.criar(sala.getId(), "prof.ana", hora(10), hora(11));
-        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA);
+        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA, "responsavel", true);
         assertThrows(IllegalStateException.class,
                 () -> service.alterar(reserva.getId(), sala.getId(), null,
                         hora(12), hora(13), "prof.ana", false));
