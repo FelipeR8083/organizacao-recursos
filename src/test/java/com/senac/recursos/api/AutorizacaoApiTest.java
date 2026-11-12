@@ -263,6 +263,24 @@ class AutorizacaoApiTest {
     }
 
     @Test
+    @WithMockUser(username = "professor", roles = "PROFESSOR")
+    void professorNaoPodeRegistrarMovimentacoesNemConsultarHistoricoDeRetiradas() throws Exception {
+        mvc.perform(get("/reservas/movimentacoes"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/reservas/999/materiais/888/retirada"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/reservas/999/materiais/888/devolucao"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "responsavel", roles = "RESPONSAVEL")
+    void responsavelPodeConsultarMovimentacoes() throws Exception {
+        mvc.perform(get("/reservas/movimentacoes"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     @WithMockUser(username = "responsavel", roles = "RESPONSAVEL")
     void responsavelNaoPodeAtivarProfessor() throws Exception {
         mvc.perform(patch("/usuarios/999999/ativo")
