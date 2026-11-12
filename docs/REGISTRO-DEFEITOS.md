@@ -12,11 +12,15 @@ Este registro consolida problemas encontrados durante a revisão do código. "Fe
 | DEF-06 | Média | Ausência de notificação e relatório de utilização/conflitos | Notificação simulada/webhook opcional com teste WireMock; relatórios e testes de integração | Corrigido no código; CI pendente |
 | DEF-07 | Alta | Não havia reagendamento com nova checagem de conflitos | PUT de reserva SOLICITADA com verificação de titularidade, conflito, auditoria e teste | Corrigido no código; CI pendente |
 | DEF-08 | Média | Pesquisa de recursos não tinha metadados/filtros | Capacidade, localização, competências e disponibilidade | Parcial; validar filtros na interface e HTTP |
-| RSK-01 | Alta | Cobertura mínima 80% linhas / 70% branches ainda não comprovada | Relatório JaCoCo no CI | Aberto até medir e atingir metas |
+| RSK-01 | Alta | Metas 80% linhas / 70% branches no commit final | CI 43107077159 comprovou 91,26% e 75,61%; exigir nova rodada após mudanças | Atingido na versão anterior; rever no SHA final |
 | RSK-02 | Alta | SonarCloud depende de token e variáveis da equipe | Etapa condicional no workflow | Aberto até configurar SONAR_TOKEN, SONAR_ORGANIZATION e SONAR_PROJECT_KEY |
-| RSK-03 | Média | Teste JMeter existe, mas não foi executado nem possui resultado | Plano e JMX versionados | Aberto até anexar JTL/HTML e métricas |
+| RSK-03 | Média | Teste de carga deve ser comprovado | GitHub Actions 42711044633: 20 requisições, 1 HTTP 201 e 19 HTTP 409; artefatos JTL/HTML | Evidência disponível; anexar na entrega |
 | RSK-04 | Média | Responsividade ainda não possui evidência em tamanhos/dispositivos | CSS responsivo existente | Aberto até executar checklist visual |
 | RSK-05 | Média | Teste E2E cobre fluxo HTTP completo, não navegação real do navegador | TestRestTemplate + PostgreSQL Testcontainers | Parcial; E2E de navegador não implementado |
+| DEF-09 | Crítica | Administrador conseguia aprovar recurso restrito, enquanto RESPONSAVEL recebia 403 | Corrigidas as permissões em SecurityConfig, controlador e interface; professor, sala e materiais restritos exigem RESPONSAVEL | Corrigido no código; validar CI e manual |
+| DEF-10 | Alta | Reserva de sala com vários materiais não tinha retirada/devolução individual | Movimentação por (reserva, material), API e botões por material; migração Flyway V9 | Corrigido no código; validar migração sobre banco restaurado e CI |
+| DEF-11 | Média | Relatório ignorava materiais adicionais da sala | RelatorioService considera cada material vinculado; teste de regressão | Corrigido; confirmado manualmente na homologação 8084 (1 reserva/60 minutos) |
+| DEF-12 | Baixa | Professor via apenas "Sim" no campo manutenção | Etiqueta visível "Indisponível — em manutenção" sem expor ações administrativas | Corrigido no código; validação visual pendente |
 
 ## Política de triagem
 
