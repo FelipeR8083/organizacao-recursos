@@ -117,15 +117,17 @@ class ReservaControllerTest {
     }
 
     @Test
-    void administradorNaoAlteraEstadoDaReserva() throws Exception {
-        mvc.perform(patch("/reservas/42/estado")
+    void administradorNaoAlteraEstadoDaReserva() {
+        // O teste isolado do controlador não instala o filtro de segurança.
+        // O status HTTP 403 é validado por AutorizacaoApiTest/FluxoCompletoE2ETest.
+        org.junit.jupiter.api.Assertions.assertThrows(jakarta.servlet.ServletException.class, () ->
+                mvc.perform(patch("/reservas/42/estado")
                         .principal(new UsernamePasswordAuthenticationToken("admin", "n/a",
                                 java.util.List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRADOR"))))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"estado":"APROVADA"}
-                                """))
-                .andExpect(status().isForbidden());
+                                """)));
         verifyNoInteractions(service);
     }
 
