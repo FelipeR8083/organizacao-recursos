@@ -1,4 +1,6 @@
-# Plano de validação e rastreabilidade
+# Plano de validação e rastreabilidade — **registro histórico inicial**
+
+> **IMPORTANTE PARA A ENTREGA 12/11/2026:** esta página conserva uma **fotografia inicial** do plano de trabalho e sua lista de pendências **não representa o estado final do código**. Use como referência atualizada a [RTM oficial dos 14 requisitos](../RTM.md), o [guia de entrega](ENTREGA-FINAL.md), o [relatório final de qualidade](RELATORIO-QUALIDADE.md) e o [registro de defeitos](REGISTRO-DEFEITOS.md).
 
 > Este documento registra o que é verificável no código desta branch. A lista oficial dos 14 requisitos do trabalho não está versionada no repositório consultado; portanto, não atribui IDs nem declara cobertura integral sem a especificação do docente.
 
@@ -33,7 +35,7 @@
 - [ ] Consultar o histórico e conferir criação e transições.
 - [ ] Conferir logs e encerrar com `docker compose down`.
 
-## Lacunas que impedem declarar o trabalho completo
+## Lacunas do diagnóstico inicial (históricas; consultar status atualizado na RTM)
 
 - [ ] Receber e transcrever a especificação oficial dos 14 requisitos.
 - [ ] Relacionar cada requisito oficial a implementação, teste e evidência de demonstração.

@@ -6,8 +6,8 @@
 - Equipe: **Felipe e Pietro** (ver autoria e créditos no repositório).
 - Stack: Java 21, Spring Boot 3.3, PostgreSQL 16, JUnit 5, Testcontainers, WireMock, JaCoCo e JMeter.
 - Versão verificada: `main`, após [PRs #4](https://github.com/FelipeR8083/organizacao-recursos/pull/4), [#5](https://github.com/FelipeR8083/organizacao-recursos/pull/5) e [#6](https://github.com/FelipeR8083/organizacao-recursos/pull/6), commit de integração técnica `746cc14e77c112973220c8262269ffdaaa34254e`.
-- Base destinada à entrega: `main`, já integrada por pull request; revisão formal de outro integrante ainda não foi registrada.
-- **Decisão:** versão funcional candidata à entrega acadêmica **com ressalvas explicitadas**. GitHub Actions e SonarQube Cloud executaram na `main`, com **Quality Gate aprovado**. O SonarCloud passou de **6 para 1 questão nova** após PR #5; a questão residual é de recomendação de tipo SQL `VARCHAR2` incompatível com o contexto PostgreSQL/migração Flyway histórica. A importação de JaCoCo pelo scanner está comprovada; a carga pós-CSRF foi reexecutada com sucesso no GitHub Actions; permanecem a revisão por pares e a triagem formal da questão residual. Não afirmar ausência global de vulnerabilidades críticas sem examinar a classificação das questões.
+- Base destinada à entrega: `main`, já integrada por pull request; revisão retrospectiva de Pietro registrada em 12/11/2026 com estado **COMMENTED**, sem aprovação (PR #8).
+- **Decisão:** versão funcional candidata à entrega acadêmica **com ressalvas explicitadas**. GitHub Actions e SonarQube Cloud executaram na `main`, com **Quality Gate aprovado**. O SonarCloud passou de **6 para 1 questão nova** após PR #5; a questão residual é de recomendação de tipo SQL `VARCHAR2` incompatível com o contexto PostgreSQL/migração Flyway histórica. A importação de JaCoCo pelo scanner está comprovada; a carga pós-CSRF foi reexecutada com sucesso no GitHub Actions; permanecem a avaliação do atendimento à exigência de revisão **durante** o desenvolvimento e a triagem formal da questão residual. Não afirmar ausência global de vulnerabilidades críticas sem examinar a classificação das questões.
 
 ## Resultado automatizado (evidência verificada)
 
@@ -52,7 +52,7 @@ Ambiente **exclusivamente isolado**: `http://localhost:8085`, banco `recursos_te
 ## Riscos e pendências reais
 
 1. **SonarCloud:** a análise do GitHub Actions já executa com `SONAR_TOKEN` protegido, importou XML JaCoCo e recebeu **Quality Gate aprovado** na `main` após PR #6. Check final registra **1 questão nova**, ainda sem aceite formal, e **0 hotspots no código novo**. Cinco questões de confiabilidade/acessibilidade foram corrigidas no PR #5; quatro alertas de segurança nos workflows (1 alto/3 médios) foram corrigidos no PR #6. Confirmar classificação global no painel antes de declarar ausência de vulnerabilidades críticas em todo o projeto. O indicador de **0% no código novo** não é o percentual global de cobertura.
-2. **Revisão por pares:** realizar revisão real pelo Pietro no pull request final; registrar a decisão/comentários.
+2. **Revisão por pares:** Pietro registrou revisão retrospectiva `COMMENTED` no PR #8, e Felipe publicou manifestação própria sobre reservas. A exigência adicional de revisão **durante** o desenvolvimento não foi atendida retrospectivamente; caberá ao professor avaliar essa evidência.
 3. **Evidências/apresentação:** guardar captura do CI final e indicadores JaCoCo, JMeter JTL/HTML, telas desktop/celular (360px e 768px), diagramas/RTM; roteiro em `docs/APRESENTACAO.md`.
 4. **Atualização de base legada:** Flyway V9 foi observado em **banco novo**, não sobre uma cópia de banco V8 com dados reais; preservar backup antes de uma futura atualização de produção.
 5. **Regra temporal:** o sistema permitiu antecipar `APROVADA → EM_USO` e concluir reserva antes do horário agendado. Registrar como risco/decisão pendente; não afirmar que essa restrição está implementada.
@@ -104,4 +104,31 @@ O [PR #7](https://github.com/FelipeR8083/organizacao-recursos/pull/7) habilitou 
 - [Homologação e checklist](HOMOLOGACAO-FINAL-2026-11-12.md)
 - [Roteiro de apresentação](APRESENTACAO.md)
 
-**Conclusão:** a equipe demonstrou funcionamento de grande parte do escopo exigido, atingiu as metas automatizadas de cobertura e obteve **Quality Gate aprovado** no SonarCloud para a `main`. A entrega como versão candidata é tecnicamente justificável **com riscos explicitados**; o JaCoCo XML foi importado ao Sonar, os alertas de segurança de CI foram corrigidos com Quality Gate aprovado e ainda restam triagem formal da questão residual do SonarCloud, revisão por pares e validação final de outros requisitos manuais. O relatório não certifica cumprimento de 100% dos requisitos de evidência nem qualidade de produção.
+**Conclusão:** a equipe demonstrou funcionamento de grande parte do escopo exigido, atingiu as metas automatizadas de cobertura e obteve **Quality Gate aprovado** no SonarCloud para a `main`. A entrega como versão candidata é tecnicamente justificável **com riscos explicitados**; o JaCoCo XML foi importado ao Sonar, os alertas de segurança de CI foram corrigidos com Quality Gate aprovado e ainda restam triagem formal da questão residual do SonarCloud, validação de suficiência da revisão retrospectiva para a exigência de revisão **durante o desenvolvimento** e validação final de outros requisitos manuais. O relatório não certifica cumprimento de 100% dos requisitos de evidência nem qualidade de produção.
+
+
+## Revisão retrospectiva por pares — registro efetivo de Pietro e declaração de Felipe
+
+**Registro de acompanhamento técnico e roteiro de revisão retrospectiva:** [consultar o documento específico](REGISTRO-ACOMPANHAMENTO-E-REVISAO-RETROSPECTIVA.md), com histórico verificável dos PRs #1–#7, links das evidências e roteiro de revisão. As avaliações automatizadas feitas durante o desenvolvimento não equivalem à revisão por pares humana exigida naquele período.
+
+
+
+**Atualização verificada em 12/11/2026 (20h31 BRT):** `pietrolaureano` submeteu no [PR #8](https://github.com/FelipeR8083/organizacao-recursos/pull/8) uma revisão retrospectiva com estado **COMMENTED**, indicando que leu a análise técnica de segurança, APIs, testes e CI e concorda em manter PI-REV-01 a PI-REV-05 como melhorias e ressalvas. **Não foi uma aprovação (APPROVED)** e não demonstra revisão humana durante as etapas anteriores do desenvolvimento.
+
+**Felipe:** publicou pela própria conta a [manifestação técnica detalhada](https://github.com/FelipeR8083/organizacao-recursos/pull/8#issuecomment-6839223791), com avaliação retrospectiva sobre reservas, concorrência, movimentação de materiais e persistência. Houve também um [registro anterior elaborado por assistente a pedido do integrante](https://github.com/FelipeR8083/organizacao-recursos/pull/8#issuecomment-6839085749), identificado como tal. A manifestação de Felipe é comentário do autor do PR, **não** revisão aprovadora de um terceiro.
+
+**Documentos:** [análise para Felipe](REVISAO-PARA-FELIPE-RASCUNHO.md) e [análise para Pietro](REVISAO-PARA-PIETRO-RASCUNHO.md). O professor decide se a documentação retrospectiva gera crédito parcial diante da exigência de revisão durante o desenvolvimento.
+
+Esta seção foi criada inicialmente como pedido de revisão **real** pelo integrante Pietro, pelo GitHub. O pedido de revisão não equivale a aprovação. O revisor deve verificar código e evidências, deixar comentários sobre pontos não atendidos e emitir sua própria decisão no PR; **não há aceite antecipado**.
+
+**Pontos sugeridos para a revisão do repositório em `main`:**
+
+- [ ] Segurança: CSRF universal, autenticação/autorização por perfil, manutenção de cookie/sessão; examinar `SegurancaConfig.java`, controllers e testes.
+- [ ] Concorrência: bloqueio pessimista e conflitos de reserva, resultado JMeter 20 POST = 1 HTTP 201 + 19 HTTP 409 após CSRF, [run 43316844059](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43316844059).
+- [ ] Automação: 188 testes sem falhas, JaCoCo linhas 91,85% / branches 78,37%, [CI integrado após PR #7, run 43316844286](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43316844286).
+- [ ] Análise estática: SonarCloud Quality Gate aprovado; revisar a questão residual e a justificativa de `CHAR(64)` na migração histórica `V6`, sem trocar por tipo Oracle nem modificar checksum de migração já aplicada.
+- [ ] Ressalvas de homologação: regra temporal de transição antecipada, migração `V8 → V9` não validada em banco populado, ausência de envio SMTP de confirmação de e-mail em ambiente real, e evidência de responsividade limitada às capturas existentes.
+
+**Como registrar a revisão:** utilizar a aba **Files changed** e **Review changes** do pull request aberto para comentar e selecionar `Comment`, `Approve` ou `Request changes` conforme a análise efetivamente realizada. É válido solicitar mudanças. O colaborador deve usar **sua própria conta GitHub**; nunca compartilhar credenciais.
+
+**Estado histórico ao abrir:** revisão solicitada e aguardando decisão. **Estado atual:** Pietro submeteu COMMENTED em 12/11/2026; Felipe publicou [seu parecer retrospectivo](https://github.com/FelipeR8083/organizacao-recursos/pull/8#issuecomment-6839223791) pela própria conta. Ainda não há APPROVED de Pietro.
