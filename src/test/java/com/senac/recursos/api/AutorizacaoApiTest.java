@@ -135,7 +135,7 @@ class AutorizacaoApiTest {
     }
 
     @Test
-    void administradorPodeAnalisarReservasRestritas() throws Exception {
+    void administradorNaoAprovaReservaRestritaEResponsavelAprova() throws Exception {
         usuarios.save(new Usuario("gestor", encoder.encode("senha-gestor-123"), PerfilAcesso.ADMINISTRADOR));
         MvcResult login = mvc.perform(post("/login")
                         .param("username", "gestor")
@@ -170,6 +170,12 @@ class AutorizacaoApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].solicitante").value("professor1"));
         mvc.perform(patch("/reservas/" + reservaId + "/estado").session(session)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"APROVADA\"}"))
+                .andExpect(status().isForbidden());
+
+        usuarios.save(new Usuario("responsavel1", encoder.encode("senha-responsavel-123"), PerfilAcesso.RESPONSAVEL));
+        mvc.perform(patch("/reservas/" + reservaId + "/estado")
+                        .with(httpBasic("responsavel1", "senha-responsavel-123"))
                         .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"APROVADA\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("APROVADA"));
@@ -248,12 +254,12 @@ class AutorizacaoApiTest {
 
     @Test
     @WithMockUser(username = "responsavel", roles = "RESPONSAVEL")
-    void responsavelNaoPodeAnalisarEstadoDeReservas() throws Exception {
-        // Somente o administrador pode aprovar ou rejeitar solicitações.
+    void responsavelPodeAcessarAprovacaoDeReservas() throws Exception {
+        // 404 indica que a autorização passou e a reserva solicitada não existe.
         mvc.perform(patch("/reservas/999999/estado")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"estado\":\"APROVADA\"}"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isNotFound());
     }
 
     @Test
