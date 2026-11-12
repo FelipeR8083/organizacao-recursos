@@ -126,7 +126,18 @@ class ReservaControllerTest {
                                 {"estado":"APROVADA"}
                                 """))
                 .andExpect(status().isOk());
-        verify(service).alterarEstado(42L, EstadoReserva.APROVADA, "admin", true);
+        verify(service).alterarEstado(42L, EstadoReserva.APROVADA, "admin", false);
+    }
+
+    @Test
+    void aprovacaoDoResponsavelEhEncaminhadaComPapelCorreto() throws Exception {
+        mvc.perform(patch("/reservas/42/estado")
+                        .principal(new UsernamePasswordAuthenticationToken("resp", "n/a",
+                                java.util.List.of(new SimpleGrantedAuthority("ROLE_RESPONSAVEL"))))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"estado\":\"APROVADA\"}"))
+                .andExpect(status().isOk());
+        verify(service).alterarEstado(42L, EstadoReserva.APROVADA, "resp", true);
     }
 
     @Test
