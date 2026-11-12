@@ -29,6 +29,18 @@ class EmailConfirmacaoProfessorServiceTest {
     }
 
     @Test
+    void removeVariasBarrasDaUrlBaseSemAlterarOToken() {
+        when(verificacao.emitir(professor)).thenReturn("b".repeat(64));
+        EmailConfirmacaoProfessorService service = new EmailConfirmacaoProfessorService(
+                mail, verificacao, "contato@senac.br", "https://exemplo.test/////", true);
+        service.enviar(professor);
+        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mail).send(captor.capture());
+        assertTrue(captor.getValue().getText().contains(
+                "https://exemplo.test/confirmar-email.html#token=" + "b".repeat(64)));
+    }
+
+    @Test
     void naoGeraTokenNemEnviaQuandoDesabilitado() {
         EmailConfirmacaoProfessorService service = new EmailConfirmacaoProfessorService(
                 mail, verificacao, "contato@senac.br", "https://exemplo.test", false);

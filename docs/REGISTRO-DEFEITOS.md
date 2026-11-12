@@ -49,3 +49,16 @@ Este registro consolida problemas encontrados durante a revisão do código. **A
 | RSK-02 / RSK-07 | Alta | Check `SonarCloud Code Analysis` no merge `60862cd8`: Quality Gate **aprovado**, **6 questões novas**, **0,0% cobertura do código novo no SonarCloud**. A etapa SonarCloud do GitHub Actions permanece `skipped`. | **Análise estática executada**, mas **triagem das 6 questões** e **integração JaCoCo** ainda pendentes. Separadamente, JaCoCo do CI: 91,73% linhas, 77,55% branches. |
 | RSK-08 | Média | JMeter anterior demonstrou 20 threads com 1 HTTP 201 e 19 HTTP 409, mas era anterior ao CSRF obrigatório. Plano JMX atualizado exige token e cookie por thread. | **Reexecução de carga pós-CSRF pendente**; não atribuir métricas antigas à implementação nova. |
 | RSK-09 | Média | Login, logout e `GET /csrf` foram validados em :8085; um POST sem token e sem autenticação retornou 401. | **Não registrar o 401 como prova de CSRF**. Testes automatizados com usuários autenticados validam HTTP 403 para mutações sem token; sem novas provas manuais. |
+
+## Triagem das 6 questões do SonarCloud — 12/11/2026
+
+| ID | Local | Diagnóstico | Ação |
+|---|---|---|---|
+| SONAR-01 | `EmailConfirmacaoProfessorService.java:39` | Regex para remover barras finais da URL pode ter custo superlinear | **Corrigido na branch `correcao/sonar-confiabilidade-20261112`** por varredura linear |
+| SONAR-02 | `UsuarioService.java:63` | Regex da parte local do e-mail pode causar estouro de pilha com repetição | **Corrigido na branch** por validação iterativa |
+| SONAR-03 | `UsuarioService.java:65` | Regex de domínio pode causar estouro de pilha com repetição | **Corrigido na branch** por validação iterativa |
+| SONAR-04 | `UsuarioService.java:65` | Mesmo regex de domínio pode ter backtracking superlinear | **Corrigido na branch** por validação iterativa |
+| SONAR-05 | `V6__verificacao_email_professor.sql:10` | Recomenda usar `VARCHAR2` no lugar de `CHAR`. `VARCHAR2` é tipo específico de Oracle, mas a aplicação usa PostgreSQL 16; `CHAR(64)` representa hash hexadecimal fixo SHA-256 | **Não alterar migração Flyway V6 já aplicada**: modificar arquivo antigo alteraria checksum e pode inviabilizar a atualização de bancos existentes. Revisar classificação de regra SQL/false positive no Sonar com justificativa. |
+| SONAR-06 | `login.html:54` | `autofocus` pode prejudicar navegação por leitores de tela | **Corrigido na branch**, atributo removido |
+
+**Limite desta triagem:** a indicação de correção só se torna evidência concluída após CI verde, merge e nova análise SonarCloud. Não classificar a questão de SQL como resolvida sem revisão pelo responsável do projeto. Não alterar a porta :8080 nem qualquer banco para corrigir alertas estáticos.
