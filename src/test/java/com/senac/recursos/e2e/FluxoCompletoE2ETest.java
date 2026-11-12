@@ -148,10 +148,9 @@ class FluxoCompletoE2ETest {
                 HttpMethod.PATCH, new HttpEntity<>(Map.of("ativo", true), jsonHeaders()), String.class);
         assertEquals(HttpStatus.FORBIDDEN, ativacaoProibida.getStatusCode());
 
-        // Somente ADMINISTRADOR pode aprovar; RESPONSAVEL deve receber 403.
-        ResponseEntity<String> aprovacaoProibida = responsavel.exchange("/reservas/" + reservaId + "/estado",
-                HttpMethod.PATCH, new HttpEntity<>(Map.of("estado", "APROVADA"), jsonHeaders()), String.class);
-        assertEquals(HttpStatus.FORBIDDEN, aprovacaoProibida.getStatusCode());
+        // Responsável acessa movimentos, mas a aprovação comum também pode ser feita pelo administrador.
+        assertEquals(HttpStatus.OK,
+                responsavel.getForEntity("/reservas/movimentacoes", String.class).getStatusCode());
 
         ResponseEntity<JsonNode> aprovada = admin.exchange("/reservas/" + reservaId + "/estado",
                 HttpMethod.PATCH, new HttpEntity<>(Map.of("estado", "APROVADA"), jsonHeaders()), JsonNode.class);
@@ -162,6 +161,25 @@ class FluxoCompletoE2ETest {
                 "/reservas/" + reservaId + "/auditoria", JsonNode.class);
         assertEquals(2, historico.getBody().size());
         assertEquals("e2e-admin", historico.getBody().get(1).get("origem").asText());
+
+        // RF-07: somente RESPONSAVEL aprova recurso restrito.
+        ResponseEntity<JsonNode> especial = admin.postForEntity("/recursos",
+                new HttpEntity<>(Map.of("tipo", "SALA", "nome", "Sala restrita E2E", "restrito", true),
+                        jsonHeaders()), JsonNode.class);
+        assertEquals(HttpStatus.CREATED, especial.getStatusCode());
+        long especialId = especial.getBody().get("id").asLong();
+        ResponseEntity<JsonNode> pedidoEspecial = solicitante.postForEntity("/reservas",
+                new HttpEntity<>(Map.of("recursoId", especialId, "solicitante", "solicitante-e2e",
+                        "inicio", inicio.toString(), "fim", fim.toString()), jsonHeaders()), JsonNode.class);
+        assertEquals(HttpStatus.CREATED, pedidoEspecial.getStatusCode());
+        long pedidoEspecialId = pedidoEspecial.getBody().get("id").asLong();
+        ResponseEntity<String> adminNegado = admin.exchange("/reservas/" + pedidoEspecialId + "/estado",
+                HttpMethod.PATCH, new HttpEntity<>(Map.of("estado", "APROVADA"), jsonHeaders()), String.class);
+        assertEquals(HttpStatus.FORBIDDEN, adminNegado.getStatusCode());
+        ResponseEntity<JsonNode> responsavelAprovou = responsavel.exchange("/reservas/" + pedidoEspecialId + "/estado",
+                HttpMethod.PATCH, new HttpEntity<>(Map.of("estado", "APROVADA"), jsonHeaders()), JsonNode.class);
+        assertEquals(HttpStatus.OK, responsavelAprovou.getStatusCode());
+        assertEquals("APROVADA", responsavelAprovou.getBody().get("estado").asText());
 
         ResponseEntity<JsonNode> relatorio = responsavel.getForEntity(
                 "/relatorios/utilizacao?inicio=" + inicio.minusSeconds(60) + "&fim=" + fim.plusSeconds(60),
