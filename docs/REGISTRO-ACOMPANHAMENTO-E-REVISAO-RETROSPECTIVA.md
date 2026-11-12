@@ -25,7 +25,18 @@ O histórico começa **antes da etapa final**: o PR #1 foi aberto em **09/11/202
 
 **Distinção essencial:** os PRs, testes e alertas do SonarCloud são evidências de **acompanhamento técnico e correção de problemas**; não provam que houve **revisão por pares humana** enquanto essas alterações eram desenvolvidas. Tampouco um Quality Gate aprovado atesta ausência absoluta de vulnerabilidades.
 
-## 2. Checklist de revisão independente — a realizar por Pietro
+## 2. Duas análises técnicas preparatórias (não assinadas)
+
+Foram criados **dois documentos diferentes** com observações de código, achados preliminares e recomendações concretas, para conferência e eventual manifestação de cada integrante:
+
+- **[Análise para Felipe — reservas, materiais, concorrência e persistência](REVISAO-PARA-FELIPE-RASCUNHO.md)**: aponta, entre outros itens, risco a testar na concorrência do reagendamento, transições antecipadas, migração V8→V9 e custo do filtro em memória.
+- **[Análise para Pietro — segurança, APIs, testes e CI](REVISAO-PARA-PIETRO-RASCUNHO.md)**: documenta controles verificados e melhorias/pontos em aberto no contrato de criação de reservas, publicação de Swagger, confirmação real de e-mail, triagem Sonar e evidências visuais.
+
+**Status de ambos: RASCUNHOS ELABORADOS COM APOIO DE IA.** Os nomes indicam somente o **destinatário** de cada roteiro, **não a autoria** da análise por aquele aluno. Nenhum rascunho foi aprovado ou enviado pela conta de Pietro ou de Felipe como parecer pessoal.
+
+A autoria de cada trecho implementado precisa ser confirmada antes de chamar o trabalho de revisão por pares: **não é revisão independente avaliar o próprio código**. Além disso, Felipe é autor do **PR #8**, portanto não pode aprovar formalmente esse próprio PR. Pode comentar seu parecer ali; para ser revisor formal no GitHub precisa analisar um PR aberto por outra pessoa.
+
+## 3. Checklist de revisão independente — a realizar por Pietro
 
 O revisor deve examinar o código e os diffs históricos (além dos resumos), consultar as evidências e registrar observações originais no [PR #8](https://github.com/FelipeR8083/organizacao-recursos/pull/8). **Nenhuma caixa abaixo foi marcada antecipadamente.**
 
@@ -47,7 +58,7 @@ O revisor deve examinar o código e os diffs históricos (além dos resumos), co
 - [ ] **Concorrência e métricas (PR #7):** conferir JMX, workflow e critério de 1 criação (201) para 19 conflitos (409), além do cálculo de P95 sobre o JTL.
 - [ ] **Questões em aberto:** avaliar o alerta de `CHAR(64)` no Flyway V6, a migração V8→V9 ainda não validada com base populada, transições temporais antecipadas e ausência de homologação SMTP real.
 
-### 3. Registro da decisão do revisor (não preenchido)
+### 4. Registro da decisão do revisor (não preenchido)
 
 | Campo | A preencher pelo revisor depois da análise |
 | --- | --- |
@@ -60,11 +71,11 @@ O revisor deve examinar o código e os diffs históricos (além dos resumos), co
 
 A decisão deve ser registrada por **Pietro na própria conta**, por `Files changed → Review changes` no PR #8. Ele pode usar o navegador do celular, se conseguir acessar a interface de revisão. A data será a da submissão real. **Uma aprovação não deve ser escolhida antes da análise.**
 
-## 4. Texto de apresentação honesta da evidência ao professor
+## 5. Texto de apresentação honesta da evidência ao professor
 
 > Durante o desenvolvimento, realizamos implementação e correções progressivas documentadas nos PRs #1 a #7, com testes, rastreabilidade, BDD, análise de segurança, SonarCloud e JMeter. Reconhecemos que a revisão formal por outro integrante, exigida durante o desenvolvimento, não foi registrada naquele momento. Por isso, organizamos a trilha histórica verificável e solicitamos agora uma revisão retrospectiva independente, registrada no PR #8 com data real. Pedimos que as evidências de controle contínuo de qualidade sejam consideradas para eventual crédito parcial, sem apresentá-las como substituição integral da revisão por pares exigida.
 
-## 5. Referências adicionais
+## 6. Referências adicionais
 
 - [Relatório de qualidade e ressalvas](RELATORIO-QUALIDADE.md)
 - [Registro de defeitos](REGISTRO-DEFEITOS.md)
