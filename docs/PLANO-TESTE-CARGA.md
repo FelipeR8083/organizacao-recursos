@@ -16,9 +16,13 @@ Verificar o comportamento da proteção contra dupla reserva quando múltiplas s
 
 Na raiz do repositório, execute em terminal (substitua usuário, senha e ID):
 
-    jmeter -n -t jmeter/reservas-concorrentes.jmx -Jhost=localhost -Jport=8080 -JbaseUrl=http://localhost:8080 -Jlogin=usuario_teste -Jpassword='senha-de-teste' -JresourceId=1 -Jthreads=20 -Jstart=2026-12-01T10:00:00Z -Jend=2026-12-01T11:00:00Z -l resultados-reservas.jtl -e -o relatorio-jmeter
+    jmeter -n -t jmeter/reservas-concorrentes.jmx -Jhost=localhost -Jport=8085 -JbaseUrl=http://localhost:8085 -Jlogin=usuario_teste -Jpassword='senha-de-teste' -JresourceId=1 -Jthreads=20 -Jstart=2026-12-01T10:00:00Z -Jend=2026-12-01T11:00:00Z -l resultados-reservas.jtl -e -o relatorio-jmeter
 
 Não use credenciais reais em arquivos versionados ou capturas de tela. O JMX recebe as credenciais por propriedades de execução.
+
+**Atualização CSRF (12/11/2026):** antes de cada `POST /reservas`, cada thread executa `GET /csrf`, extrai `$.token` e mantém seu próprio cookie de sessão (`JSESSIONID`). O `POST` envia `X-CSRF-TOKEN`. Isso impede que o teste de carga dependa de CSRF desativado. O JTL contém amostras de **preparação GET** e de **reserva POST**; conte apenas as amostras com rótulo `Solicitar reserva concorrente` para comparar a distribuição **1 HTTP 201 + 19 HTTP 409**. Use o banco isolado de homologação, sem alterar o sistema original da porta 8080.
+
+A alteração deste JMX ainda **precisa de uma nova execução JMeter real**. O resultado abaixo é histórico da versão anterior à proteção CSRF obrigatória.
 
 ## Resultado esperado
 
