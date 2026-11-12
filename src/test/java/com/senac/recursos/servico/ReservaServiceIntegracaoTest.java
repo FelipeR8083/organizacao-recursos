@@ -453,6 +453,29 @@ class ReservaServiceIntegracaoTest {
     }
 
     @Test
+    void responsavelNaoPodeAprovarNemRejeitarPropriaReserva() {
+        Reserva reserva = service.criar(sala.getId(), "resp.ana", hora(10), hora(11));
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA, "RESP.ANA", true));
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> service.alterarEstado(reserva.getId(), EstadoReserva.REJEITADA, "resp.ana", true));
+        assertEquals(EstadoReserva.SOLICITADA, reservas.findById(reserva.getId()).orElseThrow().getEstado());
+        assertEquals(1, service.listarAuditoria(reserva.getId()).size());
+
+        service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA, "resp.bia", true);
+        assertEquals(EstadoReserva.APROVADA, reservas.findById(reserva.getId()).orElseThrow().getEstado());
+        assertEquals(2, service.listarAuditoria(reserva.getId()).size());
+    }
+
+    @Test
+    void administradorNaoAprovaNemMesmoRecursoComum() {
+        Reserva reserva = service.criar(sala.getId(), "prof.ana", hora(10), hora(11));
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> service.alterarEstado(reserva.getId(), EstadoReserva.APROVADA, "admin", false));
+        assertEquals(EstadoReserva.SOLICITADA, reservas.findById(reserva.getId()).orElseThrow().getEstado());
+    }
+
+    @Test
     void somenteResponsavelPodeAprovarReservaDeRecursoRestrito() {
         Recurso salaRestrita = recursos.save(new Recurso(TipoRecurso.SALA, "Sala restrita", true));
         Reserva reserva = service.criar(salaRestrita.getId(), "prof.ana", hora(10), hora(11));
