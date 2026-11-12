@@ -31,7 +31,7 @@ Docker deve estar em execução para os testes com Testcontainers. O relatório 
 6. Retirada só é permitida após aprovação e devolução conclui a reserva.
 7. Relatório calcula minutos alocados no intervalo solicitado e inclui conflitos evitados persistidos.
 8. Webhook externo é isolado por WireMock; sem URL, canal SIMULADO.
-8a. Só RESPONSAVEL aprova reservas com sala/professor/material restrito; ADMINISTRADOR pode aprovar reservas comuns.
+8a. Somente RESPONSAVEL aprova/rejeita reservas comuns ou restritas; ADMINISTRADOR não altera estados. Um RESPONSAVEL não pode aprovar ou rejeitar a própria solicitação.
 8b. Em reservas conjuntas, cada material tem retirada/devolução auditável; conclusão somente após todas as devoluções.
 9. Metas de cobertura exigidas pelo docente: 80% de linhas e 70% de branches.
 10. E2E de navegador, teste JMeter executado e análise SonarCloud devem ser anexados como evidências, não apenas descritos.
