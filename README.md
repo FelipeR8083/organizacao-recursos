@@ -83,7 +83,7 @@ No Linux/macOS, exporte as mesmas três variáveis antes de executar `mvn spring
 
 A aplicação ficará disponível em `http://localhost:8080`. A interface web está em `src/main/resources/static/index.html`. O navegador pode solicitar as credenciais HTTP Basic; para comparar perfis distintos, abra sessões separadas (por exemplo, janela anônima).
 
-Na interface, o **administrador** gerencia recursos, usuários e aprova/rejeita reservas; o **responsável** pode executar outras ações de gestão autorizadas, mas **não pode aprovar nem rejeitar reservas**; o **solicitante/professor** vê somente as próprias reservas e ações permitidas. É possível solicitar uma sala com vários materiais na mesma reserva. A aba de relatórios usa o período selecionado pelo usuário.
+Na interface, o **administrador** gerencia recursos e usuários e pode avaliar reservas comuns; o **responsável** aprova solicitações especiais e pode gerenciar reservas. Somente o perfil RESPONSAVEL aprova salas, professores ou materiais restritos. O **solicitante/professor** vê somente as próprias reservas e ações permitidas. É possível solicitar uma sala com vários materiais na mesma reserva. A aba de relatórios usa o período selecionado pelo usuário.
 
 ### Configuração do banco
 
