@@ -59,8 +59,8 @@ Ver [docs/DIAGRAMAS-SEQUENCIA.md](DIAGRAMAS-SEQUENCIA.md), que contém o diagram
 | Perfil | Permissões principais |
 |---|---|
 | SOLICITANTE | Consultar recursos/reservas, solicitar reserva, reagendar/cancelar a própria reserva |
-| RESPONSAVEL | Consultar, aprovar reservas restritas, transicionar estados, retirar/devolver materiais, consultar relatórios e notificações |
-| ADMINISTRADOR | Gerenciar recursos/usuários, consultar e gerenciar reservas e relatórios; não substitui o papel RESPONSAVEL para aprovar recurso restrito |
+| RESPONSAVEL | Consultar, criar e gerenciar reservas; avaliar solicitações alheias (comuns/restritas), registrar início/fim, ausência e materiais; consultar relatórios. Não aprova/rejeita pedido próprio |
+| ADMINISTRADOR | Gerenciar recursos/usuários/manutenção; consultar e gerenciar dados de reserva conforme operações permitidas, mas sem aprovar/rejeitar, alterar estado ou movimentar material |
 
 ## Endpoints principais
 
@@ -70,9 +70,9 @@ Ver [docs/DIAGRAMAS-SEQUENCIA.md](DIAGRAMAS-SEQUENCIA.md), que contém o diagram
 | POST / PUT | `/recursos`, `/recursos/{id}` | ADMINISTRADOR |
 | GET / POST | `/reservas` | autenticado |
 | PUT / DELETE | `/reservas/{id}` | titular ou perfil privilegiado |
-| PATCH | `/reservas/{id}/estado` | RESPONSAVEL/ADMINISTRADOR; restrição em sala, professor ou material exige RESPONSAVEL |
-| POST | `/reservas/{id}/retirada`, `/devolucao` | RESPONSAVEL/ADMINISTRADOR; reserva de um único material |
-| POST | `/reservas/{id}/materiais/{materialId}/retirada`, `/devolucao` | RESPONSAVEL/ADMINISTRADOR; material associado à reserva |
+| PATCH | `/reservas/{id}/estado` | RESPONSAVEL, exceto se a solicitação for própria; início/fim/ausência somente RESPONSAVEL |
+| POST | `/reservas/{id}/retirada`, `/devolucao` | Somente RESPONSAVEL; reserva de um único material |
+| POST | `/reservas/{id}/materiais/{materialId}/retirada`, `/devolucao` | Somente RESPONSAVEL; material associado à reserva |
 | GET | `/reservas/movimentacoes` | RESPONSAVEL/ADMINISTRADOR |
 | GET | `/reservas/{id}/auditoria` | autenticado |
 | GET / POST / PATCH | `/usuarios`, `/usuarios/{id}/ativo` | ADMINISTRADOR |
