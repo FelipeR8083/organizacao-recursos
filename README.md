@@ -107,9 +107,12 @@ Defina `DB_PASSWORD` no ambiente antes de iniciar a aplicação.
 | GET | `/reservas` | Lista reservas |
 | POST | `/reservas` | Solicita reserva |
 | PUT | `/reservas/{id}` | Titular altera reserva solicitada; responsável/administrador pode gerenciar |
-| PATCH | `/reservas/{id}/estado` | Somente administrador aprova/rejeita ou altera o estado, conforme a máquina de estados |
+| PATCH | `/reservas/{id}/estado` | RESPONSAVEL e ADMINISTRADOR; somente RESPONSAVEL aprova recursos restritos (sala, professor ou material adicional) |
 | POST | `/reservas/{id}/retirada` | Responsável registra retirada de material aprovado |
-| POST | `/reservas/{id}/devolucao` | Responsável registra devolução e conclui a reserva |
+| POST | `/reservas/{id}/devolucao` | Devolução de reserva com um único material, concluindo após a devolução |
+| GET | `/reservas/movimentacoes` | RESPONSAVEL/ADMINISTRADOR consultam retiradas e devoluções |
+| POST | `/reservas/{id}/materiais/{materialId}/retirada` | Registra retirada de cada material de uma reserva conjunta |
+| POST | `/reservas/{id}/materiais/{materialId}/devolucao` | Registra devolução; conclui quando todos os materiais voltam |
 | DELETE | `/reservas/{id}` | Solicitante cancela a própria reserva; responsável/administrador pode cancelar |
 | GET | `/sessao` | Retorna login e perfil da sessão autenticada |
 | GET | `/usuarios` | Administrador lista usuários |
