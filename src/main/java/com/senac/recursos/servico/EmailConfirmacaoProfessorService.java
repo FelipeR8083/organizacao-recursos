@@ -36,7 +36,12 @@ public class EmailConfirmacaoProfessorService {
             throw new IllegalStateException("Envio de verificacao de e-mail desabilitado");
         }
         String token = verificacao.emitir(professor);
-        String url = urlPublica.replaceAll("/+$", "") + "/confirmar-email.html#token=" + token;
+        // Remove barras finais sem regex para manter custo linear mesmo com entradas extensas.
+        String baseUrl = urlPublica;
+        while (baseUrl.endsWith("/")) {
+            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+        }
+        String url = baseUrl + "/confirmar-email.html#token=" + token;
         SimpleMailMessage mensagem = new SimpleMailMessage();
         mensagem.setFrom(origem);
         mensagem.setTo(professor.getUsername());
