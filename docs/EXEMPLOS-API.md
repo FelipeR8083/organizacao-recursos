@@ -69,7 +69,7 @@ Cancelamento por titular ou gestor:
 DELETE /reservas/1
 ```
 
-Aprovação de reservas comuns por RESPONSAVEL ou ADMINISTRADOR. Para sala, professor vinculado **ou material adicional** marcado como restrito, a aprovação é exclusiva de RESPONSAVEL. O administrador recebe HTTP 403 ao tentar aprovar esse pedido:
+Todas as solicitações são aprovadas ou rejeitadas exclusivamente por RESPONSAVEL, inclusive reservas comuns e recursos restritos. Um RESPONSAVEL pode fazer uma reserva, mas não pode aprovar **nem rejeitar o próprio pedido**: outro responsável precisa avaliá-lo. O ADMINISTRADOR recebe HTTP 403 ao tentar mudar o estado de qualquer reserva:
 
 ```http
 PATCH /reservas/1/estado
@@ -86,7 +86,7 @@ GET /reservas/1/auditoria
 
 ## Materiais e relatórios
 
-RESPONSAVEL/ADMINISTRADOR pode registrar retirada de material aprovado e devolução do material em uso:
+Somente RESPONSAVEL pode registrar retirada de material aprovado e devolução do material em uso:
 
 ```http
 POST /reservas/1/retirada
@@ -103,7 +103,7 @@ POST /reservas/1/materiais/2/devolucao
 POST /reservas/1/materiais/3/devolucao
 ```
 
-O estado muda para `EM_USO` na primeira retirada e só muda para `CONCLUIDA` após **todos os materiais associados** serem devolvidos. Somente RESPONSAVEL/ADMINISTRADOR têm acesso. Um material não vinculado à reserva é recusado; tentar retirar o mesmo material duas vezes também é recusado. A migração `V9` preserva movimentações anteriores, sem permitir duplicidade do mesmo material na mesma reserva.
+O estado muda para `EM_USO` na primeira retirada e só muda para `CONCLUIDA` após **todos os materiais associados** serem devolvidos. Somente RESPONSAVEL pode registrar movimentações; ADMINISTRADOR pode consultar o histórico. Um material não vinculado à reserva é recusado; tentar retirar o mesmo material duas vezes também é recusado. A migração `V9` preserva movimentações anteriores, sem permitir duplicidade do mesmo material na mesma reserva.
 
 Relatórios disponíveis para RESPONSAVEL/ADMINISTRADOR:
 
