@@ -31,8 +31,17 @@ Docker deve estar em execução para os testes com Testcontainers. O relatório 
 6. Retirada só é permitida após aprovação e devolução conclui a reserva.
 7. Relatório calcula minutos alocados no intervalo solicitado e inclui conflitos evitados persistidos.
 8. Webhook externo é isolado por WireMock; sem URL, canal SIMULADO.
+8a. Só RESPONSAVEL aprova reservas com sala/professor/material restrito; ADMINISTRADOR pode aprovar reservas comuns.
+8b. Em reservas conjuntas, cada material tem retirada/devolução auditável; conclusão somente após todas as devoluções.
 9. Metas de cobertura exigidas pelo docente: 80% de linhas e 70% de branches.
 10. E2E de navegador, teste JMeter executado e análise SonarCloud devem ser anexados como evidências, não apenas descritos.
+
+## Cenários adicionados na homologação 12/11/2026
+
+- `AutorizacaoApiTest.administradorNaoAprovaReservaRestritaEResponsavelAprova`: administrador recebe HTTP 403 e RESPONSAVEL aprova.
+- `ReservaServiceIntegracaoTest.somenteResponsavelPodeAprovarReservaComMaterialAdicionalRestrito`: restrição do projetor exige responsável mesmo com sala comum.
+- `ReservaServiceIntegracaoTest.retiradaEDevolucaoDeDoisMateriaisDaMesmaSalaSaoIndependentes`: materiais individuais com PostgreSQL, retirada duplicada impedida, conclusão após todos voltarem.
+- `AutorizacaoApiTest.professorNaoPodeRegistrarMovimentacoesNemConsultarHistoricoDeRetiradas`: bloqueio de acesso ao professor.
 
 ## Resultado da execução
 
