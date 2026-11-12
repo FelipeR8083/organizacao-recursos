@@ -20,7 +20,13 @@ const formulario=document.getElementById('formulario'), mensagem=document.getEle
 formulario.addEventListener('submit',async(event)=>{
  event.preventDefault();enviar.disabled=true;mensagem.textContent='Enviando solicitação...';
  try{
-  const resposta=await fetch('/cadastro-professor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('email').value,senha:document.getElementById('senha').value})});
+  const tokenResposta=await fetch('/csrf',{credentials:'same-origin'});
+  if(!tokenResposta.ok)throw new Error('Não foi possível iniciar a proteção de segurança.');
+  const csrf=await tokenResposta.json();
+  if(csrf.enabled!==true||!csrf.token)throw new Error('Token de segurança indisponível.');
+  const resposta=await fetch('/cadastro-professor',{method:'POST',credentials:'same-origin',
+    headers:{'Content-Type':'application/json',[csrf.headerName]:csrf.token},
+    body:JSON.stringify({email:document.getElementById('email').value,senha:document.getElementById('senha').value})});
   const dados=await resposta.json().catch(()=>({}));
   if(!resposta.ok)throw new Error(dados.erro||dados.mensagem||'Não foi possível concluir o cadastro.');
   mensagem.style.color='#18663a';mensagem.textContent=dados.mensagem;formulario.reset();

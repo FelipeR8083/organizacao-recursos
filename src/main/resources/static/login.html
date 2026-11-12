@@ -64,6 +64,27 @@
     const params = new URLSearchParams(location.search), msg = document.getElementById('mensagem');
     if (params.has('erro')) { msg.className = 'alert error'; msg.textContent = 'Usuário ou senha incorretos. Confira os dados e tente novamente.'; }
     if (params.has('saiu')) { msg.className = 'alert success'; msg.textContent = 'Você saiu do sistema com segurança.'; }
+    const formLogin = document.querySelector('form[action="/login"]');
+    const botaoLogin = formLogin.querySelector('button[type="submit"]');
+    botaoLogin.disabled = true;
+    fetch('/csrf', {credentials:'same-origin'})
+      .then(async resposta => {
+        if (!resposta.ok) throw new Error('Erro ao obter token CSRF');
+        const dados = await resposta.json();
+        if (dados.enabled !== true || !dados.parameterName || !dados.token) {
+          throw new Error('Token CSRF indisponível');
+        }
+        const campo = document.createElement('input');
+        campo.type = 'hidden';
+        campo.name = dados.parameterName;
+        campo.value = dados.token;
+        formLogin.appendChild(campo);
+        botaoLogin.disabled = false;
+      })
+      .catch(() => {
+        msg.className = 'alert error';
+        msg.textContent = 'Não foi possível iniciar a proteção de segurança. Atualize a página.';
+      });
   </script>
 </body>
 </html>

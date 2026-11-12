@@ -9,6 +9,8 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.http.*;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import java.net.http.HttpClient;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -34,8 +36,26 @@ class FluxoCompletoE2ETest {
 
     private TestRestTemplate auth(String login, String senha) {
         TestRestTemplate client = http.withBasicAuth(login, senha);
+        // Cada usuario do teste usa sua propria sessao HTTP e seu proprio token.
+        CookieManager cookies = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
         client.getRestTemplate().setRequestFactory(new JdkClientHttpRequestFactory(
-                HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build()));
+                HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1)
+                        .cookieHandler(cookies).build()));
+        client.getRestTemplate().getInterceptors().add((request, body, execution) -> {
+            HttpMethod metodo = request.getMethod();
+            if (metodo != HttpMethod.GET && metodo != HttpMethod.HEAD
+                    && metodo != HttpMethod.OPTIONS && metodo != HttpMethod.TRACE) {
+                ResponseEntity<JsonNode> tokenResponse = client.getForEntity("/csrf", JsonNode.class);
+                JsonNode token = tokenResponse.getBody();
+                if (!tokenResponse.getStatusCode().is2xxSuccessful() || token == null
+                        || !token.path("enabled").asBoolean(false)) {
+                    throw new IllegalStateException("Token CSRF nao disponivel no teste E2E");
+                }
+                request.getHeaders().set(token.path("headerName").asText(),
+                        token.path("token").asText());
+            }
+            return execution.execute(request, body);
+        });
         return client;
     }
 

@@ -3,9 +3,6 @@ package com.senac.recursos.config;
 import com.senac.recursos.repositorio.UsuarioRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -32,19 +29,11 @@ public class SegurancaConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, Environment ambiente) throws Exception {
-        boolean producao = java.util.Arrays.asList(ambiente.getActiveProfiles()).contains("prod");
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> {
-                    if (!producao) {
-                        csrf.disable();
-                    } else {
-                        csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                                .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-                                .ignoringRequestMatchers("/login", "/cadastro-professor",
-                                        "/confirmacao-email-professor");
-                    }
-                })
+                // CSRF fica ativo em todos os perfis, inclusive homologacao.
+                // O /csrf disponibiliza o token para formularios e chamadas fetch.
+                .csrf(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .exceptionHandling(ex -> ex.defaultAuthenticationEntryPointFor(
                         new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),

@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 /**
- * Informa ao cliente web se deve enviar um token CSRF.
- * Em ambientes onde o filtro CSRF esta desativado, nenhum token e fornecido.
+ * Disponibiliza ao navegador o token CSRF da sessao para formularios
+ * e requisicoes fetch que alteram estado, inclusive em homologacao.
  */
 @RestController
 public class CsrfController {
