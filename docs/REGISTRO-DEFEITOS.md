@@ -28,3 +28,14 @@ Este registro consolida problemas encontrados durante a revisão do código. "Fe
 - Alta: impede requisito funcional ou pode gerar alocação incorreta; corrigir antes da entrega.
 - Média: afeta evidência, observabilidade, usabilidade ou meta de qualidade; registrar plano e resultado.
 - Não marcar risco como fechado apenas por existir um commit: exigir teste verde e evidência de execução.
+
+## Atualização de homologação — 12/11/2026
+
+| ID | Prioridade | Evidência observada | Decisão / estado |
+|---|---|---|---|
+| DEF-13 | Alta | O botão CONCLUIDA era exibido durante movimentações de materiais ainda não devolvidos; o endpoint manual de conclusão não conferia os movimentos. | **Corrigido em código e testes automatizados:** `ReservaService.alterarEstado` bloqueia conclusão com materiais pendentes; interface oculta botão, testes para reserva conjunta e material principal; CI [43279334663](https://github.com/FelipeR8083/organizacao-recursos/actions/runs/43279334663) verde. Revalidar na instalação manual após rebuild. |
+| RSK-05 | Média | Foi possível iniciar e encerrar no dia 12/11 uma reserva marcada para 13/11. | **Risco registrado**, sem correção nesta versão. Requer definição da regra temporal com o docente/equipe antes de alterar comportamento. |
+| RSK-06 | Alta | Flyway V9 executou em banco novo, ainda não testado em cópia de V8 com dados. | **Em aberto** até ensaio de migração com backup; não atualizar produção sem plano. |
+| RSK-07 | Alta | SonarCloud não executou; relatório final de segurança e Quality Gate indisponíveis. | **Em aberto**; análise estática não substituída pelo resultado dos testes/JaCoCo. |
+
+**Relatório atualizado:** `docs/RELATORIO-QUALIDADE.md`. A homologação na porta 8085 validou as movimentações e manutenção, sem alterar a porta 8080 original.
