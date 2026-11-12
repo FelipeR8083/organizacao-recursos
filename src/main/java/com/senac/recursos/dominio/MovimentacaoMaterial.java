@@ -4,12 +4,12 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
-@Table(name = "movimentacoes_material")
+@Table(name = "movimentacoes_material", uniqueConstraints = @UniqueConstraint(name = "uk_movimentacao_reserva_recurso", columnNames = {"reserva_id", "recurso_id"}))
 public class MovimentacaoMaterial {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @OneToOne(optional = false)
-    @JoinColumn(name = "reserva_id", nullable = false, unique = true)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "reserva_id", nullable = false)
     private Reserva reserva;
     @ManyToOne(optional = false)
     @JoinColumn(name = "recurso_id", nullable = false)
