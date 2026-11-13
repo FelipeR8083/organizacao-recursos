@@ -185,6 +185,39 @@ class AutorizacaoApiTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Sua conta foi desativada")));
     }
 
+
+    @Test
+    void contaDesativadaNaoAcessaPaginaDiretaNemApisComSessoesAbertas() throws Exception {
+        Usuario professor = usuarios.save(new Usuario("prof.outros-caminhos",
+                encoder.encode("senha-segura-123"), PerfilAcesso.PROFESSOR));
+
+        MvcResult loginIndex = mvc.perform(post("/login").with(csrf())
+                        .param("username", "prof.outros-caminhos").param("password", "senha-segura-123"))
+                .andExpect(status().is3xxRedirection()).andReturn();
+        MvcResult loginPublico = mvc.perform(post("/login").with(csrf())
+                        .param("username", "prof.outros-caminhos").param("password", "senha-segura-123"))
+                .andExpect(status().is3xxRedirection()).andReturn();
+        MvcResult loginApi = mvc.perform(post("/login").with(csrf())
+                        .param("username", "prof.outros-caminhos").param("password", "senha-segura-123"))
+                .andExpect(status().is3xxRedirection()).andReturn();
+
+        professor.setAtivo(false);
+        usuarios.saveAndFlush(professor);
+
+        mvc.perform(get("/index.html")
+                        .session((MockHttpSession) loginIndex.getRequest().getSession(false)))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login.html?desativado"));
+        mvc.perform(get("/login.html")
+                        .session((MockHttpSession) loginPublico.getRequest().getSession(false)))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login.html?desativado"));
+        mvc.perform(get("/recursos")
+                        .session((MockHttpSession) loginApi.getRequest().getSession(false)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.contaDesativada").value(true));
+    }
+
     @Test
     void administradorNaoAprovaReservaRestritaEResponsavelAprova() throws Exception {
         usuarios.save(new Usuario("gestor", encoder.encode("senha-gestor-123"), PerfilAcesso.ADMINISTRADOR));
