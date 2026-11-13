@@ -63,6 +63,7 @@
   <script>
     const params = new URLSearchParams(location.search), msg = document.getElementById('mensagem');
     if (params.has('erro')) { msg.className = 'alert error'; msg.textContent = 'Usuário ou senha incorretos. Confira os dados e tente novamente.'; }
+    if (params.has('desativado')) { msg.className = 'alert error'; msg.textContent = 'Sua conta foi desativada pelo administrador. Você não tem mais autorização para acessar o sistema.'; }
     if (params.has('saiu')) { msg.className = 'alert success'; msg.textContent = 'Você saiu do sistema com segurança.'; }
     const formLogin = document.querySelector('form[action="/login"]');
     const botaoLogin = formLogin.querySelector('button[type="submit"]');
