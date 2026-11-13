@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 
 @Configuration
@@ -29,7 +30,7 @@ public class SegurancaConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, UsuarioRepository usuarios) throws Exception {
         return http
                 // CSRF fica ativo em todos os perfis, inclusive homologacao.
                 // O /csrf disponibiliza o token para formularios e chamadas fetch.
@@ -77,6 +78,7 @@ public class SegurancaConfig {
                         .logoutSuccessUrl("/login.html?saiu").invalidateHttpSession(true)
                         .clearAuthentication(true).deleteCookies("JSESSIONID"))
                 .httpBasic(Customizer.withDefaults())
+                .addFilterBefore(new UsuarioAtivoFilter(usuarios), AuthorizationFilter.class)
                 .build();
     }
 }

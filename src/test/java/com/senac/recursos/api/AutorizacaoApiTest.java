@@ -349,4 +349,59 @@ class AutorizacaoApiTest {
                 .andExpect(status().isForbidden());
     }
 
+
+    @Test
+    void desativacaoBloqueiaReservasMesmoComSessaoAberta() throws Exception {
+        Usuario professor = usuarios.save(new Usuario("prof.desativado",
+                encoder.encode("senha-professor-123"), PerfilAcesso.PROFESSOR));
+        usuarios.save(new Usuario("admin.seg", encoder.encode("senha-admin-123456"),
+                PerfilAcesso.ADMINISTRADOR));
+
+        MvcResult loginProfessor = mvc.perform(post("/login").with(csrf())
+                        .param("username", "prof.desativado").param("password", "senha-professor-123"))
+                .andExpect(status().is3xxRedirection()).andReturn();
+        MockHttpSession sessaoProfessor = (MockHttpSession) loginProfessor.getRequest().getSession(false);
+        org.junit.jupiter.api.Assertions.assertNotNull(sessaoProfessor);
+
+        MvcResult loginAdmin = mvc.perform(post("/login").with(csrf())
+                        .param("username", "admin.seg").param("password", "senha-admin-123456"))
+                .andExpect(status().is3xxRedirection()).andReturn();
+        MockHttpSession sessaoAdmin = (MockHttpSession) loginAdmin.getRequest().getSession(false);
+
+        mvc.perform(patch("/usuarios/" + professor.getId() + "/ativo").with(csrf())
+                        .session(sessaoAdmin).contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"ativo":false}
+                                """))
+                .andExpect(status().isOk());
+
+        mvc.perform(post("/reservas").with(csrf()).session(sessaoProfessor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"recursoId":99999,"solicitante":"prof.desativado",
+                                 "inicio":"2026-11-25T10:00:00Z","fim":"2026-11-25T11:00:00Z"}
+                                """))
+                .andExpect(status().isUnauthorized());
+        org.junit.jupiter.api.Assertions.assertEquals(0, reservas.count());
+    }
+
+    @Test
+    void atualizarPaginaDesconectaContaDesativada() throws Exception {
+        Usuario professor = usuarios.save(new Usuario("prof.sessao",
+                encoder.encode("senha-professor-123"), PerfilAcesso.PROFESSOR));
+        MvcResult login = mvc.perform(post("/login").with(csrf())
+                        .param("username", "prof.sessao").param("password", "senha-professor-123"))
+                .andExpect(status().is3xxRedirection()).andReturn();
+        MockHttpSession sessao = (MockHttpSession) login.getRequest().getSession(false);
+        org.junit.jupiter.api.Assertions.assertNotNull(sessao);
+
+        professor.setAtivo(false);
+        usuarios.saveAndFlush(professor);
+
+        mvc.perform(get("/").accept(MediaType.TEXT_HTML).session(sessao))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login.html?desativado"));
+        org.junit.jupiter.api.Assertions.assertTrue(sessao.isInvalid());
+    }
+
 }
