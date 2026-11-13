@@ -35,7 +35,8 @@ public class UsuarioAtivoFilter extends OncePerRequestFilter {
                     sessao.invalidate();
                 }
                 if ("GET".equals(request.getMethod())
-                        && ("/".equals(request.getServletPath()) || "/index.html".equals(request.getServletPath()))) {
+                        && ("/".equals(request.getRequestURI().substring(request.getContextPath().length()))
+                            || "/index.html".equals(request.getRequestURI().substring(request.getContextPath().length())))) {
                     response.sendRedirect(request.getContextPath() + "/login.html?desativado");
                 } else {
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
