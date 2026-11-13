@@ -40,7 +40,7 @@ public class SessaoAtivaFilter extends OncePerRequestFilter {
                 if (sessao != null) sessao.invalidate();
                 SecurityContextHolder.clearContext();
 
-                String caminho = request.getServletPath();
+                String caminho = request.getRequestURI().substring(request.getContextPath().length());
                 if ("GET".equals(request.getMethod())
                         && ("/".equals(caminho) || "/index.html".equals(caminho)
                             || "/login.html".equals(caminho))) {
