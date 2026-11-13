@@ -87,6 +87,10 @@ A aplicação ficará disponível em `http://localhost:8080`. A interface web es
 
 Na interface, o **administrador** gerencia pessoas, recursos e manutenção; o **responsável** avalia solicitações (comuns ou restritas), registra início/fim, ausência e movimentações de materiais. O responsável também pode reservar, **mas outro responsável deve aprovar sua solicitação**. Professores e coordenadores atuam como solicitantes (contas `PROFESSOR` ou `SOLICITANTE`) e veem apenas as próprias reservas. O administrador pode consultar reservas para auditoria, mas não muda seus estados nem registra retiradas/devoluções. É possível solicitar uma sala com vários materiais na mesma reserva. A aba de relatórios usa o período selecionado pelo usuário.
 
+### Banco atualizado de demonstracao (Flyway V9)
+
+Para a entrega academica, o repositorio inclui [um seed SQL de **dados ficticios** e instrucoes de reproducao](demo/README.md). Ele cria uma base **isolada** (`recursos_demo_v9`) com recursos e reservas de exemplo, sem expor os dados nem as senhas do banco real. **O seed nao deve ser executado no banco original `recursos`.** As migracoes oficiais V1–V9 continuam sendo aplicadas automaticamente pelo Flyway.
+
 ### Configuração do banco
 
 As variáveis de ambiente aceitas são:
