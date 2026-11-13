@@ -32,6 +32,7 @@ public class SegurancaConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, UsuarioRepository usuarios) throws Exception {
         return http
+                .addFilterBefore(new SessaoAtivaFilter(usuarios), AuthorizationFilter.class)
                 // CSRF fica ativo em todos os perfis, inclusive homologacao.
                 // O /csrf disponibiliza o token para formularios e chamadas fetch.
                 .csrf(Customizer.withDefaults())
