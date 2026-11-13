@@ -12,6 +12,7 @@
 | Item exigido | Link e situação documentada |
 | --- | --- |
 | Código-fonte, instalação e execução | [README principal](../README.md) e [instruções de atualização segura](../README-NOVA-VERSAO.md) |
+| Banco de dados **V9 reproduzível** | [Migracoes Flyway V1–V9](../src/main/resources/db/migration), [script com dados ficticios e instrucoes](../demo/README.md) e [SQL do seed](../demo/dados-ficticios-v9.sql). Usa banco separado `recursos_demo_v9`; **nao** contem backup real, senhas ou dados pessoais. A carga e demonstrativa, nao evidencia de execucao dos fluxos. |
 | Matriz de rastreabilidade dos **14 RFs** | [RTM — requisito → risco → teste → evidência](../RTM.md); RF-13 tem validação visual manual pendente |
 | Arquitetura e ADRs | [Arquitetura/C4](ARQUITETURA-E-OPERACAO.md), [componentes e diagramas de sequência](DIAGRAMAS-SEQUENCIA.md), [ADR segurança](ADR-001-SEGURANCA.md), [ADR aprovações/materiais](ADR-002-APROVACAO-RESTRITA-E-MOVIMENTACAO.md), [ADR papéis/aprovação em par](ADR-003-PAPEIS-E-APROVACAO-EM-PAR.md) |
 | Estratégia, suíte e resultado de testes | [Plano de testes](PLANO-DE-TESTES.md), [BDD — falha/correção/sucesso](EVIDENCIA-BDD.md), [relatório de qualidade](RELATORIO-QUALIDADE.md) |
