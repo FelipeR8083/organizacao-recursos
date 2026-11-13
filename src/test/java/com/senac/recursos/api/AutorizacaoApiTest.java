@@ -135,6 +135,56 @@ class AutorizacaoApiTest {
                 .andExpect(status().isForbidden());
     }
 
+
+    @Test
+    void professorDesativadoNaoPodeCriarReservaEmSessaoAntiga() throws Exception {
+        Usuario professor = usuarios.save(new Usuario("prof.revogado",
+                encoder.encode("senha-segura-123"), PerfilAcesso.PROFESSOR));
+        MvcResult login = mvc.perform(post("/login").with(csrf())
+                        .param("username", "prof.revogado").param("password", "senha-segura-123"))
+                .andExpect(status().is3xxRedirection()).andReturn();
+        MockHttpSession sessao = (MockHttpSession) login.getRequest().getSession(false);
+        org.junit.jupiter.api.Assertions.assertNotNull(sessao);
+
+        mvc.perform(get("/sessao").session(sessao))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.login").value("prof.revogado"));
+
+        professor.setAtivo(false);
+        usuarios.saveAndFlush(professor);
+
+        Instant inicio = Instant.now().plusSeconds(86400);
+        String pedido = mapper.writeValueAsString(java.util.Map.of(
+                "recursoId", 99999L, "solicitante", "prof.revogado",
+                "inicio", inicio.toString(), "fim", inicio.plusSeconds(3600).toString()));
+        mvc.perform(post("/reservas").with(csrf()).session(sessao)
+                        .contentType(MediaType.APPLICATION_JSON).content(pedido))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.contaDesativada").value(true));
+        org.junit.jupiter.api.Assertions.assertEquals(0L, reservas.count());
+    }
+
+    @Test
+    void professorDesativadoEhRedirecionadoAoAtualizarPagina() throws Exception {
+        Usuario professor = usuarios.save(new Usuario("prof.sem-acesso",
+                encoder.encode("senha-segura-123"), PerfilAcesso.PROFESSOR));
+        MvcResult login = mvc.perform(post("/login").with(csrf())
+                        .param("username", "prof.sem-acesso").param("password", "senha-segura-123"))
+                .andExpect(status().is3xxRedirection()).andReturn();
+        MockHttpSession sessao = (MockHttpSession) login.getRequest().getSession(false);
+        org.junit.jupiter.api.Assertions.assertNotNull(sessao);
+
+        professor.setAtivo(false);
+        usuarios.saveAndFlush(professor);
+
+        mvc.perform(get("/").session(sessao).accept(MediaType.TEXT_HTML))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login.html?desativado"));
+        mvc.perform(get("/login.html").param("desativado", ""))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Sua conta foi desativada")));
+    }
+
     @Test
     void administradorNaoAprovaReservaRestritaEResponsavelAprova() throws Exception {
         usuarios.save(new Usuario("gestor", encoder.encode("senha-gestor-123"), PerfilAcesso.ADMINISTRADOR));
